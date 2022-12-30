@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            color: #222B45;
+        }
+        header {
+            background-color: #FFF6FF;
+            font-weight: 800;
+            padding: 30px 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        .container {
+            padding: 30px 40px;
+        }
+
+        .font-extrabold {
+            font-weight: 800;
+        }
+
+        .text-xs {
+            font-size: 12px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .verify-email-btn {
+            background-color: #FB6FB9;
+            border-radius: 4px;
+            color: white;
+            padding: 15px 25px;
+            border: 1px solid #FB6FB9;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        footer {
+            padding: 10px 24px;
+            border-top: 1px solid #F4F4F4;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div class="container">
+            <p>Hello <span class="font-extrabold">{{ firstName }}</span>,</p>
+            <p>Please click the button below to verify your email address.</p>
+            <div class="text-center">
+                <a href="{{ link }}" class="verify-email-btn">Verify Email Address</a>
+            </div>
+            <p>If you did not create an account, no further action is required.</p>
+            <br>
+            <p>Regards,</p>
+            <p>{{ appName }}</p>
+        </div>
+        <footer class="text-xs">
+            <p>If you're having trouble clicking the "Verify Email Address" button, copy and paste the URL below into your web browser: {{ link }}</p>
+        </footer>
+    </main>
+</body>
+
+</html>

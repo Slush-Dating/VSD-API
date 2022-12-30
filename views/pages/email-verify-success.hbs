@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <title>Verified | You have successfully verified account</title>
+    <style>
+        .bg-rose-200 {
+            background-color: #FFF6FF;
+        }
+
+        .border-rose-200 {
+            border-color: #FFF6FF;
+            border-style: solid;
+        }
+
+        .bg-rose-600 {
+            background-color: #FB6FB9;
+        }
+
+        .text-rose-600 {
+            color: #FB6FB9;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex justify-center items-center bg-rose-200">
+    <div class="w-10/12 lg:w-8/12 xl:w-6/12 p-5 sm:p-10 bg-white rounded-lg text-center space-y-4 bg-rose-400 shadow">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 sm:h-30 w-20 sm:w-30 text-rose-600 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-sm sm:text-base lg:text-xl font-semibold">Hello {{ user.fullName }},</p>
+        <p class="text-xs sm:text-sm lg:text-base">Thank you, your email has been verified. Your acccount is now active.</p>
+        <p class="text-xs sm:text-sm lg:text-base">Thank you for choosing {{ appName }}</p>
+    </div>
+</body>
+
+</html>

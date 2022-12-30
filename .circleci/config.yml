@@ -1,0 +1,53 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@4.7
+
+jobs:
+  build:
+    docker:
+      - image: cimg/node:lts
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Building nest.js
+          command: npm run build
+  deploy:
+    docker:
+      - image: cimg/node:lts
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "b3:26:45:0c:48:ae:9c:5a:38:79:6f:e4:a7:cd:b8:af"
+      - run:
+          name: Keyscan (HACK)
+          command: ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+      - checkout
+      - run:
+          name: Deploy over SSH
+          command: ssh $SSH_USER@$SSH_HOST "cd /var/www/virtual-speed-date-app && sh deploy.sh"
+workflows:
+  deploy_production:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - main
+      - deploy:
+          context: VSD-PROD
+          requires:
+            - build
+  deploy_development:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - development
+      - deploy:
+          context: VSD-DEV
+          requires:
+            - build

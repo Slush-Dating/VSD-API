@@ -1,0 +1,179 @@
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  MinLength,
+  ValidateIf,
+} from 'class-validator';
+import {
+  GenderEnum,
+  NextActionEnum,
+  SexualityEnum,
+} from '../../users/user.entity';
+
+export class CompleteRegistrationDto {
+  /**
+   * @example verify_phone
+   */
+  @IsEnum(NextActionEnum)
+  @IsNotEmpty()
+  action!: NextActionEnum;
+
+  /**
+   * Required when action = 'verify_phone'
+   * @example "+1 8798729318"
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.VERIFY_PHONE,
+  )
+  @IsPhoneNumber()
+  @IsNotEmpty()
+  phoneNumber?: string;
+
+  /**
+   * Required when action = 'verify_phone'
+   * @example "FIREBASE_TOKEN"
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.VERIFY_PHONE,
+  )
+  @IsString()
+  @IsNotEmpty()
+  token?: string;
+
+  /**
+   * Required when action = 'upload_avatar'
+   */
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+  })
+  avatar?: Express.Multer.File;
+
+  /**
+   * Required when action = 'fill_profile'
+   * @example John
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+  )
+  @MinLength(3)
+  @IsString()
+  @IsNotEmpty()
+  firstName?: string;
+
+  /**
+   * Required when action = 'fill_profile'
+   * @example Doe
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+  )
+  @MinLength(3)
+  @IsString()
+  @IsNotEmpty()
+  lastName?: string;
+
+  /**
+   * Required when action = 'fill_profile'
+   * @example 1996-12-16
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+  )
+  @IsDateString()
+  @IsNotEmpty()
+  dateOfBirth?: string;
+
+  /**
+   * Required when action = 'fill_profile'
+   * @example UK
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+  )
+  @IsString()
+  @IsNotEmpty()
+  country?: string;
+
+  /**
+   * Required when action = 'fill_profile'
+   * @example London
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+  )
+  @IsString()
+  @IsNotEmpty()
+  address?: string;
+
+  /**
+   * Required when action = 'fill_profile'
+   * @example 21.1820972
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+  )
+  @IsString()
+  @IsNotEmpty()
+  latitude?: string;
+
+  /**
+   * Required when action = 'fill_profile'
+   * @example 72.7905927
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+  )
+  @IsString()
+  @IsNotEmpty()
+  longitude?: string;
+
+  /**
+   * Required when action = 'fill_profile'
+   * @example Travel Consultant
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+  )
+  @IsString()
+  @IsNotEmpty()
+  jobTitle?: string;
+
+  /**
+   * Required when action = 'fill_profile'
+   * @example female
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+  )
+  @IsEnum(SexualityEnum)
+  @IsNotEmpty()
+  sexuality?: SexualityEnum;
+
+  /**
+   * @example "I'm a programmer"
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+  )
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  bio?: string;
+
+  /**
+   * Required when action = 'choose_gender'
+   * @example male
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.CHOOSE_GENDER,
+  )
+  @IsEnum(GenderEnum)
+  @IsNotEmpty()
+  gender?: GenderEnum;
+}
