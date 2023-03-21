@@ -18,7 +18,11 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "deploy:local": "nest build && pm2 startOrRestart ecosystem.config.js --env local",
+    "deploy:dev": "nest build && pm2 startOrRestart pm2.dev.config.js --env production",
+    "deploy:stage": "nest build && pm2 startOrRestart pm2.stage.config.js --env production",
+    "deploy:prod": "nest build && pm2 startOrRestart pm2.prod.config.js --env production"
   },
   "dependencies": {
     "@mailchimp/mailchimp_marketing": "^3.0.72",
