@@ -12,12 +12,9 @@ export class User {
 
   @Expose()
   readonly fullName: string;
-
+  
   @Expose()
-  readonly firstName: string;
-
-  @Expose()
-  readonly lastName: string;
+  readonly nickName: string;
 
   @Expose()
   @Transform(({ value }) => Number(value.toFixed(2)))

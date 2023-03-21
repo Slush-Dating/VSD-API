@@ -79,8 +79,6 @@ export class ListVideoVerseService {
         'pv.id',
         'pv.key AS video',
         'pv.user_id',
-        'u.first_name',
-        'u.last_name',
         'u.date_of_birth',
         'u.jobTitle',
         'u.bio',
@@ -88,6 +86,7 @@ export class ListVideoVerseService {
         'u.country',
       ])
       .addSelect('CONCAT(u.first_name, " ", u.last_name) AS fullName')
+      .addSelect('CONCAT(u.first_name, "") AS nickName')
       .addSelect(
         `( 3959 * acos( cos( radians(:latitude) ) * cos( radians( u.latitude ) ) * cos( radians( u.longitude ) - radians(:longitude) ) + sin( radians(:latitude) ) * sin(radians(u.latitude)) ) )`,
         'distance',
