@@ -14,6 +14,12 @@ export class User {
   readonly fullName: string;
 
   @Expose()
+  readonly firstName: string;
+
+  @Expose()
+  readonly lastName: string;
+
+  @Expose()
   @Transform(({ value }) => Number(value.toFixed(2)))
   readonly distance: number;
 
