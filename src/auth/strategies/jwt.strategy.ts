@@ -44,7 +44,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     user.jti = payload.jti;
 
     // if account de-activated
-    if (user.isDeactivated()) {
+    if (user.isDeactivated) {
       throw new ForbiddenException('Your account is deactivated');
     }
 

@@ -1,50 +1,15 @@
 import { extension, lookup } from 'mime-types';
-import * as uuid from 'uuid';
-import { unlink, mkdir, writeFile } from 'fs/promises';
-import { Logger } from '@nestjs/common';
 import { storagePath } from './constants';
-import { existsSync } from 'fs';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
+import { camelCase } from 'lodash';
+import * as moment from 'moment';
 
-export const guessFileContentType = (file: Express.Multer.File) => {
-  return lookup(file.mimetype);
+export const guessFileContentType = (mimeType: string) => {
+  return lookup(mimeType);
 };
 
-export const guessFileExtension = (file: Express.Multer.File) => {
-  return extension(file.mimetype);
-};
-
-export const storeAs = async (dir: string, file: Express.Multer.File) => {
-  const fileName = `${dir}/${uuid.v4()}.${guessFileExtension(file)}`;
-
-  // create public dir
-  const publicDirExists = existsSync('public');
-  if (!publicDirExists) await mkdir('public');
-
-  // create storage dir
-  const storageDirExists = existsSync(storagePath);
-  if (!storageDirExists) await mkdir(storagePath);
-
-  // create provided dir
-  const exists = existsSync(`${storagePath}/${dir}`);
-  if (!exists) await mkdir(`${storagePath}/${dir}`);
-
-  // save
-  try {
-    await writeFile(`${storagePath}/${fileName}`, file.buffer);
-    return fileName;
-  } catch (error) {
-    Logger.log(error.message);
-    throw error;
-  }
-};
-
-export const unlinkFile = async (filename: string): Promise<void> => {
-  try {
-    await unlink(storagePath + `/${filename}`);
-  } catch (error) {
-    Logger.log(error.message);
-  }
+export const guessFileExtension = (mimeType: string) => {
+  return extension(mimeType);
 };
 
 export const baseUrl = (value?: string) => {
@@ -131,4 +96,22 @@ export const createFcmPayload = (payload: {
     },
     tokens: payload.tokens,
   };
+};
+
+export const removeAliasFromList = (
+  items: Record<string, any>[],
+  aliases: string[],
+) => {
+  return items.map((item: Record<string, any>) => {
+    return Object.fromEntries(
+      Object.entries(item).map(([k, v]) => {
+        aliases.forEach((a) => (k = k.replace(a, '')));
+        return [camelCase(k), v];
+      }),
+    );
+  });
+};
+
+export const calculateAge = (dateOfBirth: Date) => {
+  return moment().diff(dateOfBirth, 'years', false);
 };

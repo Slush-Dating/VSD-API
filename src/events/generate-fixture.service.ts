@@ -50,9 +50,9 @@ export class GenerateFixturesService {
       participants.sort((a, b) => (a.id > b.id ? 1 : -1));
 
       if (participants[0].event.isEventFor(EventGenderEnum.STRAIGHT)) {
-        const males = participants.filter((p: Participant) => p.user.isMale());
-        const females = participants.filter((p: Participant) =>
-          p.user.isFemale(),
+        const males = participants.filter((p: Participant) => p.user.isMale);
+        const females = participants.filter(
+          (p: Participant) => p.user.isFemale,
         );
 
         if (!males.length || !females.length) {

@@ -293,7 +293,7 @@ export class EventsService {
       );
     }
 
-    if (event.hasStarted()) {
+    if (event.hasStarted) {
       throw new BadRequestException('Sorry! The booking time is over');
     }
 
@@ -538,28 +538,7 @@ export class EventsService {
     authUser: User,
     queryBuilder: SelectQueryBuilder<Event>,
   ): void {
-    const allowedGender: EventGenderEnum[] = [];
-
-    if (authUser.isStraight()) {
-      allowedGender.push(EventGenderEnum.STRAIGHT);
-    } else if (authUser.isGay()) {
-      allowedGender.push(EventGenderEnum.GAY, EventGenderEnum.BISEXUAL);
-    } else if (authUser.isLesbian()) {
-      allowedGender.push(EventGenderEnum.LESBIAN, EventGenderEnum.BISEXUAL);
-    } else if (authUser.isBisexual() && authUser.isMale()) {
-      allowedGender.push(
-        EventGenderEnum.STRAIGHT,
-        EventGenderEnum.BISEXUAL,
-        EventGenderEnum.GAY,
-      );
-    } else if (authUser.isBisexual() && authUser.isFemale()) {
-      allowedGender.push(
-        EventGenderEnum.STRAIGHT,
-        EventGenderEnum.BISEXUAL,
-        EventGenderEnum.LESBIAN,
-      );
-    }
-
+    const allowedGender: EventGenderEnum[] = authUser.allowedGenders;
     queryBuilder.andWhere('e.gender IN (:allowedGender)', {
       allowedGender,
     });

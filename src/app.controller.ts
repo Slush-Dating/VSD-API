@@ -77,11 +77,6 @@ export class AppController {
     return { data: { token } };
   }
 
-  @Post('/callback/freshping')
-  freshpingCallback(@Req() req: Request) {
-    console.log(req.body);
-  }
-
   constructor(
     private configService: ConfigService,
     private usersService: UsersService,

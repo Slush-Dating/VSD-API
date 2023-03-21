@@ -1,8 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsArray,
   IsDateString,
   IsEnum,
   IsNotEmpty,
+  IsNumberString,
   IsOptional,
   IsPhoneNumber,
   IsString,
@@ -165,6 +167,18 @@ export class CompleteRegistrationDto {
   @IsString()
   @IsNotEmpty()
   bio?: string;
+
+  /**
+   * Required when action = 'interests'
+   * @example [1, 2]
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_INTERESTS,
+  )
+  @IsArray()
+  @IsNotEmpty({ each: true })
+  @IsNumberString({}, { each: true })
+  interests?: number[];
 
   /**
    * Required when action = 'choose_gender'

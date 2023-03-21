@@ -18,6 +18,9 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AuthUser } from 'src/common/decorators/auth-user.decorator';
+import { UpdateInterestsDto } from 'src/interests/dto/update-interests.dto';
+import { Interests } from 'src/interests/interests.entity';
+import { InterestsService } from 'src/interests/interests.service';
 import { ReportUserProfileDto } from 'src/user-report/dto/report-user-profile.dto';
 import { ChangeEmailDto } from '../dto/change-email.dto';
 import { MatchUnmatchDto } from '../dto/match-unmatch.dto';
@@ -138,5 +141,21 @@ export class UsersControllerV1 {
     return { message: 'Success!' };
   }
 
-  constructor(private usersService: UsersService) {}
+  @Patch('interests')
+  @ApiOperation({ summary: 'Update Interests' })
+  public async updateInterests(
+    @AuthUser() authUser: User,
+    @Body() updateInterestsDto: UpdateInterestsDto,
+  ): Promise<{ data: Interests[] }> {
+    const interests = await this.usersService.updateInterests(
+      authUser,
+      updateInterestsDto.interests,
+    );
+    return { data: interests };
+  }
+
+  constructor(
+    private usersService: UsersService,
+    private interestsService: InterestsService,
+  ) {}
 }

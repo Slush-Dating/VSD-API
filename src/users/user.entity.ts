@@ -3,6 +3,8 @@ import {
   Column,
   Entity,
   Index,
+  JoinTable,
+  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -25,8 +27,11 @@ import {
   MinLength,
 } from 'class-validator';
 import { FcmToken } from 'src/fcm-token/fcm-token.entity';
-import * as moment from 'moment';
 import { ProfilePicture } from 'src/profile-pictures/profile-picture.entity';
+import { ProfileVideo } from 'src/profile-videos/profile-video.entity';
+import { EventGenderEnum } from 'src/events/event.entity';
+import { Interests } from 'src/interests/interests.entity';
+import { bucketUrl, calculateAge } from 'src/common/helper';
 
 export enum RoleType {
   USER = 'USER',
@@ -55,6 +60,7 @@ export enum NextActionEnum {
   VERIFY_PHONE = 'verify_phone',
   UPLOAD_AVATAR = 'upload_avatar',
   FILL_PROFILE = 'fill_profile',
+  FILL_INTERESTS = 'fill_interests',
   CHOOSE_GENDER = 'choose_gender',
   NONE = 'none',
 }
@@ -287,6 +293,17 @@ export class User extends BaseEntity {
   })
   profilePictures: ProfilePicture[];
 
+  @OneToMany(() => ProfileVideo, (profileVideo) => profileVideo.user, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+    eager: true,
+  })
+  profileVideos: ProfileVideo[];
+
+  @ManyToMany(() => Interests)
+  @JoinTable({ name: 'users_interests' })
+  interests?: Interests[];
+
   @Column({
     type: 'datetime',
     nullable: true,
@@ -296,9 +313,25 @@ export class User extends BaseEntity {
 
   public get age(): number {
     if (this.dateOfBirth) {
-      return moment().diff(this.dateOfBirth, 'years', false);
+      return calculateAge(this.dateOfBirth);
     }
     return 0;
+  }
+
+  @Expose()
+  public get avatar(): string | null {
+    return (
+      (this.profilePictures?.[0]?.key &&
+        bucketUrl(this.profilePictures[0].key)) ??
+      null
+    );
+  }
+
+  public get rawFcmTokens(): string[] {
+    if (this.fcmTokens?.length) {
+      return this.fcmTokens.map((f) => f.token);
+    }
+    return [];
   }
 
   public get fullName(): string {
@@ -320,46 +353,76 @@ export class User extends BaseEntity {
     this._jti = v;
   }
 
-  public isOnline(): boolean {
+  public get allowedGenders(): EventGenderEnum[] {
+    const allowedGender: EventGenderEnum[] = [];
+
+    if (this.isStraight) {
+      allowedGender.push(EventGenderEnum.STRAIGHT);
+    } else if (this.isGay) {
+      allowedGender.push(EventGenderEnum.GAY, EventGenderEnum.BISEXUAL);
+    } else if (this.isLesbian) {
+      allowedGender.push(EventGenderEnum.LESBIAN, EventGenderEnum.BISEXUAL);
+    } else if (this.isBisexual && this.isMale) {
+      allowedGender.push(
+        EventGenderEnum.STRAIGHT,
+        EventGenderEnum.BISEXUAL,
+        EventGenderEnum.GAY,
+      );
+    } else if (this.isBisexual && this.isFemale) {
+      allowedGender.push(
+        EventGenderEnum.STRAIGHT,
+        EventGenderEnum.BISEXUAL,
+        EventGenderEnum.LESBIAN,
+      );
+    }
+
+    return allowedGender;
+  }
+
+  public get isOnline(): boolean {
     return this.onlineStatus;
   }
 
-  public isNotificationOn(): boolean {
+  public get isNotificationOn(): boolean {
     return this.notifications;
   }
 
-  public isDeactivated(): boolean {
+  public get isDeactivated(): boolean {
     return !!this.deactivatedAt;
   }
 
-  public isMale(): boolean {
+  public get isMale(): boolean {
     return this.gender === GenderEnum.male;
   }
 
-  public isFemale(): boolean {
+  public get isFemale(): boolean {
     return this.gender === GenderEnum.female;
   }
 
-  public isStraight(): boolean {
+  public get isStraight(): boolean {
     return this.sexuality === SexualityEnum.STRAIGHT;
   }
 
-  public isGay(): boolean {
+  public get isGay(): boolean {
     return (
       this.sexuality === SexualityEnum.GAY_OR_LESBIAN &&
       this.gender === GenderEnum.male
     );
   }
 
-  public isLesbian(): boolean {
+  public get isLesbian(): boolean {
     return (
       this.sexuality === SexualityEnum.GAY_OR_LESBIAN &&
       this.gender === GenderEnum.female
     );
   }
 
-  public isBisexual(): boolean {
+  public get isBisexual(): boolean {
     return this.sexuality === SexualityEnum.BISEXUAL;
+  }
+
+  public get hasUploadAtleastOneProfileVideo(): boolean {
+    return !this.profileVideos?.length;
   }
 
   @BeforeInsert()

@@ -116,17 +116,17 @@ export class ParticipantsService {
     event: Event,
     user: User,
   ) {
-    const maleCount = participants.filter((p: Participant) =>
-      p.user.isMale(),
+    const maleCount = participants.filter(
+      (p: Participant) => p.user.isMale,
     ).length;
 
-    const femaleCount = participants.filter((p: Participant) =>
-      p.user.isFemale(),
+    const femaleCount = participants.filter(
+      (p: Participant) => p.user.isFemale,
     ).length;
 
-    const counter = event.hasFiveDates() ? 5 : 10;
+    const counter = event.hasFiveDates ? 5 : 10;
 
-    if (user.isMale() ? maleCount >= counter : femaleCount >= counter) {
+    if (user.isMale ? maleCount >= counter : femaleCount >= counter) {
       throw new BadRequestException(
         `Sorry! all slots for ${user.gender} have been booked!`,
       );

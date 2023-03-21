@@ -12,24 +12,42 @@ import { NOTIFICATION } from 'src/common/constants';
 import { PaginationOptions } from 'src/common/pagination-options';
 import { User } from 'src/users/user.entity';
 import { UsersService } from 'src/users/users.service';
-import { Brackets, getConnection, getManager, In, Repository } from 'typeorm';
+import { Brackets, getManager, In, Repository } from 'typeorm';
 import { Chat } from './chat.entity';
 import { ChatConversationListDto } from './dto/chat.dto';
-import { FixtureStatus } from 'src/fixtures/fixture.entity';
 import { defaultPaginationPayload } from 'src/common/helper';
+import { FixturesService } from 'src/fixtures/fixtures.service';
+import * as moment from 'moment';
 
-interface IPrivateMessage {
+type PrivateMessageRequest = {
   from: number;
   to: number;
   content: string;
-}
+};
+
+type ChatUser = {
+  userId: number;
+  avatar: string;
+};
+
+export type PrivateMessage = {
+  chatId: number;
+  content: string;
+  sender: ChatUser;
+  receiver: ChatUser;
+  readByReceiver: number;
+  readBySender: number;
+  deletedAt: number;
+  createdAt: number;
+  updatedAt: number;
+};
 
 @Injectable()
 export class ChatsService {
   /**
    * Private Message
    */
-  async privateMessage(data: IPrivateMessage): Promise<Chat> {
+  async privateMessage(data: PrivateMessageRequest): Promise<PrivateMessage> {
     try {
       const chatMessage = await this.chatRepository.save(
         this.chatRepository.create({
@@ -43,22 +61,19 @@ export class ChatsService {
         }),
       );
 
-      const sender = await this.usersService.findOne({
+      const sender = await this.usersService.findOneByAttribute({
         select: ['id', 'firstName', 'lastName'],
         where: { id: data.from },
+        relations: ['profilePictures'],
       });
 
-      const receiver = await this.usersService.findOne({
+      const receiver = await this.usersService.findOneByAttribute({
         select: ['id', 'fcmTokens', 'notifications'],
         where: { id: data.to },
-        relations: ['fcmTokens'],
+        relations: ['fcmTokens', 'profilePictures'],
       });
 
-      const fcmTokens = receiver.fcmTokens.flatMap(
-        (fcmToken) => fcmToken.token,
-      );
-
-      if (receiver.isNotificationOn() && fcmTokens.length) {
+      if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
         await getMessaging().sendMulticast({
           data: {
             senderId: data.from.toString(),
@@ -80,11 +95,27 @@ export class ChatsService {
               },
             },
           },
-          tokens: fcmTokens,
+          tokens: receiver.rawFcmTokens,
         });
       }
 
-      return chatMessage;
+      return {
+        chatId: chatMessage.id,
+        content: chatMessage.content,
+        deletedAt: moment(chatMessage.deletedAt).unix(),
+        createdAt: moment(chatMessage.createdAt).unix(),
+        updatedAt: moment(chatMessage.updatedAt).unix(),
+        readByReceiver: moment(chatMessage.updatedAt).unix(),
+        readBySender: moment(chatMessage.updatedAt).unix(),
+        sender: {
+          userId: sender.id,
+          avatar: sender.avatar,
+        },
+        receiver: {
+          userId: receiver.id,
+          avatar: receiver.avatar,
+        },
+      };
     } catch (error) {
       throw error;
     }
@@ -162,32 +193,11 @@ export class ChatsService {
     try {
       const queryAlias = 'c';
 
-      let matchUsers = await getConnection().query(
-        `
-        SELECT user_id FROM (
-            SELECT p1.user_id,
-            (
-                SELECT COUNT(*) FROM fixtures f2
-                WHERE f2.first_participant_id = f1.second_participant_id
-                AND f2.second_participant_id = f1.first_participant_id
-                AND f2.status = ?
-            ) AS mutual
-            FROM fixtures f1
-            INNER JOIN participants p1 ON p1.id = f1.first_participant_id
-            INNER JOIN participants p2 ON p2.id = f1.second_participant_id
-            WHERE f1.status = ?
-            AND p2.user_id = ?
-            HAVING mutual > 0
-        ) t
-      `,
-        [FixtureStatus.LIKED, FixtureStatus.LIKED, authUser.id],
+      const matchedUsers = await this.fixturesService.getMatchedUsersIds(
+        authUser.id,
       );
 
-      matchUsers = matchUsers.length
-        ? matchUsers.map((a: { user_id: string }) => a.user_id)
-        : [0];
-
-      if (!matchUsers.length) {
+      if (!matchedUsers.length) {
         return defaultPaginationPayload(options);
       }
 
@@ -210,7 +220,7 @@ export class ChatsService {
         .orderBy('c.createdAt', 'DESC')
         .setParameters({
           sender_id: authUser.id,
-          matched_users: matchUsers,
+          matched_users: matchedUsers,
         });
 
       if (search) {
@@ -361,5 +371,6 @@ export class ChatsService {
   constructor(
     @InjectRepository(Chat) private chatRepository: Repository<Chat>,
     private usersService: UsersService,
+    private fixturesService: FixturesService,
   ) {}
 }

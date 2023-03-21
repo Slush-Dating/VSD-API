@@ -44,7 +44,7 @@ export class AuthService {
    * Reset Password
    */
   async resetPassword(data: ResetPasswordDto): Promise<void> {
-    const user = await this.usersService.findOne({
+    const user = await this.usersService.findOneByAttribute({
       where: {
         passwordResetToken: data.passwordResetToken,
       },
@@ -159,7 +159,11 @@ export class AuthService {
 
       case NextActionEnum.FILL_PROFILE:
         completeRegistrationDto.avatar = avatar;
-        await this.completeProfile(authUser, completeRegistrationDto);
+        await this.fillProfile(authUser, completeRegistrationDto);
+        break;
+
+      case NextActionEnum.FILL_INTERESTS:
+        await this.fillInterests(authUser, completeRegistrationDto.interests);
         break;
 
       default:
@@ -167,14 +171,17 @@ export class AuthService {
         break;
     }
 
-    return this.usersService.findById(authUser.id);
+    return this.usersService.findOneOrFail({ id: authUser.id }, [
+      'interests',
+      'profilePictures',
+    ]);
   }
 
   /**
    * Fill Phone-number
    */
   async fillPhoneNumber(authUser: User, phoneNumber: string): Promise<void> {
-    const checkPhoneNumber = await this.usersService.findOne({
+    const checkPhoneNumber = await this.usersService.findOneByAttribute({
       where: {
         phoneNumber,
       },
@@ -206,13 +213,22 @@ export class AuthService {
   /**
    * Complete profile
    */
-  async completeProfile(
+  public async fillProfile(
     authUser: User,
     completeRegistrationDto: CompleteRegistrationDto,
   ): Promise<void> {
     const { avatar, ...data } = completeRegistrationDto;
     await this.usersService.save({
       ...data,
+      id: authUser.id,
+      nextAction: NextActionEnum.FILL_INTERESTS,
+      interests: [],
+    });
+  }
+
+  public async fillInterests(authUser: User, interestIds: number[]) {
+    await this.usersService.updateInterests(authUser, interestIds);
+    await this.usersService.save({
       id: authUser.id,
       nextAction: NextActionEnum.CHOOSE_GENDER,
     });
@@ -327,7 +343,7 @@ export class AuthService {
    * Validate user
    */
   async validateUser(username: string, password: string): Promise<User | null> {
-    const user = await this.usersService.findOne({
+    const user = await this.usersService.findOneByAttribute({
       where: {
         email: username,
         deactivatedAt: IsNull(),
@@ -363,7 +379,7 @@ export class AuthService {
 
     if (!socialUser) throw new UnauthorizedException();
 
-    const user = await this.usersService.findOne({
+    const user = await this.usersService.findOneByAttribute({
       where: {
         email: socialUser.email,
         role: RoleType.USER,
@@ -405,7 +421,7 @@ export class AuthService {
    * Register user
    */
   async registerUser(registerDto: RegisterDto) {
-    const checkEmail = await this.usersService.findOne({
+    const checkEmail = await this.usersService.findOneByAttribute({
       where: {
         email: registerDto.email,
         deactivatedAt: IsNull(),

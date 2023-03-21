@@ -30,8 +30,6 @@ import { CheckPhoneExistDto } from './dto/check-phone-exist.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyForgotPasswordDto } from './dto/verify-forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { LogoutDto } from './dto/logout.dto';
-import { DeactivateAccountDto } from './dto/deactivate-account.dto';
 
 @Controller({
   path: 'auth',

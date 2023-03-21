@@ -69,11 +69,11 @@ export class ChatsGateway {
   async handleCheckOpponentUserOnlineStatus(
     @MessageBody() data: any,
   ): Promise<any> {
-    const user = await this.usersService.findOne({
+    const user = await this.usersService.findOneByAttribute({
       where: { id: data.userId },
     });
 
-    return { online: user?.isOnline() || false };
+    return { online: user?.isOnline || false };
   }
 
   constructor(

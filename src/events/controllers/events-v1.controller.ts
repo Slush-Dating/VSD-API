@@ -73,7 +73,6 @@ export class EventsControllerV1 {
     @Query('limit', new DefaultValuePipe(15)) limit: number,
     @Query() query?: EventResultDto,
   ) {
-    console.log('reached');
     const data = await this.eventsService.getEventResult(authUser, query, {
       page,
       limit,

@@ -10,12 +10,11 @@ import {
   RelationId,
 } from 'typeorm';
 
-@Entity({ name: 'profile_pictures' })
-export class ProfilePicture extends BaseEntity {
-  // avatar + 5 photos
-  static readonly MAX_PICTURES = 3;
+@Entity({ name: 'profile_videos' })
+export class ProfileVideo extends BaseEntity {
+  static readonly MAX_VIDEOS = 3;
 
-  @Expose({ name: 'profilePictureId' })
+  @Expose({ name: 'profileVideoId' })
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -25,10 +24,13 @@ export class ProfilePicture extends BaseEntity {
   key: string;
 
   @Expose()
-  @RelationId((profilePicture: ProfilePicture) => profilePicture.user)
+  @RelationId((profileVideo: ProfileVideo) => profileVideo.user)
   userId: number;
 
   @Expose()
   @ManyToOne(() => User, (user) => user.id, { onDelete: 'CASCADE' })
   user: User;
+
+  @Column({ type: 'boolean', default: false })
+  isPrimary: boolean;
 }
