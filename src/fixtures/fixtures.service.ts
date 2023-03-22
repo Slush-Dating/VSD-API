@@ -327,6 +327,7 @@ export class FixturesService {
             .where('f1.status = :liked', {
               liked: ProfileVideoLikeStatusEnum.LIKED,
             })
+            .andWhere('f.is_reported = :is_reported', {is_reported: false})
             .andWhere('p3.user_id = p2.user_id')
             .andWhere('p4.user_id = p1.user_id');
 
@@ -344,8 +345,7 @@ export class FixturesService {
         }, 'mutual_like')
         .innerJoin(Participant, 'p1', 'p1.id = f.first_participant_id')
         .innerJoin(Participant, 'p2', 'p2.id = f.second_participant_id')
-        .where('f.status = :liked', { liked: FixtureStatus.LIKED })
-        .andWhere('f.is_reported = :is_reported', {is_reported: false})
+        .where('f.status = :liked', { liked: FixtureStatus.LIKED })        
         .andWhere('p2.user_id = :authUserId', { authUserId })
         .having('mutual_like > 0');
 
