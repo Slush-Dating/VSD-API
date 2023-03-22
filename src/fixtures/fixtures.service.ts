@@ -345,6 +345,7 @@ export class FixturesService {
         .innerJoin(Participant, 'p1', 'p1.id = f.first_participant_id')
         .innerJoin(Participant, 'p2', 'p2.id = f.second_participant_id')
         .where('f.status = :liked', { liked: FixtureStatus.LIKED })
+        .where('f.is_reported = :false')
         .andWhere('p2.user_id = :authUserId', { authUserId })
         .having('mutual_like > 0');
 
