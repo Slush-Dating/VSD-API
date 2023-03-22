@@ -327,7 +327,6 @@ export class FixturesService {
             .where('f1.status = :liked', {
               liked: ProfileVideoLikeStatusEnum.LIKED,
             })
-            .andWhere('f1.is_reported = :is_reported', {is_reported: false})
             .andWhere('p3.user_id = p2.user_id')
             .andWhere('p4.user_id = p1.user_id');
 
