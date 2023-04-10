@@ -31,6 +31,7 @@ import { Rekognition, S3 } from 'aws-sdk';
 import { EnvSchema } from './common/env.schema';
 import { ProfileVideosModule } from './profile-videos/profile-videos.module';
 import { InterestsModule } from './interests/interests.module';
+import { EthnicityModule } from './ethnicity/ethnicity.module';
 import { ProfileVideoLikesModule } from './profile-video-likes/profile-video-likes.module';
 import { VideoVerseModule } from './video-verse/video-verse.module';
 
@@ -130,6 +131,7 @@ const mailchimp = require('@mailchimp/mailchimp_marketing');
     InterestsModule,
     ProfileVideoLikesModule,
     VideoVerseModule,
+    EthnicityModule,
   ],
   controllers: [AppController],
   providers: [

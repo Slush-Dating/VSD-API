@@ -31,12 +31,25 @@ import { ProfilePicture } from 'src/profile-pictures/profile-picture.entity';
 import { ProfileVideo } from 'src/profile-videos/profile-video.entity';
 import { EventGenderEnum } from 'src/events/event.entity';
 import { Interests } from 'src/interests/interests.entity';
+import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
 import { bucketUrl, calculateAge } from 'src/common/helper';
 
 export enum RoleType {
   USER = 'USER',
   ADMIN = 'ADMIN',
 }
+
+// export enum EthnicityEnum {
+//   ASIAN = 'Asian',
+//   BLACK = 'Black',
+//   EAST_ASIAN = 'East Asian',
+//   INDIGENOUS = 'Indigenous',
+//   LATIN = 'Latin',
+//   MIDDLE_EASTERN = 'Middle Eastern',
+//   PACIFIC_ISLANDER = 'Pacific Islander',
+//   SOUTHEAST_ASIAN = 'Southeast Asian',
+//   OTHER = 'Other',
+// }
 
 export enum AuthType {
   EMAIL = 'email',
@@ -303,6 +316,10 @@ export class User extends BaseEntity {
   @ManyToMany(() => Interests)
   @JoinTable({ name: 'users_interests' })
   interests?: Interests[];
+
+  @ManyToMany(() => Ethnicity)
+  @JoinTable({ name: 'users_ethnicity' })
+  ethnicity?: Ethnicity[];
 
   @Column({
     type: 'datetime',

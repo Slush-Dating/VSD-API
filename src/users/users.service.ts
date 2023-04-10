@@ -44,6 +44,8 @@ import { Interests } from 'src/interests/interests.entity';
 import { InterestsService } from 'src/interests/interests.service';
 import { ProfileVideoLikesService } from 'src/profile-video-likes/profile-video-likes.service';
 import { ProfileVideoLikeStatusEnum } from 'src/profile-video-likes/profile-video-like.entity';
+import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
+import { EthnicityService } from 'src/ethnicity/ethnicity.service';
 
 @Injectable()
 export class UsersService {
@@ -58,6 +60,19 @@ export class UsersService {
 
     return this.getUserInterests(authUser);
   }
+
+  public async updateEthnicity(
+    authUser: User,
+    ethnicityIds: number[],
+  ): Promise<Ethnicity[]> {
+    const items = await this.ethnicityService.findByIds(ethnicityIds);
+
+    authUser.ethnicity = items;
+    await this.repository.save(authUser);
+
+    return this.getUserInterests(authUser);
+  }
+
 
   public async getUserInterests(authUser: User): Promise<Interests[]> {
     try {
@@ -462,5 +477,6 @@ export class UsersService {
     private fcmTokensService: FcmTokenService,
     private interestsService: InterestsService,
     private profileVideoLikeService: ProfileVideoLikesService,
+    private ethnicityService: EthnicityService,
   ) {}
 }
