@@ -5,6 +5,7 @@ import {
   Inject,
   Injectable,
   UnprocessableEntityException,
+  Logger
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GenerateRtcTokenDto } from './dto/generate-rtc-token.dto';
@@ -67,6 +68,10 @@ export class AppService {
   public async detectInAppropriateImage(
     file: Express.Multer.File,
   ): Promise<void> {
+    this.logger.log({
+      level: 'info',
+      message: 'Detecting In Appropriate Image!',
+    });
     try {
       const response = await this.amazonRekognition
         .detectModerationLabels({
@@ -76,6 +81,11 @@ export class AppService {
           MinConfidence: 70,
         })
         .promise();
+
+        this.logger.log({
+          level: 'info',
+          message: response,
+        });
 
       if (response.$response.httpResponse.statusCode !== HttpStatus.OK) {
         throw new BadRequestException('Failed to upload file.');
@@ -119,7 +129,7 @@ export class AppService {
 
       if (result.$response.error) {
         this.logger.log(
-          this.logger.ERROR,
+          this.logger.error,
           JSON.stringify(result.$response.error),
         );
         throw new UnprocessableEntityException('Oops! something went wrong.');
@@ -148,7 +158,7 @@ export class AppService {
         })
         .promise();
     } catch (error) {
-      this.logger.log(this.logger.ERROR, JSON.stringify(error));
+      this.logger.log(this.logger.error, JSON.stringify(error));
       throw error;
     }
   }

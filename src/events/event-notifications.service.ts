@@ -35,7 +35,7 @@ export class EventNotificationsService {
     const eventIds = events.map((e: { id: any }) => e.id);
 
     if (!eventIds.length) {
-      this.logger.log('Notify before 15 mins: No events found!');
+      // this.logger.log('Notify before 15 mins: No events found!');
       return;
     }
 
@@ -44,7 +44,7 @@ export class EventNotificationsService {
     );
 
     if (!participants.length) {
-      this.logger.log('Notify when event starts: No participants found!');
+      // this.logger.log('Notify when event starts: No participants found!');
       return;
     }
 
@@ -100,7 +100,7 @@ export class EventNotificationsService {
     const eventIds = events.map((e: { id: any }) => e.id);
 
     if (!eventIds.length) {
-      this.logger.log('Notify when event starts: No events found!');
+      // this.logger.log('Notify when event starts: No events found!');
       return;
     }
 
@@ -109,7 +109,7 @@ export class EventNotificationsService {
     );
 
     if (!participants.length) {
-      this.logger.log('Notify when event starts: No participants found!');
+      // this.logger.log('Notify when event starts: No participants found!');
       return;
     }
 
@@ -165,7 +165,7 @@ export class EventNotificationsService {
     const eventIds = events.map((e: { id: any }) => e.id);
 
     if (!eventIds.length) {
-      this.logger.log('Notify when event starts: No events found!');
+      // this.logger.log('Notify when event starts: No events found!');
       return;
     }
 
@@ -174,7 +174,7 @@ export class EventNotificationsService {
     );
 
     if (!participants.length) {
-      this.logger.log('Notify when event starts: No participants found!');
+      // this.logger.log('Notify when event starts: No participants found!');
       return;
     }
 
