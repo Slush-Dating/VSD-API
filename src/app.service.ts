@@ -91,7 +91,7 @@ export class AppService {
         throw new BadRequestException('Failed to upload file.');
       }
 
-      if (response.ModerationLabels?.[0]?.Name === 'Explicit Nudity') {
+      if (response.ModerationLabels?.[0]?.Name === 'Explicit Nudity' || response.ModerationLabels?.[0]?.Name === 'Nudity') {
         throw new BadRequestException(
           'File contains explicit content. Please provide a different one',
         );
