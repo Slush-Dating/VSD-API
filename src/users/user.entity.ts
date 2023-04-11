@@ -39,18 +39,6 @@ export enum RoleType {
   ADMIN = 'ADMIN',
 }
 
-// export enum EthnicityEnum {
-//   ASIAN = 'Asian',
-//   BLACK = 'Black',
-//   EAST_ASIAN = 'East Asian',
-//   INDIGENOUS = 'Indigenous',
-//   LATIN = 'Latin',
-//   MIDDLE_EASTERN = 'Middle Eastern',
-//   PACIFIC_ISLANDER = 'Pacific Islander',
-//   SOUTHEAST_ASIAN = 'Southeast Asian',
-//   OTHER = 'Other',
-// }
-
 export enum AuthType {
   EMAIL = 'email',
   GOOGLE = 'google',
@@ -317,9 +305,13 @@ export class User extends BaseEntity {
   @JoinTable({ name: 'users_interests' })
   interests?: Interests[];
 
+  
   @ManyToMany(() => Ethnicity)
   @JoinTable({ name: 'users_ethnicity' })
   ethnicity?: Ethnicity[];
+
+  @Expose()
+  ethnicityIds?: number[];
 
   @Column({
     type: 'datetime',

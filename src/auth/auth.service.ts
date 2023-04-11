@@ -343,6 +343,8 @@ export class AuthService {
    * Validate user
    */
   async validateUser(username: string, password: string): Promise<User | null> {
+    console.log(username);
+    console.log(password);
     const user = await this.usersService.findOneByAttribute({
       where: {
         email: username,

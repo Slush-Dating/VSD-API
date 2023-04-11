@@ -9,6 +9,7 @@ import { ProfilePicturesModule } from 'src/profile-pictures/profile-pictures.mod
 import { FcmTokenModule } from 'src/fcm-token/fcm-token.module';
 import { InterestsModule } from 'src/interests/interests.module';
 import { ProfileVideoLikesModule } from 'src/profile-video-likes/profile-video-likes.module';
+import { EthnicityModule } from 'src/ethnicity/ethnicity.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ProfileVideoLikesModule } from 'src/profile-video-likes/profile-video-l
     UserReportModule,
     FcmTokenModule,
     InterestsModule,
+    EthnicityModule
   ],
   providers: [UsersService],
   exports: [UsersService],

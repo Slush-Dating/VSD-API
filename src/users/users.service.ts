@@ -61,6 +61,19 @@ export class UsersService {
     return this.getUserInterests(authUser);
   }
 
+  
+  public async getUserInterests(authUser: User): Promise<Interests[]> {
+    try {
+      const user = await this.repository.findOne({
+        where: { id: authUser.id },
+        relations: ['interests'],
+      });
+      return user.interests;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   public async updateEthnicity(
     authUser: User,
     ethnicityIds: number[],
@@ -70,17 +83,16 @@ export class UsersService {
     authUser.ethnicity = items;
     await this.repository.save(authUser);
 
-    return this.getUserInterests(authUser);
+    return this.getUserEthnicity(authUser);
   }
 
-
-  public async getUserInterests(authUser: User): Promise<Interests[]> {
+  public async getUserEthnicity(authUser: User): Promise<Ethnicity[]> {
     try {
       const user = await this.repository.findOne({
         where: { id: authUser.id },
-        relations: ['interests'],
+        relations: ['ethnicity'],
       });
-      return user.interests;
+      return user.ethnicity;
     } catch (error) {
       throw error;
     }
@@ -170,7 +182,7 @@ export class UsersService {
           id: userId,
           role: RoleType.USER,
         },
-        relations: ['profilePictures', 'interests'],
+        relations: ['profilePictures', 'interests', 'ethnicity'],
       });
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
@@ -304,6 +316,10 @@ export class UsersService {
       dateOfBirth: moment(updateUserDto.dateOfBirth, 'YYYY-MM-DD').toDate(),
     };
 
+    const ids = await this.ethnicityService.findByIds(updateUserDto.ethnicityIds); 
+    authUser.ethnicity = ids;
+    await this.repository.save(authUser);
+
     await this.repository.save(
       this.repository.create({
         id: authUser.id,
@@ -335,6 +351,7 @@ export class UsersService {
         .leftJoinAndSelect('u.profilePictures', 'pp')
         .leftJoinAndSelect('u.profileVideos', 'pv')
         .leftJoinAndSelect('u.interests', 'ui')
+        .leftJoinAndSelect('u.ethnicity', 'ue')
         .where('u.id IN (:ids)', { ids: data.ids ?? [1] });
 
       if (data.select) {

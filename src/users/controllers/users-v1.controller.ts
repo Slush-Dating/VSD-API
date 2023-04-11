@@ -27,6 +27,9 @@ import { MatchUnmatchDto } from '../dto/match-unmatch.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { User } from '../user.entity';
 import { UsersService } from '../users.service';
+import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
+import { EthnicityService } from 'src/ethnicity/ethnicity.service';
+import { UpdateEthnicityDto } from 'src/ethnicity/dto/update-ethnicity.dto';
 
 @Controller({
   path: 'users',
@@ -154,8 +157,22 @@ export class UsersControllerV1 {
     return { data: interests };
   }
 
+  @Patch('ethnicity')
+  @ApiOperation({ summary: 'Update Ethnicity' })
+  public async updateEthnicity(
+    @AuthUser() authUser: User,
+    @Body() updateEthnicityDto: UpdateEthnicityDto,
+  ): Promise<{ data: Ethnicity[] }> {
+    const ethnicity = await this.usersService.updateEthnicity(
+      authUser,
+      updateEthnicityDto.ethnicity,
+    );
+    return { data: ethnicity };
+  }
+
   constructor(
     private usersService: UsersService,
     private interestsService: InterestsService,
+    private ethnicityService: EthnicityService,
   ) {}
 }
