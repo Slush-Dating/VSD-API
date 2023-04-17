@@ -5,6 +5,7 @@ import {
   Inject,
   Injectable,
   Logger,
+  Next,
   UnauthorizedException,
 } from '@nestjs/common';
 import { compare, hash } from 'bcrypt';
@@ -162,6 +163,10 @@ export class AuthService {
         await this.fillProfile(authUser, completeRegistrationDto);
         break;
 
+      case NextActionEnum.FILL_ETHNICITY:
+        await this.fillEthnicity(authUser, completeRegistrationDto.ethnicity);
+        break;
+      
       case NextActionEnum.FILL_INTERESTS:
         await this.fillInterests(authUser, completeRegistrationDto.interests);
         break;
@@ -173,6 +178,7 @@ export class AuthService {
 
     return this.usersService.findOneOrFail({ id: authUser.id }, [
       'interests',
+      'ethnicity',
       'profilePictures',
     ]);
   }
@@ -221,8 +227,17 @@ export class AuthService {
     await this.usersService.save({
       ...data,
       id: authUser.id,
-      nextAction: NextActionEnum.FILL_INTERESTS,
+      nextAction: NextActionEnum.FILL_ETHNICITY,
+      ethnicity: [],
       interests: [],
+    });
+  }
+
+  public async fillEthnicity(authUser: User, ethnicityIds: number[]) {
+    await this.usersService.updateEthnicity(authUser, ethnicityIds);
+    await this.usersService.save({
+      id: authUser.id,
+      nextAction: NextActionEnum.FILL_INTERESTS,
     });
   }
 

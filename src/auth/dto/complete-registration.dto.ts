@@ -168,6 +168,19 @@ export class CompleteRegistrationDto {
   @IsNotEmpty()
   bio?: string;
 
+
+   /**
+   * Required when action = 'ethnicity'
+   * @example [1, 2]
+   */
+   @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_ETHNICITY,
+  )
+  @IsArray()
+  @IsNotEmpty({ each: true })
+  @IsNumberString({}, { each: true })
+  ethnicity?: number[];
+
   /**
    * Required when action = 'interests'
    * @example [1, 2]
@@ -179,6 +192,8 @@ export class CompleteRegistrationDto {
   @IsNotEmpty({ each: true })
   @IsNumberString({}, { each: true })
   interests?: number[];
+
+ 
 
   /**
    * Required when action = 'choose_gender'

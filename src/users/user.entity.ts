@@ -61,6 +61,7 @@ export enum NextActionEnum {
   VERIFY_PHONE = 'verify_phone',
   UPLOAD_AVATAR = 'upload_avatar',
   FILL_PROFILE = 'fill_profile',
+  FILL_ETHNICITY = 'fill_ethnicity',
   FILL_INTERESTS = 'fill_interests',
   CHOOSE_GENDER = 'choose_gender',
   NONE = 'none',
