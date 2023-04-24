@@ -7,8 +7,6 @@ export class UpdateUserDto extends PartialType(
     'jobTitle',
     'firstName',
     'lastName',
-    'ethnicity',
-    'ethnicityIds',
     'country',
     'address',
     'latitude',

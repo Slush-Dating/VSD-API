@@ -316,9 +316,9 @@ export class UsersService {
       dateOfBirth: moment(updateUserDto.dateOfBirth, 'YYYY-MM-DD').toDate(),
     };
 
-    const ids = await this.ethnicityService.findByIds(updateUserDto.ethnicityIds); 
-    authUser.ethnicity = ids;
-    await this.repository.save(authUser);
+    // const ids = await this.ethnicityService.findByIds(updateUserDto.ethnicityIds); 
+    // authUser.ethnicity = ids;
+    // await this.repository.save(authUser);
 
     await this.repository.save(
       this.repository.create({
