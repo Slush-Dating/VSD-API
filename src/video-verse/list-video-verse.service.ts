@@ -110,6 +110,7 @@ export class ListVideoVerseService {
       }, 'avatar')
       .innerJoin(User, 'u', 'pv.user_id = u.id')
       .where('pv.is_primary = :isPrimary', { isPrimary: true })
+      .andWhere('u.deactivatedAt IS NULL')
       .setParameters({
         latitude: videoVerseDto.latitude,
         longitude: videoVerseDto.longitude,
