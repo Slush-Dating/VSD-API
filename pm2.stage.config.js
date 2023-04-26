@@ -1,7 +1,7 @@
 module.exports = {
     apps: [
       {
-        name: 'Slush Dating App (PROD)',
+        name: 'Slush Dating App (STAGE)',
         exec_mode: 'cluster',
         instances: 'max', // Or a number of instances
         script: './dist/main.js',
