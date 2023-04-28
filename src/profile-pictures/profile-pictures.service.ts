@@ -71,7 +71,8 @@ export class ProfilePicturesService {
     try {
       const key = await this.appService.storeToS3({
         file,
-        options: { directory: 'users' },
+        options: { checkForNudity: true, directory: 'users' },
+
       });
       await this.profilePictureRepo.save(
         this.profilePictureRepo.create({
