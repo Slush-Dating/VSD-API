@@ -24,7 +24,7 @@ export class AppleSocialProvider extends AbstractSocialProviderAuthenticate {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         data: stringify({
-          client_id: process.env.APPLE_KEYID,
+          client_id: process.env.APPLE_CLIENTID,
           client_secret: process.env.APPLE_CLIENT_SECRET,
           grant_type: 'authorization_code',
           code: this.token,
