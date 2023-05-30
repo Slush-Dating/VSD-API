@@ -16,7 +16,7 @@ export class GenerateFixturesService {
    */
   @Cron(CronExpression.EVERY_MINUTE)
   async handleEvents(): Promise<void> {
-    console.log("$$HANDLE EVENTS running every minute")
+    console.log("$$$ HANDLE EVENTS running every minute")
     const events = await this.eventsService.getReadyEvents();
     const eventIds = events.map((e: { id: any }) => e.id);
 
@@ -25,6 +25,7 @@ export class GenerateFixturesService {
         level: 'info',
         message: 'Generate Fixtures: No events found!',
       });
+      console.log("$$$ Generate Fixtures: No events found! ")
       return;
     }
 
@@ -37,6 +38,7 @@ export class GenerateFixturesService {
     for (const [eventId, participants] of Object.entries(participantsByEvent)) {
       // no participants found
       if (!participants.length) {
+        console.log(`$$$ Generate Fixtures: No participants found for event ${eventId}! so CANCELLING EVENT`)
         this.logger.log(
           'info',
           `Generate Fixtures: No participants found for event ${eventId}!`,
@@ -44,6 +46,7 @@ export class GenerateFixturesService {
         await this.cancelEvent([Number(eventId)]);
         return;
       } else {
+        console.log(`$$$ Start event ${eventId}!`)
         await this.startEvent([Number(eventId)]);
       }
 
@@ -51,12 +54,14 @@ export class GenerateFixturesService {
       participants.sort((a, b) => (a.id > b.id ? 1 : -1));
 
       if (participants[0].event.isEventFor(EventGenderEnum.STRAIGHT)) {
+        console.log(`$$$ Straight event!`)
         const males = participants.filter((p: Participant) => p.user.isMale);
         const females = participants.filter(
           (p: Participant) => p.user.isFemale,
         );
 
         if (!males.length || !females.length) {
+          console.log(`$$$ No males or females for event so cancelling!`)
           await this.cancelEvent(eventIds);
           return;
         }
@@ -77,6 +82,7 @@ export class GenerateFixturesService {
 
         await this.generateFixtures(max, min, participants);
       } else {
+        console.log(`$$$ Other Sexuality event!`)
         const half = Math.ceil(participants.length / 2);
         const max = participants.slice(0, half);
         const min = participants.slice(half, participants.length);
@@ -93,6 +99,11 @@ export class GenerateFixturesService {
     min: Participant[],
     participants: Participant[],
   ) {
+    console.log(`$$$ Generating Fixtures event!`)
+    console.log(`$$$ Max ${max}`)
+    console.log(`$$$ Min ${min}`)
+    console.log(`$$$ Participants ${participants}`)
+    
     let j = 0;
     const fixtures = [];
 
