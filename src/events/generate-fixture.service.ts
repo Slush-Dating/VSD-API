@@ -28,13 +28,13 @@ export class GenerateFixturesService {
       console.log("$$$ Generate Fixtures: No events found! ")
       return;
     }
-
+    console.log(`$$$ ${eventIds.length} events found! `)
     const participants = await this.participantsService.getParticipants(
       eventIds,
     );
 
     const participantsByEvent = groupBy(participants, 'event.id');
-
+    console.log(`$$$ ${participantsByEvent.length} participantsByEvent! `)
     for (const [eventId, participants] of Object.entries(participantsByEvent)) {
       // no participants found
       if (!participants.length) {
@@ -46,7 +46,7 @@ export class GenerateFixturesService {
         await this.cancelEvent([Number(eventId)]);
         return;
       } else {
-        console.log(`$$$ Start event ${eventId}!`)
+        console.log(`$$$ Start event ${eventId} with ${participants.length} participants!`)
         await this.startEvent([Number(eventId)]);
       }
 
@@ -268,6 +268,7 @@ export class GenerateFixturesService {
     finalFixtures: Fixture[],
     participants: Participant[],
   ) {
+    console.log(`$$$ Storing Fixtures`)
     // get a connection and create a new query runner
     const connection = getConnection();
     const queryRunner = connection.createQueryRunner();
