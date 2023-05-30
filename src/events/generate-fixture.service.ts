@@ -28,13 +28,20 @@ export class GenerateFixturesService {
       console.log("$$$ Generate Fixtures: No events found! ")
       return;
     }
+    
     console.log(`$$$ ${eventIds.length} events found! `)
+
+    console.log(`$$$ Event Ids, ${eventIds}`)
+
     const participants = await this.participantsService.getParticipants(
       eventIds,
     );
 
+    console.log(`$$$ Participants for event ${eventIds}: ${participants}`)
+
     const participantsByEvent = groupBy(participants, 'event.id');
     console.log(`$$$ ${participantsByEvent.length} participantsByEvent! `)
+
     for (const [eventId, participants] of Object.entries(participantsByEvent)) {
       // no participants found
       if (!participants.length) {
