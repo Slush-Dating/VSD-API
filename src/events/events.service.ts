@@ -294,7 +294,7 @@ export class EventsService {
       );
     }
 
-    if (event.hasStarted) {
+    if (event.hasStarted()) {
       throw new BadRequestException('Sorry! The booking time is over');
     }
 
