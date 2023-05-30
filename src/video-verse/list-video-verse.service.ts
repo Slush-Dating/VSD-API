@@ -11,7 +11,7 @@ import { ProfileVideo } from '../profile-videos/profile-video.entity';
 import { SelectQueryBuilder } from 'typeorm';
 import { GenderEnum } from 'src/users/user.entity';
 import { EventGenderEnum } from 'src/events/event.entity';
-import { plainToClass } from 'class-transformer';
+import { plainToClass, plainToInstance } from 'class-transformer';
 import { VideoVerseListDto } from './dto/video-verse-list.dto';
 import { removeAliasFromList } from 'src/common/helper';
 import {
@@ -143,7 +143,8 @@ export class ListVideoVerseService {
     items = removeAliasFromList(items, ['pv_', 'u_']);
 
     return createPaginationObject({
-      items: plainToClass(VideoVerseListDto, items, {
+      items: plainToInstance(VideoVerseListDto, items, {
+      // items: plainToClass(VideoVerseListDto, items, {
         excludeExtraneousValues: true,
       }),
       totalItems: Number(totalItems),

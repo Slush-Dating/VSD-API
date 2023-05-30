@@ -1,4 +1,4 @@
-import { Expose, plainToClass, Transform } from 'class-transformer';
+import { Expose, plainToClass, plainToInstance, Transform } from 'class-transformer';
 import { CastToBucket } from 'src/common/decorators/cast-to-bucket.decorator';
 import { calculateAge } from 'src/common/helper';
 
@@ -47,7 +47,8 @@ export class VideoVerseListDto {
 
   @Expose()
   @Transform(({ obj }) =>
-    plainToClass(User, obj, { excludeExtraneousValues: true }),
+    plainToInstance(User, obj, { excludeExtraneousValues: true }),
+    // plainToClass(User, obj, { excludeExtraneousValues: true }),
   )
   readonly user: User;
 

@@ -25,7 +25,7 @@ import { EventTypeEnum, GetEventDto } from './dto/get-event.dto';
 import { Event, EventGenderEnum, EventStatusEnum } from './event.entity';
 import { BookEventTicketDto } from './dto/join-event.dto';
 import { ParticipantsService } from 'src/participants/participants.service';
-import { plainToClass } from 'class-transformer';
+import { plainToClass, plainToInstance } from 'class-transformer';
 import { EventList } from './dto/event-list.dto';
 import { camelCase } from 'lodash';
 import { Participant } from 'src/participants/participant.entity';
@@ -100,7 +100,8 @@ export class EventsService {
 
       event.participants = participants ?? [];
 
-      return plainToClass(EventList, event, {
+      // return plainToClass(EventList, event, {
+        return plainToInstance(EventList, event, {
         excludeExtraneousValues: true,
         enableImplicitConversion: true,
       });

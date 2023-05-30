@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { plainToClass } from 'class-transformer';
+import { plainToClass, plainToInstance } from 'class-transformer';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AuthUser } from 'src/common/decorators/auth-user.decorator';
@@ -105,7 +105,8 @@ export class EventsControllerV1 {
     );
 
     return {
-      data: plainToClass(EventParticipant, participants, {
+      // data: plainToClass(EventParticipant, participants, {
+      data: plainToInstance(EventParticipant, participants, {
         enableImplicitConversion: true,
         excludeExtraneousValues: true,
       }),
