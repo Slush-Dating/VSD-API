@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { plainToClass } from 'class-transformer';
+import { plainToClass, plainToInstance } from 'class-transformer';
 import {
   IPaginationMeta,
   IPaginationOptions,
@@ -204,7 +204,8 @@ export class FixturesService {
       })
       .getRawMany();
 
-    return plainToClass(UserFixtureListDto, data, {
+    // return plainToClass(UserFixtureListDto, data, {
+    return plainToInstance(UserFixtureListDto, data, {
       excludeExtraneousValues: true,
       enableImplicitConversion: true,
     });
