@@ -16,6 +16,7 @@ export class GenerateFixturesService {
    */
   @Cron(CronExpression.EVERY_MINUTE)
   async handleEvents(): Promise<void> {
+    console.log("$$HANDLE EVENTS running every minute")
     const events = await this.eventsService.getReadyEvents();
     const eventIds = events.map((e: { id: any }) => e.id);
 
