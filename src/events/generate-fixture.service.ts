@@ -19,7 +19,8 @@ export class GenerateFixturesService {
     console.log("$$$ HANDLE EVENTS running every minute")
     const events = await this.eventsService.getReadyEvents();
     const eventIds = events.map((e: { id: any }) => e.id);
-
+    console.log(`$$$ Events within 15 min ${events} `)
+    console.log(`$$$ EventIDS within 15 min ${eventIds} `)
     if (!eventIds.length) {
       this.logger.log({
         level: 'info',
@@ -28,7 +29,7 @@ export class GenerateFixturesService {
       console.log("$$$ Generate Fixtures: No events found! ")
       return;
     }
-    
+
     console.log(`$$$ ${eventIds.length} events found! `)
 
     console.log(`$$$ Event Ids, ${eventIds}`)
