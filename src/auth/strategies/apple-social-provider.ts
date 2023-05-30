@@ -24,7 +24,7 @@ export class AppleSocialProvider extends AbstractSocialProviderAuthenticate {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         data: stringify({
-          client_id: process.env.APPLE_CLIENT_ID,
+          client_id: process.env.APPLE_CLIENTID,
           client_secret: process.env.APPLE_CLIENT_SECRET,
           grant_type: 'authorization_code',
           code: this.token,
@@ -35,7 +35,7 @@ export class AppleSocialProvider extends AbstractSocialProviderAuthenticate {
       const payload = decode(data.id_token, { json: true });
 
       if (
-        payload.aud !== process.env.APPLE_CLIENT_ID ||
+        payload.aud !== process.env.APPLE_CLIENTID ||
         payload.iss !== 'https://appleid.apple.com' ||
         moment.utc().unix() > payload.exp
       ) {
