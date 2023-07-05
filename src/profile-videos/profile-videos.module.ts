@@ -14,5 +14,6 @@ import { ProfileVideosService } from './profile-videos.service';
   ],
   controllers: [ProfileVideosController],
   providers: [ProfileVideosService],
+  exports: [ProfileVideosService],
 })
 export class ProfileVideosModule {}

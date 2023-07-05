@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Rekognition, S3 } from 'aws-sdk';
 import { InjectAwsService } from 'nest-aws-sdk';
@@ -136,9 +136,11 @@ export class ProfileVideosService {
     @InjectAwsService(S3)
     private readonly amazonS3: S3,
     private configService: ConfigService,
+
     @InjectRepository(ProfileVideo)
     private profileVideoRepo: Repository<ProfileVideo>,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
     private appService: AppService,
   ) {}

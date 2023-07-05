@@ -46,6 +46,7 @@ import { ProfileVideoLikesService } from 'src/profile-video-likes/profile-video-
 import { ProfileVideoLikeStatusEnum } from 'src/profile-video-likes/profile-video-like.entity';
 import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
 import { EthnicityService } from 'src/ethnicity/ethnicity.service';
+import { ProfileVideosService } from 'src/profile-videos/profile-videos.service';
 
 @Injectable()
 export class UsersService {
@@ -296,6 +297,19 @@ export class UsersService {
     await Promise.all([
       this.profilePicturesService.uploadAvatar(authUser, file),
       this.update(authUser.id, {
+        nextAction: NextActionEnum.UPLOAD_VIDEO,
+      }),
+    ]);
+  }
+
+  /**
+   * #### Registration Step
+   * ##### Upload Video
+   */
+  async uploadVideo(authUser: User, file: Express.Multer.File): Promise<void> {
+    await Promise.all([
+      this.profileVideosService.storeMany(authUser, [file]),
+      this.update(authUser.id, {
         nextAction: NextActionEnum.FILL_PROFILE,
       }),
     ]);
@@ -490,10 +504,11 @@ export class UsersService {
     @Inject(forwardRef(() => AuthService))
     private authService: AuthService,
     private userReportService: UserReportService,
-    private profilePicturesService: ProfilePicturesService,
+    private profilePicturesService: ProfilePicturesService,    
     private fcmTokensService: FcmTokenService,
     private interestsService: InterestsService,
     private profileVideoLikeService: ProfileVideoLikesService,
     private ethnicityService: EthnicityService,
+    private profileVideosService: ProfileVideosService,
   ) {}
 }

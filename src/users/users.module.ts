@@ -10,17 +10,19 @@ import { FcmTokenModule } from 'src/fcm-token/fcm-token.module';
 import { InterestsModule } from 'src/interests/interests.module';
 import { ProfileVideoLikesModule } from 'src/profile-video-likes/profile-video-likes.module';
 import { EthnicityModule } from 'src/ethnicity/ethnicity.module';
+import { ProfileVideosModule } from 'src/profile-videos/profile-videos.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     forwardRef(() => AuthModule),
     forwardRef(() => ProfilePicturesModule),
-    forwardRef(() => ProfileVideoLikesModule),
+    forwardRef(() => ProfileVideoLikesModule),    
     UserReportModule,
     FcmTokenModule,
     InterestsModule,
-    EthnicityModule
+    EthnicityModule,
+    forwardRef(() => ProfileVideosModule), 
   ],
   providers: [UsersService],
   exports: [UsersService],

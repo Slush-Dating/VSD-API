@@ -140,6 +140,7 @@ export class AuthService {
     authUser: User,
     completeRegistrationDto: CompleteRegistrationDto,
     avatar?: Express.Multer.File,
+    video?: Express.Multer.File
   ): Promise<User> {
     const { action } = completeRegistrationDto;
 
@@ -156,6 +157,9 @@ export class AuthService {
 
       case NextActionEnum.UPLOAD_AVATAR:
         await this.uploadAvatar(authUser, avatar);
+        break;
+      case NextActionEnum.UPLOAD_VIDEO:
+        await this.uploadVideo(authUser, video)
         break;
 
       case NextActionEnum.FILL_PROFILE:
@@ -258,6 +262,17 @@ export class AuthService {
     }
 
     await this.usersService.uploadAvatar(authUser, file);
+  }
+
+  /**
+   * Upload avatar
+   */
+  async uploadVideo(authUser: User, file: Express.Multer.File): Promise<void> {
+    if (!file) {
+      throw new BadRequestException(`The avatar field is required`);
+    }
+
+    await this.usersService.uploadVideo(authUser, file);
   }
 
   /**
