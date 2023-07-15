@@ -56,6 +56,16 @@ export class CompleteRegistrationDto {
   })
   avatar?: Express.Multer.File;
 
+
+  /**
+   * Required when action = 'upload_video'
+   */
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+  })
+  video?: Express.Multer.File;
+
   /**
    * Required when action = 'fill_profile'
    * @example John
