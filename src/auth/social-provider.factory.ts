@@ -9,7 +9,9 @@ export class SocialProviderFactory extends AbstractSocialProviderFactory {
   /**
    * Create instance
    */
-  make(params: SocialLoginDto): AbstractSocialProviderAuthenticate {
+  make(params: SocialLoginDto, appleClientSecret: string): AbstractSocialProviderAuthenticate {
+    console.log("PARAMS:", params)
+    console.log("@@@ Apple Client Secret:", appleClientSecret)
     switch (params.socialProvider) {
       case SocialProviderTypeEnum.GOOGLE:
         return new GoogleSocialProvider(params.token);
@@ -18,7 +20,7 @@ export class SocialProviderFactory extends AbstractSocialProviderFactory {
         return new FacebookSocialProvider(params.token);
 
       case SocialProviderTypeEnum.APPLE:
-        return new AppleSocialProvider(params.token);
+        return new AppleSocialProvider(params.token, appleClientSecret);
 
       default:
         throw new Error('Invalid social provider type');

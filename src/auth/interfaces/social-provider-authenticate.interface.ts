@@ -11,15 +11,24 @@ export class SocialProviderOutput extends PickType(User, [
 ]) {}
 
 export abstract class AbstractSocialProviderAuthenticate {
-  private _token: string;
 
-  constructor(token: string) {
+  private _token: string;
+  private _appleClientSecret?: string;
+
+
+  constructor(token: string, appleClientSecret?: string) {
     this._token = token;
+    this._appleClientSecret = appleClientSecret;
   }
 
   protected get token(): string {
     return this._token;
   }
+
+  protected get appleClientSecret(): string {
+    return this._appleClientSecret
+  }
+  
 
   abstract validate(): Promise<SocialProviderOutput | null>;
 }

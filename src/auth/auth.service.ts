@@ -35,6 +35,7 @@ import { ConfigService } from '@nestjs/config';
 import { Md5 } from 'ts-md5';
 import * as moment from 'moment';
 import * as admin from 'firebase-admin';
+import { check } from 'prettier';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mailchimp = require('@mailchimp/mailchimp_marketing');
@@ -397,8 +398,9 @@ export class AuthService {
   validateSocialUser(
     data: SocialLoginDto,
   ): Promise<SocialProviderOutput | null> {
-    const socialProviderFactory = new SocialProviderFactory();
-    const socialProvider = socialProviderFactory.make(data);
+    const socialProviderFactory = new SocialProviderFactory()   
+    const clientSecret = this.accessTokensService.createAppleLoginClientSecret()  
+    const socialProvider = socialProviderFactory.make(data, clientSecret);       
     return socialProvider.validate();
   }
 
@@ -406,8 +408,9 @@ export class AuthService {
    * Social Login
    */
   async socialLogin(data: SocialLoginDto) {
+    console.log("@ SOCIAL LOGIN DATA:", data)
     const socialUser = await this.validateSocialUser(data);
-
+    console.log("@ SOCIAL USER:", socialUser)
     if (!socialUser) throw new UnauthorizedException();
 
     const user = await this.usersService.findOneByAttribute({
