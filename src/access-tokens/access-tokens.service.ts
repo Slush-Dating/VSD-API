@@ -122,7 +122,6 @@ privateKey = readFileSync("./secret_key/AuthKey_9U7V4744N8.p8")
     const now = Math.floor(Date.now() / 1000);
 
     const payload = {
-      // iss: process.env.APPLE_TEAMID,
       iat: now,
       expiresIn: now + (86400 * 180),
     };
@@ -134,15 +133,17 @@ privateKey = readFileSync("./secret_key/AuthKey_9U7V4744N8.p8")
       audience: 'https://appleid.apple.com',
       subject: process.env.APPLE_CLIENTID,
     };
-
-    try {
-      const token = this.jwtService.sign(payload, options);
-      return token
-      // ... further code handling the token
-    } catch (error) {
-      console.error('Error creating token:', error);
-      // ... handle the error appropriately
-    }
+    console.log("@@@ JWT Payload", payload);
+    console.log("@@@ JWT OPTIONS", options);
+    return this.jwtService.sign(payload, options);
+    // try {
+    //   const token = this.jwtService.sign(payload, options);
+    //   return token
+    //   // ... further code handling the token
+    // } catch (error) {
+    //   console.error('Error creating token:', error);
+    //   // ... handle the error appropriately
+    // }
 
 
   }
