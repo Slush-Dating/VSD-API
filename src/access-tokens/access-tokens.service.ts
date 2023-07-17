@@ -12,7 +12,7 @@ import { JWTOptions } from 'google-auth-library';
 @Injectable()
 export class AccessTokenService {
   // private readonly privateKey = 'AuthKey_9U7V4744N8.p8'
-privateKey = readFileSync("./secret_key/AuthKey_9U7V4744N8.p8")
+privateKey = readFileSync('./secret_key/AuthKey_9U7V4744N8.pem','utf8')
 
 
   /**
