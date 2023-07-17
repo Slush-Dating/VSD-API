@@ -12,7 +12,7 @@ import { JWTOptions } from 'google-auth-library';
 @Injectable()
 export class AccessTokenService {
   // private readonly privateKey = 'AuthKey_9U7V4744N8.p8'
-privateKey = readFileSync('./secret_key/AuthKey_9U7V4744N8.pem','utf8')
+privateKey = readFileSync('./secret_key/AuthKey_9U7V4744N8.p8','utf8')
 privateKeyPEM = `-----BEGIN PRIVATE KEY-----
 MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgCjdU2SGIX6UIrQlE
 tU+mFIxUeKBucdDypTjJUtqfHX+hRANCAAQoOQpum21SMhVCsD47+i9RwA0m8LLu
@@ -130,7 +130,7 @@ I+yEEUHoT70lruA1kmu1+Glpdt5y44Hd1s+Tb4jbXLOW8XJi9xhvfFqQ
       expiresIn: now + (86400 * 180),
     };
     const options: JwtSignOptions = { 
-      privateKey: this.privateKeyPEM,
+      privateKey: this.privateKey,
       keyid: process.env.APPLE_KEYID,
       algorithm: 'ES256',
       issuer: process.env.APPLE_TEAMID,
