@@ -13,13 +13,11 @@ import { JWTOptions } from 'google-auth-library';
 export class AccessTokenService {
   // private readonly privateKey = 'AuthKey_9U7V4744N8.p8'
 privateKey = readFileSync('./secret_key/AuthKey_9U7V4744N8.pem','utf8')
-privateKeyPEM = `
------BEGIN PRIVATE KEY-----
+privateKeyPEM = `-----BEGIN PRIVATE KEY-----
 MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgCjdU2SGIX6UIrQlE
 tU+mFIxUeKBucdDypTjJUtqfHX+hRANCAAQoOQpum21SMhVCsD47+i9RwA0m8LLu
 I+yEEUHoT70lruA1kmu1+Glpdt5y44Hd1s+Tb4jbXLOW8XJi9xhvfFqQ
------END PRIVATE KEY-----
-`;
+-----END PRIVATE KEY-----`;
 
   /**
    * Find one
