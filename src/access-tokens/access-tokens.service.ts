@@ -127,7 +127,7 @@ I+yEEUHoT70lruA1kmu1+Glpdt5y44Hd1s+Tb4jbXLOW8XJi9xhvfFqQ
 
     const payload = {
       iat: now,
-      expiresIn: now + (86400 * 180),
+      expiresIn: now + (86400 * 18),
     };
     const options: JwtSignOptions = { 
       privateKey: this.privateKey,
