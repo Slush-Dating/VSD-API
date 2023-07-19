@@ -11,13 +11,6 @@ import { JWTOptions } from 'google-auth-library';
 
 @Injectable()
 export class AccessTokenService {
-  // private readonly privateKey = 'AuthKey_9U7V4744N8.p8'
-privateKey = readFileSync('./secret_key/AuthKey_9U7V4744N8.p8','utf8')
-privateKeyPEM = `-----BEGIN PRIVATE KEY-----
-MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgCjdU2SGIX6UIrQlE
-tU+mFIxUeKBucdDypTjJUtqfHX+hRANCAAQoOQpum21SMhVCsD47+i9RwA0m8LLu
-I+yEEUHoT70lruA1kmu1+Glpdt5y44Hd1s+Tb4jbXLOW8XJi9xhvfFqQ
------END PRIVATE KEY-----`;
 
   /**
    * Find one
@@ -121,34 +114,34 @@ I+yEEUHoT70lruA1kmu1+Glpdt5y44Hd1s+Tb4jbXLOW8XJi9xhvfFqQ
       : false;
   }
 
-  createAppleLoginClientSecret(){
-    console.log("@PRIV KEY", this.privateKey)
-    const now = Math.floor(Date.now() / 1000);
+  // createAppleLoginClientSecret(){
+  //   console.log("@PRIV KEY", this.privateKey)
+  //   const now = Math.floor(Date.now() / 1000);
 
-    const payload = {
-      iat: now,
-      expiresIn: now + (86400 * 18),
-    };
-    const options: JwtSignOptions = { 
-      privateKey: this.privateKeyPEM,
-      keyid: process.env.APPLE_KEYID,
-      algorithm: 'ES256',
-      issuer: process.env.APPLE_TEAMID,
-      audience: 'https://appleid.apple.com',
-      subject: process.env.APPLE_CLIENTID,
-    };
-    console.log("@@@ JWT Payload", payload);
-    console.log("@@@ JWT OPTIONS", options);
-    return this.jwtService.sign(payload, options);
-    // try {
-    //   const token = this.jwtService.sign(payload, options);
-    //   return token
-    //   // ... further code handling the token
-    // } catch (error) {
-    //   console.error('Error creating token:', error);
-    //   // ... handle the error appropriately
-    // }
-  }
+  //   const payload = {
+  //     iat: now,
+  //     expiresIn: now + (86400 * 18),
+  //   };
+  //   const options: JwtSignOptions = { 
+  //     // privateKey: this.privateKeyPEM,
+  //     keyid: process.env.APPLE_KEYID,
+  //     algorithm: 'ES256',
+  //     issuer: process.env.APPLE_TEAMID,
+  //     audience: 'https://appleid.apple.com',
+  //     subject: process.env.APPLE_CLIENTID,
+  //   };
+  //   console.log("@@@ JWT Payload", payload);
+  //   console.log("@@@ JWT OPTIONS", options);
+  //   return this.jwtService.sign(payload, options);
+  //   // try {
+  //   //   const token = this.jwtService.sign(payload, options);
+  //   //   return token
+  //   //   // ... further code handling the token
+  //   // } catch (error) {
+  //   //   console.error('Error creating token:', error);
+  //   //   // ... handle the error appropriately
+  //   // }
+  // }
 
   constructor(
     @InjectRepository(AccessToken)
