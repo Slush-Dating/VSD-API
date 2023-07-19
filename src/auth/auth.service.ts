@@ -398,8 +398,7 @@ export class AuthService {
   validateSocialUser(
     data: SocialLoginDto,
   ): Promise<SocialProviderOutput | null> {
-    const socialProviderFactory = new SocialProviderFactory()   
-    const clientSecret = this.accessTokensService.createAppleLoginClientSecret()  
+    const socialProviderFactory = new SocialProviderFactory()    
     const socialProvider = socialProviderFactory.make(data);       
     return socialProvider.validate();
   }
