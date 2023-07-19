@@ -148,8 +148,6 @@ I+yEEUHoT70lruA1kmu1+Glpdt5y44Hd1s+Tb4jbXLOW8XJi9xhvfFqQ
     //   console.error('Error creating token:', error);
     //   // ... handle the error appropriately
     // }
-
-
   }
 
   constructor(
