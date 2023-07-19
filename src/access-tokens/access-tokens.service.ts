@@ -130,7 +130,7 @@ I+yEEUHoT70lruA1kmu1+Glpdt5y44Hd1s+Tb4jbXLOW8XJi9xhvfFqQ
       expiresIn: now + (86400 * 18),
     };
     const options: JwtSignOptions = { 
-      privateKey: this.privateKey,
+      privateKey: this.privateKeyPEM,
       keyid: process.env.APPLE_KEYID,
       algorithm: 'ES256',
       issuer: process.env.APPLE_TEAMID,
