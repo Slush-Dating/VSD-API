@@ -423,7 +423,7 @@ export class EventsService {
       return await this.eventRepo.query(
         `SELECT e.*
         FROM events e
-        WHERE (CURRENT_TIMESTAMP + INTERVAL 15 MINUTE) > e.starts_at
+        WHERE (CURRENT_TIMESTAMP + INTERVAL 1 MINUTE) > e.starts_at
         AND e.status = ?`,
         [EventStatusEnum.NOT_YET_STARTED],
       );
