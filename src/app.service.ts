@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GenerateRtcTokenDto } from './dto/generate-rtc-token.dto';
-import { RtcTokenBuilder, RtcRole, RtmTokenBuilder } from 'agora-access-token';
+import { RtcTokenBuilder, RtcRole, RtmTokenBuilder } from 'agora-token';
 import { GenerateRtmTokenDto } from './dto/generate-rtm-token.dto';
 import { Rekognition, S3 } from 'aws-sdk';
 import { InjectAwsService } from 'nest-aws-sdk';
@@ -17,6 +17,7 @@ import * as moment from 'moment';
 import * as uuid from 'uuid';
 import { guessFileContentType, guessFileExtension } from './common/helper';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { app } from 'firebase-admin';
 
 type StoreToS3Type = {
   file: Express.Multer.File;
@@ -37,13 +38,20 @@ export class AppService {
       'AGORA_APP_CERTIFICATE',
     );
 
+    // return RtmTokenBuilder.buildToken(
+    //   appId,
+    //   appCertificate,
+    //   data.account,
+    //   RtcRole.PUBLISHER,
+    //   moment().add(24, 'hours').unix(),
+    // );
+
     return RtmTokenBuilder.buildToken(
-      appId,
+      appId, 
       appCertificate,
       data.account,
-      RtcRole.PUBLISHER,
-      moment().add(24, 'hours').unix(),
-    );
+      1440
+      );
   }
 
   /**
@@ -55,6 +63,15 @@ export class AppService {
       'AGORA_APP_CERTIFICATE',
     );
 
+    // return RtcTokenBuilder.buildTokenWithUid(
+    //   appId,
+    //   appCertificate,
+    //   data.channelName,
+    //   data.uid,
+    //   RtcRole.PUBLISHER,
+    //   moment().add(24, 'hours').unix(),
+    // );
+
     return RtcTokenBuilder.buildTokenWithUid(
       appId,
       appCertificate,
@@ -62,7 +79,8 @@ export class AppService {
       data.uid,
       RtcRole.PUBLISHER,
       moment().add(24, 'hours').unix(),
-    );
+      1440
+    )
   }
 
   public async detectInAppropriateImage(

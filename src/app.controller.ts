@@ -59,6 +59,7 @@ export class AppController {
     @Body() generateRtcTokenDto: GenerateRtcTokenDto,
   ): Record<string, any> {
     const token = this.appService.generateRtcToken(generateRtcTokenDto);
+    print("RTC TOKEN", token)
     return { data: { token } };
   }
 
@@ -74,6 +75,7 @@ export class AppController {
     @Body() generateRtmTokenDto: GenerateRtmTokenDto,
   ): Record<string, any> {
     const token = this.appService.generateRtmToken(generateRtmTokenDto);
+    print("RTM TOKEN", token)
     return { data: { token } };
   }
 
