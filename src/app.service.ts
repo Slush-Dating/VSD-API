@@ -72,24 +72,24 @@ export class AppService {
     //   moment().add(24, 'hours').unix(),
     // );
 
-    // return RtcTokenBuilder.buildTokenWithUid(
+    return RtcTokenBuilder.buildTokenWithUid(
+      appId,
+      appCertificate,
+      data.channelName,
+      data.uid,
+      RtcRole.PUBLISHER,
+      moment().add(24, 'hours').unix(),
+      1440
+    )
+    // return RtcTokenBuilder.buildTokenWithUserAccount(
     //   appId,
     //   appCertificate,
     //   data.channelName,
     //   data.uid,
     //   RtcRole.PUBLISHER,
-    //   moment().add(24, 'hours').unix(),
+    //   1440,
     //   1440
-    // )
-    return RtcTokenBuilder.buildTokenWithUserAccount(
-      appId,
-      appCertificate,
-      data.channelName,
-      data.account,
-      RtcRole.PUBLISHER,
-      1440,
-      1440
-        )
+    //     )
   }
 
   public async detectInAppropriateImage(
