@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'Slush Dating App (PROD)',
       exec_mode: 'cluster',
-      instances: 'max', // Or a number of instances
+      instances: '1', // Or a number of instances
       script: './dist/main.js',
       args: 'start',
       env_local: {
