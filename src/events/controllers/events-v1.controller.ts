@@ -100,7 +100,7 @@ export class EventsControllerV1 {
   ): Promise<{ data: EventParticipant[] }> {
     await this.eventsService.bookEventTicket(authUser, bookEventTicketDto);
 
-    const participants = await this.participantsService.getParticipants(
+    const participants = await this.participantsService.getParticipantsForEvent(
       bookEventTicketDto.eventId.toString(),
     );
 
@@ -186,7 +186,7 @@ export class EventsControllerV1 {
   @ApiTags('Test')
   @Post('test/fixtures')
   async testGenerateFixture() {
-    await this.generateFixturesService.handleEvents();
+    await this.generateFixturesService.manageEvents();
   }
 
   constructor(

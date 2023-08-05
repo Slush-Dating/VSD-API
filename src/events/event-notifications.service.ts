@@ -39,7 +39,7 @@ export class EventNotificationsService {
       return;
     }
 
-    const participants = await this.participantsService.getParticipants(
+    const participants = await this.participantsService.getParticipantsForEvent(
       eventIds,
     );
 
@@ -104,7 +104,7 @@ export class EventNotificationsService {
       return;
     }
 
-    const participants = await this.participantsService.getParticipants(
+    const participants = await this.participantsService.getParticipantsForEvent(
       eventIds,
     );
 
@@ -169,7 +169,7 @@ export class EventNotificationsService {
       return;
     }
 
-    const participants = await this.participantsService.getParticipants(
+    const participants = await this.participantsService.getParticipantsForEvent(
       eventIds,
     );
 

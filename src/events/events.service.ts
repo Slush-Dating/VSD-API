@@ -94,7 +94,7 @@ export class EventsService {
       );
 
       // get participants
-      const participants = await this.participantsService.getParticipants([
+      const participants = await this.participantsService.getParticipantsForEvent([
         eventId.toString(),
       ]);
 
@@ -143,7 +143,7 @@ export class EventsService {
     if (query.event) {
       const event = await this.findOneOrFail({ id: Number(query.event) });
 
-      const participants = await this.participantsService.getParticipants(
+      const participants = await this.participantsService.getParticipantsForEvent(
         event.id.toString(),
       );
 
@@ -385,7 +385,7 @@ export class EventsService {
       });
 
       // get participants
-      const participants = await this.participantsService.getParticipants(
+      const participants = await this.participantsService.getParticipantsForEvent(
         items.map((item: any) => item.id),
       );
 
@@ -423,7 +423,7 @@ export class EventsService {
       return await this.eventRepo.query(
         `SELECT e.*
         FROM events e
-        WHERE (CURRENT_TIMESTAMP + INTERVAL 10 MINUTE) > e.starts_at
+        WHERE (CURRENT_TIMESTAMP + INTERVAL 15 MINUTE) > e.starts_at
         AND e.status = ?`,
         [EventStatusEnum.NOT_YET_STARTED],
       );

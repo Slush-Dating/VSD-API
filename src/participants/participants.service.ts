@@ -38,7 +38,7 @@ export class ParticipantsService {
   /**
    * Get participants
    */
-  async getParticipants(eventIds: string | string[]): Promise<Participant[]> {
+  async getParticipantsForEvent(eventIds: string | string[]): Promise<Participant[]> {
     try {
       const ids = Array.isArray(eventIds) ? eventIds : [eventIds];
 
@@ -63,6 +63,7 @@ export class ParticipantsService {
         .orderBy('p.createdAt', 'ASC')
         .getMany();
     } catch (error) {
+      console.error(error)
       throw error;
     }
   }
