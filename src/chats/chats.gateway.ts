@@ -49,6 +49,10 @@ export class ChatsGateway {
       ...data,
       readBySender: new Date(),
     });
+    console.log("$$$ SOCKET:")
+    console.log(`User ${data.from} to User ${data.to} sending msg: ${data.content}`)
+    console.log("$$$ PM:")
+    console.log(`User ${chat.sender} to User ${chat.receiver} sending msg: ${chat.content}`)
     this.server.to(data.from).to(data.to).emit('private message', chat);
   }
 
