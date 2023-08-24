@@ -352,7 +352,8 @@ export class UsersService {
         .leftJoinAndSelect('u.profileVideos', 'pv')
         .leftJoinAndSelect('u.interests', 'ui')
         .leftJoinAndSelect('u.ethnicity', 'ue')
-        .where('u.id IN (:ids)', { ids: data.ids ?? [1] });
+        .where('u.id IN (:ids)', { ids: data.ids ?? [1] })
+        .andWhere('u.deactivatedAt IS NULL');
 
       if (data.select) {
         queryBuilder.select(data.select);
