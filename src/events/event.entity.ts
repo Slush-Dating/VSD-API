@@ -114,6 +114,14 @@ export class Event extends BaseEntity {
   isFree: boolean;
 
   /**
+   * @example false
+   */
+  @IsBoolean()
+  @Expose()
+  @Column({ type: 'boolean', default: false })
+  isPopular: boolean;
+
+  /**
    * @example straight
    */
   @IsEnum(EventGenderEnum)

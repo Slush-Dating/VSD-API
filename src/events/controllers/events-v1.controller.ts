@@ -63,6 +63,30 @@ export class EventsControllerV1 {
   }
 
   /**
+   * Get Popular events
+   */
+  // @ApiOperation({ summary: 'Get Popular events' })
+  // @Get()
+  // public async getPopularEvents(
+  //   @AuthUser() authUser: User,
+  //   @Query() queryDto: GetEventDto,
+  //   @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
+  //   @Query('limit', new DefaultValuePipe(15), ParseIntPipe) limit?: number,
+  // ): Promise<Record<string, Pagination<Event>>> {
+  //   const { meta, items } = await this.eventsService.getPopularEvents(
+  //     authUser,
+  //     queryDto,
+  //     {
+  //       page,
+  //       limit,
+  //     },
+  //   );
+
+  //   return { data: { items, meta } };
+  // }
+
+
+  /**
    * Get event result
    */
   @ApiOperation({ summary: 'Get event result' })

@@ -12,6 +12,7 @@ export class EventList extends PickType(Event, [
   'maxAge',
   'eventFee',
   'isFree',
+  'isPopular',
   'gender',
   'address',
   'country',

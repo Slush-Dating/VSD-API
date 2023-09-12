@@ -260,7 +260,7 @@ export class EventsService {
    */
   findAll(query: PaginateQuery): Promise<Paginated<Event>> {
     return paginate(query, this.eventRepo, {
-      sortableColumns: ['gender', 'type', 'isFree'],
+      sortableColumns: ['gender', 'type', 'isFree','isPopular'],
       searchableColumns: ['address', 'title'],
     });
   }
@@ -416,6 +416,121 @@ export class EventsService {
   }
 
   /**
+   * Get PopularEvents
+   */
+  // async getPopularEvents(
+  //   authUser: User,
+  //   getEventDto: GetEventDto,
+  //   options: PaginationOptions,
+  // ): Promise<Pagination<Event>> {
+  //   try {
+  //     const offset = options.page * options.limit - options.limit;
+
+  //     const queryBuilder = this.eventRepo
+  //       .createQueryBuilder('e')
+  //       .leftJoin('e.participants', 'p')
+  //       .orderBy('e.startsAt', 'ASC')
+  //       .groupBy('e.id')
+  //       .where('e.isPopular = :popularityValue', { popularityValue: true });
+
+  //     this.filterByEventTimeline(getEventDto, queryBuilder, authUser);
+
+  //     // count records
+  //     const { value: totalItems } = await queryBuilder.connection
+  //       .createQueryBuilder()
+  //       .select('COUNT(*)', 'value')
+  //       .from(`(${queryBuilder.getQuery()})`, 'uniqueTableAlias')
+  //       .setParameters(queryBuilder.getParameters())
+  //       .getRawOne();
+
+  //     // add sub-queries and sorting
+  //     queryBuilder
+  //       .addSelect((qb) => {
+  //         return qb
+  //           .select('COUNT(*)', 'aggregate')
+  //           .from(Participant, 'p1')
+  //           .leftJoin('p1.user', 'p1u')
+  //           .where('p1.event = e.id')
+  //           .andWhere('p1u.gender = :male', { male: GenderEnum.male })
+  //           .andWhere('p1u.deactivatedAt IS NULL');
+  //       }, 'maleParticipants')
+  //       .addSelect((qb) => {
+  //         return qb
+  //           .select('COUNT(*)', 'aggregate')
+  //           .from(Participant, 'p1')
+  //           .leftJoin('p1.user', 'p1u')
+  //           .where('p1.event = e.id')
+  //           .andWhere('p1u.gender = :female', { female: GenderEnum.female })
+  //           .andWhere('p1u.deactivatedAt IS NULL');
+  //       }, 'femaleParticipants')
+  //       .addSelect((qb) => {
+  //         return qb
+  //           .select('COUNT(*)', 'aggregate')
+  //           .from(Participant, 'p1')
+  //           .leftJoin('p1.user', 'p1u')
+  //           .where('p1.event = e.id')
+  //           .andWhere('p1u.deactivatedAt IS NULL');
+  //       }, 'totalParticipants');
+
+  //     // fetch records
+  //     let items = await queryBuilder
+  //       .offset(offset)
+  //       .limit(options.limit)
+  //       .getRawMany();
+
+  //     // early return if no events found
+  //     if (!items.length) {
+  //       return createPaginationObject({
+  //         items,
+  //         totalItems: Number(totalItems),
+  //         limit: options.limit,
+  //         currentPage: options.page,
+  //       });
+  //     }
+
+  //     // - remove query alias
+  //     // - convert keys to camelCase
+  //     items = items.map(function (item: Record<string, any>) {
+  //       return Object.fromEntries(
+  //         Object.entries(item).map(([k, v]) => [
+  //           camelCase(k.replace('e_', '')),
+  //           v,
+  //         ]),
+  //       );
+  //     });
+
+  //     // get participants
+  //     const participants = await this.participantsService.getParticipantsForEvent(
+  //       items.map((item: any) => item.id),
+  //     );
+
+  //     // hydrate participants to event
+  //     items.forEach(function (item: any): void {
+  //       const array = participants.filter(
+  //         (p: Participant) => p.event.id === item.id,
+  //       );
+
+  //       item.participants = array || [];
+  //     });
+
+  //     // convert to class
+  //     items = plainToClass(EventList, items, {
+  //       excludeExtraneousValues: true,
+  //       enableImplicitConversion: true,
+  //     });
+
+  //     return createPaginationObject({
+  //       items,
+  //       totalItems: Number(totalItems),
+  //       limit: options.limit,
+  //       currentPage: options.page,
+  //     });
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
+
+  /**
    * - Get events which are about to start i.e before 15 min
    */
   async getReadyEvents(): Promise<Record<string, any>[]> {
@@ -468,6 +583,18 @@ export class EventsService {
     }
   }
 
+  // async getPopularEvents(): Promise<Record<string, any>[]> {
+  //   try {
+  //     return await this.eventRepo.query(
+  //       `SELECT e.id
+  //           FROM events e
+  //           WHERE e.is_popular == true`
+  //     );
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
+
   /**
    * - Get events which are about to start i.e before 5 min
    */
@@ -496,7 +623,8 @@ export class EventsService {
     authUser: User,
   ): void {
     const isMyEvent = getEventDto.events === EventTypeEnum.MY_EVENTS;
-
+    const isPopularEvent = getEventDto.events === EventTypeEnum.POPULAR_EVENTS;
+    console.log("GET EVENT DTO", getEventDto)
     if (isMyEvent) {
       queryBuilder
         .where('p.user = :user', {
@@ -507,7 +635,15 @@ export class EventsService {
         });
 
       // + INTERVAL 45 MINUTE
-    } else {
+    }else if(isPopularEvent) {
+      queryBuilder
+        .where('e.isPopular = :isPopular', {
+          isPopular: true,
+        })
+        .andWhere('(e.startsAt) > :currentDate', {
+          currentDate: moment.utc().format('YYYY-MM-DD H:mm:ss'),
+        });
+    }  else {
       this.filterByAge(authUser.age, queryBuilder);
 
       this.filterByGender(authUser, queryBuilder);
