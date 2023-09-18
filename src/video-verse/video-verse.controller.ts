@@ -55,8 +55,8 @@ export class VideoVerseController {
     @AuthUser() authUser: User,
     @Body() interactDto: InteractDto,
   ) {
-    await this.profileVideoLikesService.interactWithUser(authUser, interactDto);
-    return { message: 'Success' };
+    let match = await this.profileVideoLikesService.interactWithUser(authUser, interactDto);
+    return { message: 'Success', data: match };
   }
 
   constructor(
