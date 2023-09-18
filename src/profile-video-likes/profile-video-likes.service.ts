@@ -39,7 +39,6 @@ export class ProfileVideoLikesService {
           status: interactDto.status,
         }),
       );
-      return false;
     }
 
     entity.status = interactDto.status;
