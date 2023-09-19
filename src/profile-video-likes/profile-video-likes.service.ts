@@ -39,10 +39,10 @@ export class ProfileVideoLikesService {
           status: interactDto.status,
         }),
       );
+    }else{
+      entity.status = interactDto.status;
+      await this.repository.save(entity);
     }
-
-    entity.status = interactDto.status;
-    await this.repository.save(entity);
 
     const oppositeEntity = await this.repository.findOne({
       from: { id: user.id },
