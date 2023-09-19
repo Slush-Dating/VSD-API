@@ -18,7 +18,7 @@ export class ProfileVideoLikesService {
     interactDto: InteractDto,
   ): Promise<Boolean> {
     if (authUser.id === interactDto.user) {
-      throw new BadRequestException('You cannot like your ownself!');
+      throw new BadRequestException('You cannot like yourself!');
     }
 
     const user = await this.usersService.findOneOrFail({
@@ -30,31 +30,37 @@ export class ProfileVideoLikesService {
       to: { id: user.id },
     });
 
+    const oppositeEntity = await this.repository.findOne({
+      from: { id: user.id },
+      to: { id: authUser.id },
+    })
 
     if (!entity) {
-      await this.repository.save(
+      const newEntity = await this.repository.save(
         this.repository.create({
           from: { id: authUser.id },
           to: { id: user.id },
           status: interactDto.status,
         }),
       );
+      if(newEntity && oppositeEntity) {
+        if(newEntity.status == "LIKED" && oppositeEntity.status =="LIKED") {
+          return true;
+        }
+      }
+      return false
     }else{
       entity.status = interactDto.status;
       await this.repository.save(entity);
-    }
 
-    const oppositeEntity = await this.repository.findOne({
-      from: { id: user.id },
-      to: { id: authUser.id },
-    })
-
-    if(entity && oppositeEntity) {
-      if(entity.status == "LIKED" && oppositeEntity.status == "LIKED") {
-        return true;
+      if(entity && oppositeEntity) {
+        if(entity.status == "LIKED" && oppositeEntity.status == "LIKED") {
+          return true;
+        }
       }
+      return false
     }
-    return false
+  
   }
 
   constructor(
