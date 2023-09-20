@@ -151,9 +151,9 @@ export class AuthService {
     }
 
     switch (action) {
-      case NextActionEnum.VERIFY_PHONE:
-        await this.verifyPhoneNumber(authUser, completeRegistrationDto);
-        break;
+      // case NextActionEnum.VERIFY_PHONE:
+      //   await this.verifyPhoneNumber(authUser, completeRegistrationDto);
+      //   break;
 
       case NextActionEnum.UPLOAD_AVATAR:
         await this.uploadAvatar(authUser, avatar);
@@ -191,24 +191,24 @@ export class AuthService {
   /**
    * Fill Phone-number
    */
-  async fillPhoneNumber(authUser: User, phoneNumber: string): Promise<void> {
-    const checkPhoneNumber = await this.usersService.findOneByAttribute({
-      where: {
-        phoneNumber,
-      },
-    });
+  // async fillPhoneNumber(authUser: User, phoneNumber: string): Promise<void> {
+  //   const checkPhoneNumber = await this.usersService.findOneByAttribute({
+  //     where: {
+  //       phoneNumber,
+  //     },
+  //   });
 
-    if (checkPhoneNumber)
-      throw new ConflictException(
-        'An account already exists with this phone number',
-      );
+  //   if (checkPhoneNumber)
+  //     throw new ConflictException(
+  //       'An account already exists with this phone number',
+  //     );
 
-    await this.usersService.update(authUser.id, {
-      phoneNumber,
-      requiresAction: true,
-      nextAction: NextActionEnum.VERIFY_PHONE,
-    });
-  }
+  //   await this.usersService.update(authUser.id, {
+  //     phoneNumber,
+  //     requiresAction: true,
+  //     nextAction: NextActionEnum.VERIFY_PHONE,
+  //   });
+  // }
 
   /**
    * Choose gender
@@ -278,49 +278,49 @@ export class AuthService {
   /**
    * Verify Phone Number
    */
-  async verifyPhoneNumber(
-    authUser: User,
-    completeRegistrationDto: CompleteRegistrationDto,
-  ): Promise<void> {
-    const phoneNumberExist = await this.usersService.checkPhoneExist(
-      authUser,
-      completeRegistrationDto.phoneNumber,
-    );
+  // async verifyPhoneNumber(
+  //   authUser: User,
+  //   completeRegistrationDto: CompleteRegistrationDto,
+  // ): Promise<void> {
+  //   const phoneNumberExist = await this.usersService.checkPhoneExist(
+  //     authUser,
+  //     completeRegistrationDto.phoneNumber,
+  //   );
 
-    if (phoneNumberExist) {
-      throw new ConflictException(
-        'The phone number is already associated with another account',
-      );
-    }
+  //   if (phoneNumberExist) {
+  //     throw new ConflictException(
+  //       'The phone number is already associated with another account',
+  //     );
+  //   }
 
-    try {
-      const result = await admin
-        .auth()
-        .verifyIdToken(completeRegistrationDto.token, true);
+  //   try {
+  //     const result = await admin
+  //       .auth()
+  //       .verifyIdToken(completeRegistrationDto.token, true);
 
-      if (
-        result.phone_number !==
-        completeRegistrationDto.phoneNumber.replace(' ', '')
-      ) {
-        throw new BadRequestException('Invalid token supplied');
-      }
+  //     if (
+  //       result.phone_number !==
+  //       completeRegistrationDto.phoneNumber.replace(' ', '')
+  //     ) {
+  //       throw new BadRequestException('Invalid token supplied');
+  //     }
 
-      await this.usersService.update(authUser.id, {
-        phoneNumber: completeRegistrationDto.phoneNumber,
-        nextAction: NextActionEnum.UPLOAD_AVATAR,
-      });
-    } catch (error) {
-      if (
-        ['auth/user-disabled', 'auth/id-token-revoked'].includes(error.name) ||
-        ['auth/argument-error'].includes(error.code)
-      ) {
-        throw new BadRequestException(error.message);
-      }
+  //     await this.usersService.update(authUser.id, {
+  //       phoneNumber: completeRegistrationDto.phoneNumber,
+  //       nextAction: NextActionEnum.UPLOAD_AVATAR,
+  //     });
+  //   } catch (error) {
+  //     if (
+  //       ['auth/user-disabled', 'auth/id-token-revoked'].includes(error.name) ||
+  //       ['auth/argument-error'].includes(error.code)
+  //     ) {
+  //       throw new BadRequestException(error.message);
+  //     }
 
-      Logger.log(error);
-      throw error;
-    }
-  }
+  //     Logger.log(error);
+  //     throw error;
+  //   }
+  // }
 
   /**
    * Generate Access & Refresh Token in exchange for a Refresh Token

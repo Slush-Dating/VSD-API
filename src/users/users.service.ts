@@ -464,7 +464,7 @@ export class UsersService {
       this.repository.create({
         ...data,
         requiresAction: true,
-        nextAction: NextActionEnum.VERIFY_PHONE,
+        nextAction: NextActionEnum.UPLOAD_AVATAR,
       }),
     );
 

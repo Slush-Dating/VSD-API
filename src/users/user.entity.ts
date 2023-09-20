@@ -58,7 +58,6 @@ export enum SexualityEnum {
 }
 
 export enum NextActionEnum {
-  VERIFY_PHONE = 'verify_phone',
   UPLOAD_AVATAR = 'upload_avatar',
   UPLOAD_VIDEO = 'upload_video',
   FILL_PROFILE = 'fill_profile',

@@ -18,9 +18,7 @@ import {
 } from '../../users/user.entity';
 
 export class CompleteRegistrationDto {
-  /**
-   * @example verify_phone
-   */
+ 
   @IsEnum(NextActionEnum)
   @IsNotEmpty()
   action!: NextActionEnum;
@@ -29,23 +27,23 @@ export class CompleteRegistrationDto {
    * Required when action = 'verify_phone'
    * @example "+1 8798729318"
    */
-  @ValidateIf(
-    (o: CompleteRegistrationDto) => o.action === NextActionEnum.VERIFY_PHONE,
-  )
-  @IsPhoneNumber()
-  @IsNotEmpty()
-  phoneNumber?: string;
+  // @ValidateIf(
+  //   (o: CompleteRegistrationDto) => o.action === NextActionEnum.VERIFY_PHONE,
+  // )
+  // @IsPhoneNumber()
+  // @IsNotEmpty()
+  // phoneNumber?: string;
 
   /**
    * Required when action = 'verify_phone'
    * @example "FIREBASE_TOKEN"
    */
-  @ValidateIf(
-    (o: CompleteRegistrationDto) => o.action === NextActionEnum.VERIFY_PHONE,
-  )
-  @IsString()
-  @IsNotEmpty()
-  token?: string;
+  // @ValidateIf(
+  //   (o: CompleteRegistrationDto) => o.action === NextActionEnum.VERIFY_PHONE,
+  // )
+  // @IsString()
+  // @IsNotEmpty()
+  // token?: string;
 
   /**
    * Required when action = 'upload_avatar'
