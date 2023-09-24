@@ -514,7 +514,13 @@ export class AuthService {
    */
   async generateTokens(user: any) {
     console.log("*****user.emailVerifiedAt", user.emailVerifiedAt)
-    const { decodedToken, jwtToken } =
+    if(user.emailVerifiedAt == null){
+      return {
+        success: false,
+        emailVerified: false
+      }
+    }else{
+      const { decodedToken, jwtToken } =
       await this.accessTokensService.createToken(user);
 
     const refreshToken = await this.refreshTokensService.createToken(
@@ -526,6 +532,8 @@ export class AuthService {
       refreshToken,
       expiresAt: decodedToken['exp'],
     };
+    }
+    
   }
 
   /**
