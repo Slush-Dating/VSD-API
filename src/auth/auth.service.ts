@@ -513,27 +513,18 @@ export class AuthService {
    * Generate token
    */
   async generateTokens(user: any) {
-    if(user.emailVerifiedAt == null){
-      return {
-        success: false,
-        emailVerified: false
-      }
-    }else{
-      const { decodedToken, jwtToken } =
+    const { decodedToken, jwtToken } =
       await this.accessTokensService.createToken(user);
 
-      const refreshToken = await this.refreshTokensService.createToken(
-        decodedToken,
-      );
+    const refreshToken = await this.refreshTokensService.createToken(
+      decodedToken,
+    );
 
-      return {
-        success: true,
-        accessToken: jwtToken,
-        refreshToken,
-        expiresAt: decodedToken['exp'],
-      };
-    }
-    
+    return {
+      accessToken: jwtToken,
+      refreshToken,
+      expiresAt: decodedToken['exp'],
+    };
   }
 
   /**
