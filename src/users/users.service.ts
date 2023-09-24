@@ -467,7 +467,7 @@ export class UsersService {
         nextAction: NextActionEnum.UPLOAD_AVATAR,
       }),
     );
-
+    this.sendVerificationEmail(user);
     return user;
   }
 
