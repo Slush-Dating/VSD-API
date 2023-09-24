@@ -513,6 +513,7 @@ export class AuthService {
    * Generate token
    */
   async generateTokens(user: any) {
+    console.log("*****user.emailVerifiedAt", user.emailVerifiedAt)
     const { decodedToken, jwtToken } =
       await this.accessTokensService.createToken(user);
 
