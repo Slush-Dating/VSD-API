@@ -513,7 +513,6 @@ export class AuthService {
    * Generate token
    */
   async generateTokens(user: any) {
-    console.log("*****user.emailVerifiedAt", user.emailVerifiedAt)
     if(user.emailVerifiedAt == null){
       return {
         success: false,
@@ -523,15 +522,16 @@ export class AuthService {
       const { decodedToken, jwtToken } =
       await this.accessTokensService.createToken(user);
 
-    const refreshToken = await this.refreshTokensService.createToken(
-      decodedToken,
-    );
+      const refreshToken = await this.refreshTokensService.createToken(
+        decodedToken,
+      );
 
-    return {
-      accessToken: jwtToken,
-      refreshToken,
-      expiresAt: decodedToken['exp'],
-    };
+      return {
+        success: true,
+        accessToken: jwtToken,
+        refreshToken,
+        expiresAt: decodedToken['exp'],
+      };
     }
     
   }

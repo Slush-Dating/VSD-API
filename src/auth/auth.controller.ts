@@ -100,7 +100,11 @@ export class AuthControllerV1 {
   async login(@Request() req: any) {
     await this.authService.logOutAllSessionsOfUser(req.user.id);
     const authenticate = await this.authService.generateTokens(req.user);
-    return { data: { ...classToPlain(req.user), authenticate } };
+    if(authenticate.success){
+      return { data: { ...classToPlain(req.user), authenticate } };
+    }else{
+      return { authenticate };
+    }
   }
 
   /**
