@@ -95,6 +95,19 @@ export class ChatsService {
               },
             },
           },
+
+          tokens: receiver.rawFcmTokens,
+        });
+        // Also Sending Silent Notification
+        await getMessaging().sendMulticast({
+          apns: {
+            payload: {
+              aps: {
+                contentAvailable: true,
+              },
+            },
+          },
+          
           tokens: receiver.rawFcmTokens,
         });
       }
