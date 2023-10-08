@@ -142,13 +142,14 @@ export class UsersControllerV1 {
       user,
       matchUnmatchDto.action,
     );
+    console.log("USER ACTION" + matchUnmatchDto.action)
     if(matchUnmatchDto.action == 'LIKED'){
       const receiver = await this.usersService.findOneByAttribute({
         select: ['id', 'fcmTokens', 'notifications'],
         where: { id: user },
         relations: ['fcmTokens', 'profilePictures'],
       });
-
+      console.log(authUser.firstName + " liked " + receiver.firstName)
       if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
         await getMessaging().sendMulticast({
           // data: {

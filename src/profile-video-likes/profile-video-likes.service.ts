@@ -10,6 +10,7 @@ import { UsersService } from 'src/users/users.service';
 import { InteractDto } from 'src/video-verse/dto/interact.dto';
 import { Repository } from 'typeorm';
 import { ProfileVideoLike } from './profile-video-like.entity';
+import { getMessaging } from 'firebase-admin/messaging';
 
 @Injectable()
 export class ProfileVideoLikesService {
@@ -43,6 +44,40 @@ export class ProfileVideoLikesService {
           status: interactDto.status,
         }),
       );
+
+      console.log("USER LIKED VIDEO" + interactDto.status)
+    if(interactDto.status == 'LIKED'){
+      const receiver = await this.usersService.findOneByAttribute({
+        select: ['id', 'fcmTokens', 'notifications'],
+        where: { id: user },
+        relations: ['fcmTokens', 'profilePictures'],
+      });
+      console.log(authUser.firstName + " liked " + receiver.firstName)
+      if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
+        await getMessaging().sendMulticast({
+          // data: {
+          //   senderId: data.from.toString(),
+          //   type: NOTIFICATION.PRIVATE_MESSAGE,
+          // },
+          notification: {
+            body: authUser.firstName + " liked you.",
+          },
+          android: {
+            notification: {
+              notificationCount: 1,
+            },
+          },
+          apns: {
+            payload: {
+              aps: {
+                badge: 1,
+              },
+            },
+          },
+          tokens: receiver.rawFcmTokens,
+        });
+      }
+    }
       if(newEntity && oppositeEntity) {
         if(newEntity.status == "LIKED" && oppositeEntity.status =="LIKED") {
           return true;
