@@ -44,15 +44,35 @@ export class ProfileVideoLikesService {
           status: interactDto.status,
         }),
       );
+      this.sendNotificaiton(newEntity.status, authUser, user.id)
+      if(newEntity && oppositeEntity) {
+        if(newEntity.status == "LIKED" && oppositeEntity.status =="LIKED") {
+          return true;
+        }
+      }
+      return false
+    }else{
+      entity.status = interactDto.status;
+      await this.repository.save(entity);
+      this.sendNotificaiton(entity.status, authUser, user.id)
+      if(entity && oppositeEntity) {
+        if(entity.status == "LIKED" && oppositeEntity.status == "LIKED") {
+          return true;
+        }
+      }
+      return false
+    }
+  }
 
-      console.log("USER LIKED VIDEO" + interactDto.status)
-    if(interactDto.status == 'LIKED'){
+  async sendNotificaiton(status: String, authUser: User, receiverId: number ){
+    console.log(">>>>> " + "USER LIKED VIDEO " + status)
+    if(status == 'LIKED'){
       const receiver = await this.usersService.findOneByAttribute({
         select: ['id', 'fcmTokens', 'notifications'],
-        where: { id: user },
+        where: { id: receiverId },
         relations: ['fcmTokens', 'profilePictures'],
       });
-      console.log(authUser.firstName + " liked " + receiver.firstName)
+      console.log(">>>>> " + authUser.firstName + " liked " + receiver.firstName)
       if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
         await getMessaging().sendMulticast({
           // data: {
@@ -77,25 +97,9 @@ export class ProfileVideoLikesService {
           tokens: receiver.rawFcmTokens,
         });
       }
-    }
-      if(newEntity && oppositeEntity) {
-        if(newEntity.status == "LIKED" && oppositeEntity.status =="LIKED") {
-          return true;
-        }
-      }
-      return false
     }else{
-      entity.status = interactDto.status;
-      await this.repository.save(entity);
-
-      if(entity && oppositeEntity) {
-        if(entity.status == "LIKED" && oppositeEntity.status == "LIKED") {
-          return true;
-        }
-      }
-      return false
+      console.log(">>>>> " + "USER DISLIKED VIDEO " + status)
     }
-  
   }
 
   constructor(
