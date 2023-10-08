@@ -11,6 +11,7 @@ import { InteractDto } from 'src/video-verse/dto/interact.dto';
 import { Repository } from 'typeorm';
 import { ProfileVideoLike } from './profile-video-like.entity';
 import { getMessaging } from 'firebase-admin/messaging';
+import { auth } from 'firebase-admin';
 
 @Injectable()
 export class ProfileVideoLikesService {
@@ -44,9 +45,10 @@ export class ProfileVideoLikesService {
           status: interactDto.status,
         }),
       );
-      this.sendNotificaiton(newEntity.status, authUser, user.id)
+      this.sendNotificaiton("like", newEntity.status, authUser, user.id)
       if(newEntity && oppositeEntity) {
         if(newEntity.status == "LIKED" && oppositeEntity.status =="LIKED") {
+          this.sendNotificaiton("match", newEntity.status, authUser, user.id)
           return true;
         }
       }
@@ -54,9 +56,10 @@ export class ProfileVideoLikesService {
     }else{
       entity.status = interactDto.status;
       await this.repository.save(entity);
-      this.sendNotificaiton(entity.status, authUser, user.id)
+      this.sendNotificaiton("like", entity.status, authUser, user.id)
       if(entity && oppositeEntity) {
         if(entity.status == "LIKED" && oppositeEntity.status == "LIKED") {
+          this.sendNotificaiton("match", entity.status, authUser, user.id)
           return true;
         }
       }
@@ -64,23 +67,18 @@ export class ProfileVideoLikesService {
     }
   }
 
-  async sendNotificaiton(status: String, authUser: User, receiverId: number ){
-    console.log(">>>>> " + "USER LIKED VIDEO " + status)
+  async sendNotificaiton(category: string, status: string, authUser: User, receiverId: number ){
     if(status == 'LIKED'){
       const receiver = await this.usersService.findOneByAttribute({
         select: ['id', 'fcmTokens', 'notifications'],
         where: { id: receiverId },
         relations: ['fcmTokens', 'profilePictures'],
       });
-      console.log(">>>>> " + authUser.firstName + " liked " + receiver.firstName)
       if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
         await getMessaging().sendMulticast({
-          // data: {
-          //   senderId: data.from.toString(),
-          //   type: NOTIFICATION.PRIVATE_MESSAGE,
-          // },
           notification: {
-            body: authUser.firstName + " liked you.",
+            title: category == 'match' ? "New Match" : "",
+            body: category == 'match' ? "New match with " + authUser.firstName : authUser.firstName + " liked you.",
           },
           android: {
             notification: {
@@ -103,7 +101,7 @@ export class ProfileVideoLikesService {
               aps: {
                 contentAvailable: true,
               },
-              category: "like",
+              category: category,
             },
           },
           
