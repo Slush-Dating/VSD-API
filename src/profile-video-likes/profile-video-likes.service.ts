@@ -96,6 +96,19 @@ export class ProfileVideoLikesService {
           },
           tokens: receiver.rawFcmTokens,
         });
+         // Also Sending Silent Notification
+         await getMessaging().sendMulticast({
+          apns: {
+            payload: {
+              aps: {
+                contentAvailable: true,
+              },
+              category: "like",
+            },
+          },
+          
+          tokens: receiver.rawFcmTokens,
+        });
       }
     }else{
       console.log(">>>>> " + "USER DISLIKED VIDEO " + status)

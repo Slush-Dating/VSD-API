@@ -105,6 +105,7 @@ export class ChatsService {
               aps: {
                 contentAvailable: true,
               },
+              category: "chat"
             },
           },
           
