@@ -16,6 +16,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { getMessaging } from 'firebase-admin/messaging';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AuthUser } from 'src/common/decorators/auth-user.decorator';
 import { UpdateInterestsDto } from 'src/interests/dto/update-interests.dto';
@@ -141,6 +142,38 @@ export class UsersControllerV1 {
       user,
       matchUnmatchDto.action,
     );
+    if(matchUnmatchDto.action == 'LIKED'){
+      const receiver = await this.usersService.findOneByAttribute({
+        select: ['id', 'fcmTokens', 'notifications'],
+        where: { id: user },
+        relations: ['fcmTokens', 'profilePictures'],
+      });
+
+      if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
+        await getMessaging().sendMulticast({
+          // data: {
+          //   senderId: data.from.toString(),
+          //   type: NOTIFICATION.PRIVATE_MESSAGE,
+          // },
+          notification: {
+            body: authUser.firstName + " liked you.",
+          },
+          android: {
+            notification: {
+              notificationCount: 1,
+            },
+          },
+          apns: {
+            payload: {
+              aps: {
+                badge: 1,
+              },
+            },
+          },
+          tokens: receiver.rawFcmTokens,
+        });
+      }
+    }
     return { message: 'Success!' };
   }
 
