@@ -78,7 +78,7 @@ export class ProfileVideoLikesService {
         await getMessaging().sendMulticast({
           notification: {
             title: category == 'match' ? "New Match" : "",
-            body: category == 'match' ? "New match with " + authUser.firstName : authUser.firstName + " liked you.",
+            body: category == 'match' ? "New match with " + authUser.firstName : "Someone has liked you.",
           },
           android: {
             notification: {
