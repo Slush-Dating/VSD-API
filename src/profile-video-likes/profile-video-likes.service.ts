@@ -84,6 +84,9 @@ export class ProfileVideoLikesService {
             notification: {
               notificationCount: 1,
             },
+            data: {
+              category: category
+            }
           },
           apns: {
             payload: {

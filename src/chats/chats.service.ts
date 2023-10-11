@@ -87,6 +87,9 @@ export class ChatsService {
             notification: {
               notificationCount: 1,
             },
+            data: {
+              category: "chat"
+            }
           },
           apns: {
             payload: {
