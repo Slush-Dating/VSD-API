@@ -83,9 +83,6 @@ export class ProfileVideoLikesService {
           android: {
             notification: {
               notificationCount: 1,
-            },
-            data: {
-              category: category
             }
           },
           apns: {
@@ -99,6 +96,11 @@ export class ProfileVideoLikesService {
         });
          // Also Sending Silent Notification
          await getMessaging().sendMulticast({
+          android:{
+            data: {
+              category: category
+            }
+          },
           apns: {
             payload: {
               aps: {

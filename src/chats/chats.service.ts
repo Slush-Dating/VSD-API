@@ -86,9 +86,6 @@ export class ChatsService {
           android: {
             notification: {
               notificationCount: 1,
-            },
-            data: {
-              category: "chat"
             }
           },
           apns: {
@@ -103,6 +100,11 @@ export class ChatsService {
         });
         // Also Sending Silent Notification
         await getMessaging().sendMulticast({
+          android:{
+            data: {
+              category: "chat"
+            }
+          },
           apns: {
             payload: {
               aps: {
