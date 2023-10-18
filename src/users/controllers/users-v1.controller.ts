@@ -31,7 +31,7 @@ import { UsersService } from '../users.service';
 import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
 import { EthnicityService } from 'src/ethnicity/ethnicity.service';
 import { UpdateEthnicityDto } from 'src/ethnicity/dto/update-ethnicity.dto';
-
+import { NOTIFICATION } from 'src/common/constants';
 @Controller({
   path: 'users',
   version: '1',
@@ -152,17 +152,18 @@ export class UsersControllerV1 {
       console.log(authUser.firstName + " liked " + receiver.firstName)
       if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
         await getMessaging().sendMulticast({
-          // data: {
-          //   senderId: data.from.toString(),
-          //   type: NOTIFICATION.PRIVATE_MESSAGE,
-          // },
           notification: {
             body: authUser.firstName + " liked you.",
           },
           android: {
             notification: {
+              body: authUser.firstName + " liked you.",
               notificationCount: 1,
             },
+            data:{
+              type: NOTIFICATION.LIKE_ACTION,
+              category: "like"
+            }
           },
           apns: {
             payload: {

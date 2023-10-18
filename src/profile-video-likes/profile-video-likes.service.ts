@@ -12,7 +12,7 @@ import { Repository } from 'typeorm';
 import { ProfileVideoLike } from './profile-video-like.entity';
 import { getMessaging } from 'firebase-admin/messaging';
 import { auth } from 'firebase-admin';
-
+import { NOTIFICATION } from 'src/common/constants';
 @Injectable()
 export class ProfileVideoLikesService {
   public async interactWithUser(
@@ -78,11 +78,17 @@ export class ProfileVideoLikesService {
         await getMessaging().sendMulticast({
           notification: {
             title: category == 'match' ? "New Match" : "",
-            body: category == 'match' ? "New match with " + authUser.firstName : "Someone has liked you.",
+            body: category == 'match' ? "New Match" : "",
           },
           android: {
             notification: {
+              title: category == 'match' ? "New Match" : "",
+              body: category == 'match' ? "New Match" : "",
               notificationCount: 1,
+            },
+            data:{
+              type: NOTIFICATION.MATCH,
+              category: "chat"
             }
           },
           apns: {
@@ -96,11 +102,6 @@ export class ProfileVideoLikesService {
         });
          // Also Sending Silent Notification
          await getMessaging().sendMulticast({
-          android:{
-            data: {
-              category: category
-            }
-          },
           apns: {
             payload: {
               aps: {

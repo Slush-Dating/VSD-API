@@ -85,7 +85,14 @@ export class ChatsService {
           },
           android: {
             notification: {
+              title: sender.fullName,
+              body: data.content,
               notificationCount: 1,
+            },
+            data:{
+              senderId: data.from.toString(),
+              type: NOTIFICATION.PRIVATE_MESSAGE,
+              category: "chat"
             }
           },
           apns: {
@@ -113,7 +120,6 @@ export class ChatsService {
               category: "chat"
             },
           },
-          
           tokens: receiver.rawFcmTokens,
         });
       }
