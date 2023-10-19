@@ -75,10 +75,10 @@ export class ChatsService {
 
       if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
         await getMessaging().sendMulticast({
-          data: {
-            senderId: data.from.toString(),
-            type: NOTIFICATION.PRIVATE_MESSAGE,
-          },
+          // data: {
+          //   senderId: data.from.toString(),
+          //   type: NOTIFICATION.PRIVATE_MESSAGE,
+          // },
           notification: {
             title: sender.fullName,
             body: data.content,
@@ -102,6 +102,8 @@ export class ChatsService {
             payload: {
               aps: {
                 badge: 1,
+                contentAvailable: true,
+                category: "chat"
               },
             },
           },
@@ -109,17 +111,17 @@ export class ChatsService {
           tokens: receiver.rawFcmTokens,
         });
         // Also Sending Silent Notification
-        await getMessaging().sendMulticast({
-          apns: {
-            payload: {
-              aps: {
-                contentAvailable: true,
-              },
-              category: "chat"
-            },
-          },
-          tokens: receiver.rawFcmTokens,
-        });
+        // await getMessaging().sendMulticast({
+        //   apns: {
+        //     payload: {
+        //       aps: {
+        //         contentAvailable: true,
+        //       },
+        //       category: "chat"
+        //     },
+        //   },
+        //   tokens: receiver.rawFcmTokens,
+        // });
       }
 
       return {
