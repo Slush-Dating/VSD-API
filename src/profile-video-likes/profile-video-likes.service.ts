@@ -81,14 +81,17 @@ export class ProfileVideoLikesService {
             body: category == 'match' ? "New Match" : "",
           },
           android: {
-            notification: {
-              title: category == 'match' ? "New Match" : "",
-              body: category == 'match' ? "New Match" : "",
-              notificationCount: 1,
-            },
+            // notification: {
+            //   title: category == 'match' ? "New Match" : "",
+            //   body: category == 'match' ? "New Match" : "",
+            //   notificationCount: 1,
+            // },
             data:{
               type: NOTIFICATION.MATCH,
-              category: "chat"
+              category: "match",
+              title: category == 'match' ? "New Match" : "",
+              message: category == 'match' ? "New Match" : "",
+              notificationCount: "1",
             }
           },
           apns: {

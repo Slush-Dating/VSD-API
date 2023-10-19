@@ -156,13 +156,15 @@ export class UsersControllerV1 {
             body: authUser.firstName + " liked you.",
           },
           android: {
-            notification: {
-              body: authUser.firstName + " liked you.",
-              notificationCount: 1,
-            },
+            // notification: {
+            //   body: authUser.firstName + " liked you.",
+            //   notificationCount: 1,
+            // },
             data:{
               type: NOTIFICATION.LIKE_ACTION,
-              category: "like"
+              category: "like",
+              message:  authUser.firstName + " liked you.",
+              notificationCount: "1",
             }
           },
           apns: {

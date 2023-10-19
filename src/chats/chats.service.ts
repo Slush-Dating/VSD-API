@@ -84,15 +84,18 @@ export class ChatsService {
             body: data.content,
           },
           android: {
-            notification: {
-              title: sender.fullName,
-              body: data.content,
-              notificationCount: 1,
-            },
+            // notification: {
+            //   title: sender.fullName,
+            //   body: data.content,
+            //   notificationCount: 1,
+            // },
             data:{
               senderId: data.from.toString(),
               type: NOTIFICATION.PRIVATE_MESSAGE,
-              category: "chat"
+              category: "chat",
+              title: sender.fullName,
+              message: data.content,
+              notificationCount:"1",
             }
           },
           apns: {
