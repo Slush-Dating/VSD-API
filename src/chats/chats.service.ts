@@ -93,6 +93,15 @@ export class ChatsService {
                 category:NOTIFICATION.PRIVATE_MESSAGE,
                 badge:1,
                 sound:"default",
+               },
+              },
+            },
+            tokens:receiver.rawFcmTokens,
+          });
+        await getMessaging().sendMulticast({
+          apns: {
+            payload: {
+              aps: {
                 contentAvailable: true,
                },
               },
