@@ -79,8 +79,8 @@ export class ProfileVideoLikesService {
           {
             data: {
               senderId: authUser.id.toString(),
-              type: NOTIFICATION.MATCH,
-              category: NOTIFICATION.MATCH,
+              type: 'match',
+              category: 'match',
               message: category == 'match' ? "New Match" : "",
               notificationCount:"1",
             },
@@ -90,7 +90,7 @@ export class ProfileVideoLikesService {
                   alert: {
                     body: category == 'match' ? "New Match" : "",
                   },
-                  category: NOTIFICATION.MATCH,
+                  category: 'match',
                   badge:1,
                   sound:"default",
                   contentAvailable: true,

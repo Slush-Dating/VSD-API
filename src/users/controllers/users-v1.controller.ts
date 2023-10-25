@@ -155,8 +155,8 @@ export class UsersControllerV1 {
           {
             data: {
               senderId: authUser.id.toString(),
-              type: NOTIFICATION.LIKE_ACTION,
-              category: NOTIFICATION.LIKE_ACTION,
+              type: 'like',
+              category: 'like',
               message: authUser.firstName + " liked you.",
               notificationCount:"1",
             },
@@ -166,7 +166,7 @@ export class UsersControllerV1 {
                   alert: {
                     body: authUser.firstName + " liked you.",
                   },
-                  category: NOTIFICATION.LIKE_ACTION,
+                  category: 'like',
                   badge:1,
                   sound:"default",
                   contentAvailable: true,

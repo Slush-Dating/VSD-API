@@ -77,8 +77,8 @@ export class ChatsService {
         await getMessaging().sendMulticast({
           data: {
             senderId: data.from.toString(),
-            type: NOTIFICATION.PRIVATE_MESSAGE,
-            category:NOTIFICATION.PRIVATE_MESSAGE,
+            type: 'chat',
+            category:'chat',
             title: sender.fullName,
             message: data.content,
             notificationCount:"1",
@@ -90,15 +90,18 @@ export class ChatsService {
                   title: sender.fullName,
                   body: data.content,
                 },
-                category:NOTIFICATION.PRIVATE_MESSAGE,
+                category:'chat',
                 badge:1,
                 sound:"default",
+                contentAvailable:true
                },
               },
             },
             tokens:receiver.rawFcmTokens,
           });
-          await getMessaging().sendToDevice(receiver.rawFcmTokens, {}, {contentAvailable:true})
+          // await getMessaging().sendToDevice(receiver.rawFcmTokens, {data:{
+          //   category:'chat'
+          // }}, {contentAvailable:true})
         // await getMessaging().sendMulticast({
           
         //   apns: {
