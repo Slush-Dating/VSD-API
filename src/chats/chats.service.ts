@@ -105,6 +105,8 @@ export class ChatsService {
           apns: {
             payload: {
               aps: {
+                title: sender.fullName,
+                body:  data.content,
                 badge: 1,
                 contentAvailable: true,
                 category: "chat"
