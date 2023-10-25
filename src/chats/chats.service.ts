@@ -105,15 +105,19 @@ export class ChatsService {
           apns: {
             payload: {
               aps: {
-                badge: 1,
+                alert: {
+                  title: sender.fullName,
+                  body: data.content
+                },
+                category: "chat",
+                badge:1
+               },
                 // contentAvailable: true,
-                category: "chat"
               },
             },
-          },
-
-          tokens: receiver.rawFcmTokens,
-        });
+            tokens:receiver.rawFcmTokens,
+          });
+        // });
         // Also Sending Silent Notification
         // await getMessaging().sendMulticast({
         //   apns: {
