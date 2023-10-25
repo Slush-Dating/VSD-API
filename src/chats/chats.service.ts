@@ -94,7 +94,7 @@ export class ChatsService {
                 badge:1,
                 sound:"default"
                },
-                // contentAvailable: true,
+                contentAvailable: true,
               },
             },
             tokens:receiver.rawFcmTokens,
