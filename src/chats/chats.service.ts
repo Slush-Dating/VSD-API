@@ -102,15 +102,15 @@ export class ChatsService {
           //     notificationCount:"1",
           //   }
           // },
-          // apns: {
-          //   payload: {
-          //     aps: {
-          //       badge: 1,
-          //       contentAvailable: true,
-          //       category: "chat"
-          //     },
-          //   },
-          // },
+          apns: {
+            payload: {
+              aps: {
+                badge: 1,
+                contentAvailable: true,
+                category: "chat"
+              },
+            },
+          },
 
           tokens: receiver.rawFcmTokens,
         });
