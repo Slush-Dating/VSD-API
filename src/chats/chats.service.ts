@@ -92,13 +92,14 @@ export class ChatsService {
                 },
                 category:NOTIFICATION.PRIVATE_MESSAGE,
                 badge:1,
-                sound:"default"
-               },
+                sound:"default",
                 contentAvailable: true,
+               },
               },
             },
             tokens:receiver.rawFcmTokens,
           });
+
       }
 
       return {

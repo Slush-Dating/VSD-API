@@ -92,55 +92,13 @@ export class ProfileVideoLikesService {
                   },
                   category: NOTIFICATION.MATCH,
                   badge:1,
-                  sound:"default"
-                 },
+                  sound:"default",
                   contentAvailable: true,
+                 },
                 },
               },
               tokens:receiver.rawFcmTokens,
-            }
-        //   {
-        //   notification: {
-        //     title: category == 'match' ? "New Match" : "",
-        //     body: category == 'match' ? "New Match" : "",
-        //   },
-        //   android: {
-        //     // notification: {
-        //     //   title: category == 'match' ? "New Match" : "",
-        //     //   body: category == 'match' ? "New Match" : "",
-        //     //   notificationCount: 1,
-        //     // },
-        //     data:{
-        //       type: NOTIFICATION.MATCH,
-        //       category: "match",
-        //       title: category == 'match' ? "New Match" : "",
-        //       message: category == 'match' ? "New Match" : "",
-        //       notificationCount: "1",
-        //     }
-        //   },
-        //   apns: {
-        //     payload: {
-        //       aps: {
-        //         badge: 1,
-        //       },
-        //     },
-        //   },
-        //   tokens: receiver.rawFcmTokens,
-        // });
-        //  // Also Sending Silent Notification
-        //  await getMessaging().sendMulticast({
-        //   apns: {
-        //     payload: {
-        //       aps: {
-        //         contentAvailable: true,
-        //       },
-        //       category: category,
-        //     },
-        //   },
-          
-        //   tokens: receiver.rawFcmTokens,
-        // }
-        );
+            });
       }
     }else{
       console.log(">>>>> " + "USER DISLIKED VIDEO " + status)

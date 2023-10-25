@@ -168,39 +168,13 @@ export class UsersControllerV1 {
                   },
                   category: NOTIFICATION.LIKE_ACTION,
                   badge:1,
-                  sound:"default"
-                 },
+                  sound:"default",
                   contentAvailable: true,
+                 },
                 },
               },
               tokens:receiver.rawFcmTokens,
-            }
-        //   {
-        //   notification: {
-        //     body: authUser.firstName + " liked you.",
-        //   },
-        //   android: {
-        //     // notification: {
-        //     //   body: authUser.firstName + " liked you.",
-        //     //   notificationCount: 1,
-        //     // },
-        //     data:{
-        //       type: NOTIFICATION.LIKE_ACTION,
-        //       category: "like",
-        //       message:  authUser.firstName + " liked you.",
-        //       notificationCount: "1",
-        //     }
-        //   },
-        //   apns: {
-        //     payload: {
-        //       aps: {
-        //         badge: 1,
-        //       },
-        //     },
-        //   },
-        //   tokens: receiver.rawFcmTokens,
-        // }
-        );
+            });
       }
     }
     return { message: 'Success!' };
