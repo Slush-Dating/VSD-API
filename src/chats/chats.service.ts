@@ -78,58 +78,27 @@ export class ChatsService {
           data: {
             senderId: data.from.toString(),
             type: NOTIFICATION.PRIVATE_MESSAGE,
-            category: "chat",
+            category:NOTIFICATION.PRIVATE_MESSAGE,
             title: sender.fullName,
             message: data.content,
             notificationCount:"1",
           },
-          // notification: {
-          //   title: sender.fullName,
-          //   body: data.content,
-          // },
-          // android: {
-          //   // notification: {
-          //   //   title: sender.fullName,
-          //   //   body: data.content,
-          //   //   notificationCount: 1,
-          //   // },
-          //   data:{
-          //     senderId: data.from.toString(),
-          //     type: NOTIFICATION.PRIVATE_MESSAGE,
-          //     category: "chat",
-          //     title: sender.fullName,
-          //     message: data.content,
-          //     notificationCount:"1",
-          //   }
-          // },
           apns: {
             payload: {
               aps: {
                 alert: {
                   title: sender.fullName,
-                  body: data.content
+                  body: data.content,
                 },
-                category: "chat",
-                badge:1
+                category:NOTIFICATION.PRIVATE_MESSAGE,
+                badge:1,
+                sound:"default"
                },
                 // contentAvailable: true,
               },
             },
             tokens:receiver.rawFcmTokens,
           });
-        // });
-        // Also Sending Silent Notification
-        // await getMessaging().sendMulticast({
-        //   apns: {
-        //     payload: {
-        //       aps: {
-        //         contentAvailable: true,
-        //       },
-        //       category: "chat"
-        //     },
-        //   },
-        //   tokens: receiver.rawFcmTokens,
-        // });
       }
 
       return {

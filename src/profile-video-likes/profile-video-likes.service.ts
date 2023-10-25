@@ -75,47 +75,72 @@ export class ProfileVideoLikesService {
         relations: ['fcmTokens', 'profilePictures'],
       });
       if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
-        await getMessaging().sendMulticast({
-          notification: {
-            title: category == 'match' ? "New Match" : "",
-            body: category == 'match' ? "New Match" : "",
-          },
-          android: {
-            // notification: {
-            //   title: category == 'match' ? "New Match" : "",
-            //   body: category == 'match' ? "New Match" : "",
-            //   notificationCount: 1,
-            // },
-            data:{
+        await getMessaging().sendMulticast(
+          {
+            data: {
+              senderId: authUser.id.toString(),
               type: NOTIFICATION.MATCH,
-              category: "match",
-              title: category == 'match' ? "New Match" : "",
+              category: NOTIFICATION.MATCH,
               message: category == 'match' ? "New Match" : "",
-              notificationCount: "1",
+              notificationCount:"1",
+            },
+            apns: {
+              payload: {
+                aps: {
+                  alert: {
+                    body: category == 'match' ? "New Match" : "",
+                  },
+                  category: NOTIFICATION.MATCH,
+                  badge:1,
+                  sound:"default"
+                 },
+                  // contentAvailable: true,
+                },
+              },
+              tokens:receiver.rawFcmTokens,
             }
-          },
-          apns: {
-            payload: {
-              aps: {
-                badge: 1,
-              },
-            },
-          },
-          tokens: receiver.rawFcmTokens,
-        });
-         // Also Sending Silent Notification
-         await getMessaging().sendMulticast({
-          apns: {
-            payload: {
-              aps: {
-                contentAvailable: true,
-              },
-              category: category,
-            },
-          },
+        //   {
+        //   notification: {
+        //     title: category == 'match' ? "New Match" : "",
+        //     body: category == 'match' ? "New Match" : "",
+        //   },
+        //   android: {
+        //     // notification: {
+        //     //   title: category == 'match' ? "New Match" : "",
+        //     //   body: category == 'match' ? "New Match" : "",
+        //     //   notificationCount: 1,
+        //     // },
+        //     data:{
+        //       type: NOTIFICATION.MATCH,
+        //       category: "match",
+        //       title: category == 'match' ? "New Match" : "",
+        //       message: category == 'match' ? "New Match" : "",
+        //       notificationCount: "1",
+        //     }
+        //   },
+        //   apns: {
+        //     payload: {
+        //       aps: {
+        //         badge: 1,
+        //       },
+        //     },
+        //   },
+        //   tokens: receiver.rawFcmTokens,
+        // });
+        //  // Also Sending Silent Notification
+        //  await getMessaging().sendMulticast({
+        //   apns: {
+        //     payload: {
+        //       aps: {
+        //         contentAvailable: true,
+        //       },
+        //       category: category,
+        //     },
+        //   },
           
-          tokens: receiver.rawFcmTokens,
-        });
+        //   tokens: receiver.rawFcmTokens,
+        // }
+        );
       }
     }else{
       console.log(">>>>> " + "USER DISLIKED VIDEO " + status)

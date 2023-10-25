@@ -151,31 +151,56 @@ export class UsersControllerV1 {
       });
       console.log(authUser.firstName + " liked " + receiver.firstName)
       if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
-        await getMessaging().sendMulticast({
-          notification: {
-            body: authUser.firstName + " liked you.",
-          },
-          android: {
-            // notification: {
-            //   body: authUser.firstName + " liked you.",
-            //   notificationCount: 1,
-            // },
-            data:{
+        await getMessaging().sendMulticast(
+          {
+            data: {
+              senderId: authUser.id.toString(),
               type: NOTIFICATION.LIKE_ACTION,
-              category: "like",
-              message:  authUser.firstName + " liked you.",
-              notificationCount: "1",
-            }
-          },
-          apns: {
-            payload: {
-              aps: {
-                badge: 1,
-              },
+              category: NOTIFICATION.LIKE_ACTION,
+              message: authUser.firstName + " liked you.",
+              notificationCount:"1",
             },
-          },
-          tokens: receiver.rawFcmTokens,
-        });
+            apns: {
+              payload: {
+                aps: {
+                  alert: {
+                    body: authUser.firstName + " liked you.",
+                  },
+                  category: NOTIFICATION.LIKE_ACTION,
+                  badge:1,
+                  sound:"default"
+                 },
+                  // contentAvailable: true,
+                },
+              },
+              tokens:receiver.rawFcmTokens,
+            }
+        //   {
+        //   notification: {
+        //     body: authUser.firstName + " liked you.",
+        //   },
+        //   android: {
+        //     // notification: {
+        //     //   body: authUser.firstName + " liked you.",
+        //     //   notificationCount: 1,
+        //     // },
+        //     data:{
+        //       type: NOTIFICATION.LIKE_ACTION,
+        //       category: "like",
+        //       message:  authUser.firstName + " liked you.",
+        //       notificationCount: "1",
+        //     }
+        //   },
+        //   apns: {
+        //     payload: {
+        //       aps: {
+        //         badge: 1,
+        //       },
+        //     },
+        //   },
+        //   tokens: receiver.rawFcmTokens,
+        // }
+        );
       }
     }
     return { message: 'Success!' };
