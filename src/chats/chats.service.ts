@@ -75,38 +75,42 @@ export class ChatsService {
 
       if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
         await getMessaging().sendMulticast({
-          // data: {
-          //   senderId: data.from.toString(),
-          //   type: NOTIFICATION.PRIVATE_MESSAGE,
-          // },
-          notification: {
+          data: {
+            senderId: data.from.toString(),
+            type: NOTIFICATION.PRIVATE_MESSAGE,
+            category: "chat",
             title: sender.fullName,
-            body: data.content,
+            message: data.content,
+            notificationCount:"1",
           },
-          android: {
-            // notification: {
-            //   title: sender.fullName,
-            //   body: data.content,
-            //   notificationCount: 1,
-            // },
-            data:{
-              senderId: data.from.toString(),
-              type: NOTIFICATION.PRIVATE_MESSAGE,
-              category: "chat",
-              title: sender.fullName,
-              message: data.content,
-              notificationCount:"1",
-            }
-          },
-          apns: {
-            payload: {
-              aps: {
-                badge: 1,
-                contentAvailable: true,
-                category: "chat"
-              },
-            },
-          },
+          // notification: {
+          //   title: sender.fullName,
+          //   body: data.content,
+          // },
+          // android: {
+          //   // notification: {
+          //   //   title: sender.fullName,
+          //   //   body: data.content,
+          //   //   notificationCount: 1,
+          //   // },
+          //   data:{
+          //     senderId: data.from.toString(),
+          //     type: NOTIFICATION.PRIVATE_MESSAGE,
+          //     category: "chat",
+          //     title: sender.fullName,
+          //     message: data.content,
+          //     notificationCount:"1",
+          //   }
+          // },
+          // apns: {
+          //   payload: {
+          //     aps: {
+          //       badge: 1,
+          //       contentAvailable: true,
+          //       category: "chat"
+          //     },
+          //   },
+          // },
 
           tokens: receiver.rawFcmTokens,
         });
