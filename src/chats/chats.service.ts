@@ -83,10 +83,10 @@ export class ChatsService {
             message: data.content,
             notificationCount:"1",
           },
-          notification: {
-            title: sender.fullName,
-            body: data.content,
-          },
+          // notification: {
+          //   title: sender.fullName,
+          //   body: data.content,
+          // },
           // android: {
           //   // notification: {
           //   //   title: sender.fullName,
@@ -106,7 +106,7 @@ export class ChatsService {
             payload: {
               aps: {
                 badge: 1,
-                contentAvailable: true,
+                // contentAvailable: true,
                 category: "chat"
               },
             },
