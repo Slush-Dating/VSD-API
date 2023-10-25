@@ -98,16 +98,18 @@ export class ChatsService {
             },
             tokens:receiver.rawFcmTokens,
           });
-        await getMessaging().sendMulticast({
-          apns: {
-            payload: {
-              aps: {
-                contentAvailable: true,
-               },
-              },
-            },
-            tokens:receiver.rawFcmTokens,
-          });
+          await getMessaging().sendToDevice(receiver.rawFcmTokens, {}, {contentAvailable:true})
+        // await getMessaging().sendMulticast({
+          
+        //   apns: {
+        //     payload: {
+        //       aps: {
+        //         contentAvailable: true,
+        //        },
+        //       },
+        //     },
+        //     tokens:receiver.rawFcmTokens,
+        //   });
 
       }
 
