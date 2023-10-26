@@ -77,7 +77,7 @@ export class ChatsService {
         await getMessaging().sendMulticast({
           data: {
             senderId: data.from.toString(),
-            type: 'chat',
+            type: NOTIFICATION.PRIVATE_MESSAGE,
             category:'chat',
             title: sender.fullName,
             message: data.content,
