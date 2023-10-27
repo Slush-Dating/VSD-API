@@ -106,8 +106,50 @@ export class AppService {
             Bytes: file.buffer,
           },
           MinConfidence: 70,
+          
         })
         .promise();
+
+        this.logger.log({
+          level: 'info',
+          message: response,
+        });
+
+      if (response.$response.httpResponse.statusCode !== HttpStatus.OK) {
+        throw new BadRequestException('Failed to upload file.');
+      }
+
+      if (response.ModerationLabels?.[0]?.Name === 'Explicit Nudity' || response.ModerationLabels?.[0]?.Name === 'Nudity') {
+        throw new BadRequestException(
+          'File contains explicit content. Please provide a different one',
+        );
+      }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new BadRequestException('Oops! Something went wrong');
+    }
+  }
+
+  public async detectInAppropriateVideo(
+    file: Express.Multer.File,
+  ): Promise<void> {
+    this.logger.log({
+      level: 'info',
+      message: 'Detecting In Appropriate Image!',
+    });
+    try {
+      const response = await this.amazonRekognition
+        .detectModerationLabels({
+          Image: {
+            Bytes: file.buffer,
+          },
+          MinConfidence: 70,
+          
+        })
+        .promise();
+        
 
         this.logger.log({
           level: 'info',

@@ -45,10 +45,10 @@ export class ProfileVideoLikesService {
           status: interactDto.status,
         }),
       );
-      this.sendNotificaiton("like", newEntity.status, authUser, user.id)
+      this.sendNotification("video-liked", newEntity.status, authUser, user.id)
       if(newEntity && oppositeEntity) {
         if(newEntity.status == "LIKED" && oppositeEntity.status =="LIKED") {
-          this.sendNotificaiton("match", newEntity.status, authUser, user.id)
+          this.sendNotification("match", newEntity.status, authUser, user.id)
           return true;
         }
       }
@@ -56,10 +56,10 @@ export class ProfileVideoLikesService {
     }else{
       entity.status = interactDto.status;
       await this.repository.save(entity);
-      this.sendNotificaiton("like", entity.status, authUser, user.id)
+      this.sendNotification("video-liked", entity.status, authUser, user.id)
       if(entity && oppositeEntity) {
         if(entity.status == "LIKED" && oppositeEntity.status == "LIKED") {
-          this.sendNotificaiton("match", entity.status, authUser, user.id)
+          this.sendNotification("match", entity.status, authUser, user.id)
           return true;
         }
       }
@@ -67,7 +67,7 @@ export class ProfileVideoLikesService {
     }
   }
 
-  async sendNotificaiton(category: string, status: string, authUser: User, receiverId: number ){
+  async sendNotification(category: string, status: string, authUser: User, receiverId: number ){
     if(status == 'LIKED'){
       const receiver = await this.usersService.findOneByAttribute({
         select: ['id', 'fcmTokens', 'notifications'],
@@ -79,18 +79,18 @@ export class ProfileVideoLikesService {
           {
             data: {
               senderId: authUser.id.toString(),
-              type: 'match',
-              category: 'match',
-              message: category == 'match' ? "New Match" : "",
+              type: category,
+              category: category,
+              message: category == 'match' ? "New Match" : "Someone liked your video",
               notificationCount:"1",
             },
             apns: {
               payload: {
                 aps: {
                   alert: {
-                    body: category == 'match' ? "New Match" : "",
+                    body: category == 'match' ? "New Match" : "Someone liked your video",
                   },
-                  category: 'match',
+                  category: category,
                   badge:1,
                   sound:"default",
                   contentAvailable: true,
