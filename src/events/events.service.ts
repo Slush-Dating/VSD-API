@@ -37,6 +37,7 @@ import { UserFixtureListDto } from 'src/fixtures/dto/user-fixture-list.dto';
 import { ReportFixtureUserDto } from './dto/report-fixture-user.dto';
 import { EventResultDto, EventResultTypeEnum } from './dto/event-result.dto';
 import * as moment from 'moment';
+import { date } from 'joi';
 
 @Injectable()
 export class EventsService {
@@ -534,6 +535,8 @@ export class EventsService {
    * - Get events which are about to start i.e before 15 min
    */
   async getReadyEvents(): Promise<Record<string, any>[]> {
+    console.log("Checking if events are ready")
+    console.log(date.toString)
     try {
       return await this.eventRepo.query(
         `SELECT e.*
