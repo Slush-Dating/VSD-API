@@ -16,6 +16,11 @@ export class GenerateFixturesService {
    */
   @Cron(CronExpression.EVERY_MINUTE)
   async manageEvents(): Promise<void> {
+    console.log("#Manage Events called from cron")
+    this.logger.log({
+      level: 'info',
+      message: `Manage Events called!`,
+    });
     const events = await this.eventsService.getReadyEvents();
     const eventIds = events.map((e: { id: any }) => e.id);
     
