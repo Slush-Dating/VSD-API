@@ -220,54 +220,55 @@ export class EventNotificationsService {
   /**
    * User will be notified every 7 days if he has not joined any event for 7 days
    */
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  public async notifyAfterSevenDays() {
-    const passiveUsersQuery = getManager()
-      .createQueryBuilder()
-      .select('p.user_id')
-      .from(Event, 'e')
-      .innerJoin(Participant, 'p', 'p.event_id = e.id')
-      .where('e.created_at BETWEEN DATE_SUB(NOW(), INTERVAL 1 WEEK) AND NOW()');
+  // TODO
+  // @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  // public async notifyAfterSevenDays() {
+  //   const passiveUsersQuery = getManager()
+  //     .createQueryBuilder()
+  //     .select('p.user_id')
+  //     .from(Event, 'e')
+  //     .innerJoin(Participant, 'p', 'p.event_id = e.id')
+  //     .where('e.created_at BETWEEN DATE_SUB(NOW(), INTERVAL 1 WEEK) AND NOW()');
 
-    const usersToNotifyQuery = getManager()
-      .createQueryBuilder()
-      .select('u.id', 'id')
-      .from(User, 'u')
-      .where(`u.id NOT IN (${passiveUsersQuery.getQuery()})`)
-      .andWhere('u.role = :role', { role: RoleType.USER })
-      .andWhere('(NOW() - INTERVAL 1 WEEK) > u.event_seven_day_reminder');
+  //   const usersToNotifyQuery = getManager()
+  //     .createQueryBuilder()
+  //     .select('u.id', 'id')
+  //     .from(User, 'u')
+  //     .where(`u.id NOT IN (${passiveUsersQuery.getQuery()})`)
+  //     .andWhere('u.role = :role', { role: RoleType.USER })
+  //     .andWhere('(NOW() - INTERVAL 1 WEEK) > u.event_seven_day_reminder');
 
-    const fcmTokens: FcmToken[] = await getManager()
-      .createQueryBuilder()
-      .select('ft.token', 'token')
-      .from(FcmToken, 'ft')
-      .where(`ft.user_id IN (${usersToNotifyQuery.getQuery()})`)
-      .setParameters(usersToNotifyQuery.getParameters())
-      .execute();
+  //   const fcmTokens: FcmToken[] = await getManager()
+  //     .createQueryBuilder()
+  //     .select('ft.token', 'token')
+  //     .from(FcmToken, 'ft')
+  //     .where(`ft.user_id IN (${usersToNotifyQuery.getQuery()})`)
+  //     .setParameters(usersToNotifyQuery.getParameters())
+  //     .execute();
 
-    const tokens = fcmTokens.flatMap((a) => a.token);
+  //   const tokens = fcmTokens.flatMap((a) => a.token);
 
-    if (tokens.length) {
-      const fcmPayload = createFcmPayload({
-        title: this.configService.get<string>('APP_NAME'),
-        body: 'New events are now showing, check them out!',
-        tokens,
-      });
+  //   if (tokens.length) {
+  //     const fcmPayload = createFcmPayload({
+  //       title: this.configService.get<string>('APP_NAME'),
+  //       body: 'New events are now showing, check them out!',
+  //       tokens,
+  //     });
 
-      await getMessaging().sendMulticast(fcmPayload);
+  //     await getMessaging().sendMulticast(fcmPayload);
 
-      const updateSubQuery = `SELECT * FROM (${usersToNotifyQuery.getQuery()}) t`;
+  //     const updateSubQuery = `SELECT * FROM (${usersToNotifyQuery.getQuery()}) t`;
 
-      await getManager()
-        .createQueryBuilder()
-        .update(User, {
-          eventSevenDayReminder: () => 'NOW()',
-        })
-        .where(`id IN (${updateSubQuery})`)
-        .setParameters(usersToNotifyQuery.getParameters())
-        .execute();
-    }
-  }
+  //     await getManager()
+  //       .createQueryBuilder()
+  //       .update(User, {
+  //         eventSevenDayReminder: () => 'NOW()',
+  //       })
+  //       .where(`id IN (${updateSubQuery})`)
+  //       .setParameters(usersToNotifyQuery.getParameters())
+  //       .execute();
+  //   }
+  // }
 
   constructor(
     private eventsService: EventsService,
