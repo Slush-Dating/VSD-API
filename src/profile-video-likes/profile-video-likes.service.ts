@@ -45,7 +45,7 @@ export class ProfileVideoLikesService {
           status: interactDto.status,
         }),
       );
-      this.sendNotification("video-liked", newEntity.status, authUser, user.id)
+      // this.sendNotification("video-liked", newEntity.status, authUser, user.id)
       if(newEntity && oppositeEntity) {
         if(newEntity.status == "LIKED" && oppositeEntity.status =="LIKED") {
           this.sendNotification("match", newEntity.status, authUser, user.id)
@@ -56,7 +56,7 @@ export class ProfileVideoLikesService {
     }else{
       entity.status = interactDto.status;
       await this.repository.save(entity);
-      this.sendNotification("video-liked", entity.status, authUser, user.id)
+      // this.sendNotification("video-liked", entity.status, authUser, user.id)
       if(entity && oppositeEntity) {
         if(entity.status == "LIKED" && oppositeEntity.status == "LIKED") {
           this.sendNotification("match", entity.status, authUser, user.id)
@@ -81,14 +81,14 @@ export class ProfileVideoLikesService {
               senderId: authUser.id.toString(),
               type: category,
               category: category,
-              message: category == 'match' ? "New Match" : "Someone liked your video",
+              message: category == 'match' ? "New Match" : "Someone liked you",
               notificationCount:"1",
             },
             apns: {
               payload: {
                 aps: {
                   alert: {
-                    body: category == 'match' ? "New Match" : "Someone liked your video",
+                    body: category == 'match' ? "New Match" : "Someone liked you",
                   },
                   category: category,
                   badge:1,
