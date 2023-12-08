@@ -72,6 +72,12 @@ export class GenerateFixturesService {
     }
   }
 
+
+
+
+
+  
+
   /**
    * Sort Participants
    * @param participants 
