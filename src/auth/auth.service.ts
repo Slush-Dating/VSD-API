@@ -98,6 +98,17 @@ export class AuthService {
   }
 
   /**
+   * resend verification email
+  */
+  async resendVerificationEmail(email: string): Promise<void> {
+    const user = await this.usersService.findOneByEmail(email);
+    if (!user)
+      throw new BadRequestException("Sorry! We couldn't find the account");
+
+      this.usersService.sendVerificationEmail(user);
+  }
+
+  /**
    * Forgot Password
    */
   async forgotPassword(email: string): Promise<void> {
