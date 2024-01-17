@@ -536,7 +536,6 @@ export class EventsService {
    */
   async getReadyEvents(): Promise<Record<string, any>[]> {
     console.log("Checking if events are ready")
-    console.log(date.toString)
     try {
       return await this.eventRepo.query(
         `SELECT e.*
