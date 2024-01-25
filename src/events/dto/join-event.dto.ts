@@ -10,6 +10,5 @@ export class BookEventTicketDto {
   readonly eventId: number;
 
   @IsString()
-  @IsNotEmpty()
   password: string;
 }
