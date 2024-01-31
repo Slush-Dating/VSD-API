@@ -692,7 +692,7 @@ export class EventsService {
         });
 
       // + INTERVAL 45 MINUTE
-    } else if (isPopularEvent) {
+    } else if (!isPopularEvent) {
       queryBuilder
         .where('e.isPopular = :isPopular', {
           isPopular: true,
