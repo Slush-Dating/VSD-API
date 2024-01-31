@@ -295,11 +295,13 @@ export class EventsService {
         `Please select valid event`,
       );
     }
-    const passwordCheck = await compare(data.password, event.password)
-    if (event && !passwordCheck) {
-      throw new ForbiddenException(
-        `Event password is incorrect... !`,
-      );
+    if (data.password !== undefined && data.password !== null && data.password !== '') {
+      const passwordCheck = await compare(data.password, event.password)
+      if (event && !passwordCheck) {
+        throw new ForbiddenException(
+          `Event password is incorrect... !`,
+        );
+      }
     }
     if (!event.isGenderAllowed(authUser)) {
       throw new ForbiddenException(
@@ -680,7 +682,6 @@ export class EventsService {
   ): void {
     const isMyEvent = getEventDto.events === EventTypeEnum.MY_EVENTS;
     const isPopularEvent = getEventDto.events === EventTypeEnum.POPULAR_EVENTS;
-    console.log("GET EVENT DTO", getEventDto)
     if (isMyEvent) {
       queryBuilder
         .where('p.user = :user', {

@@ -91,13 +91,10 @@ export class Event extends BaseEntity {
   /**
  * @example Passsword
  */
-  @MinLength(3)
   @IsString()
   @Expose()
-  @Column()
+  @Column({ nullable: true })
   password: string;
-
-
 
   /**
    * @example 21
