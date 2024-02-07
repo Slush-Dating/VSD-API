@@ -1,8 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsArray,
   IsDateString,
   IsEnum,
   IsNotEmpty,
+  IsNumberString,
   IsOptional,
   IsPhoneNumber,
   IsString,
@@ -16,9 +18,7 @@ import {
 } from '../../users/user.entity';
 
 export class CompleteRegistrationDto {
-  /**
-   * @example verify_phone
-   */
+ 
   @IsEnum(NextActionEnum)
   @IsNotEmpty()
   action!: NextActionEnum;
@@ -27,23 +27,23 @@ export class CompleteRegistrationDto {
    * Required when action = 'verify_phone'
    * @example "+1 8798729318"
    */
-  @ValidateIf(
-    (o: CompleteRegistrationDto) => o.action === NextActionEnum.VERIFY_PHONE,
-  )
-  @IsPhoneNumber()
-  @IsNotEmpty()
-  phoneNumber?: string;
+  // @ValidateIf(
+  //   (o: CompleteRegistrationDto) => o.action === NextActionEnum.VERIFY_PHONE,
+  // )
+  // @IsPhoneNumber()
+  // @IsNotEmpty()
+  // phoneNumber?: string;
 
   /**
    * Required when action = 'verify_phone'
    * @example "FIREBASE_TOKEN"
    */
-  @ValidateIf(
-    (o: CompleteRegistrationDto) => o.action === NextActionEnum.VERIFY_PHONE,
-  )
-  @IsString()
-  @IsNotEmpty()
-  token?: string;
+  // @ValidateIf(
+  //   (o: CompleteRegistrationDto) => o.action === NextActionEnum.VERIFY_PHONE,
+  // )
+  // @IsString()
+  // @IsNotEmpty()
+  // token?: string;
 
   /**
    * Required when action = 'upload_avatar'
@@ -53,6 +53,16 @@ export class CompleteRegistrationDto {
     format: 'binary',
   })
   avatar?: Express.Multer.File;
+
+
+  /**
+   * Required when action = 'upload_video'
+   */
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+  })
+  video?: Express.Multer.File;
 
   /**
    * Required when action = 'fill_profile'
@@ -165,6 +175,33 @@ export class CompleteRegistrationDto {
   @IsString()
   @IsNotEmpty()
   bio?: string;
+
+
+   /**
+   * Required when action = 'ethnicity'
+   * @example [1, 2]
+   */
+   @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_ETHNICITY,
+  )
+  @IsArray()
+  @IsNotEmpty({ each: true })
+  @IsNumberString({}, { each: true })
+  ethnicity?: number[];
+
+  /**
+   * Required when action = 'interests'
+   * @example [1, 2]
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_INTERESTS,
+  )
+  @IsArray()
+  @IsNotEmpty({ each: true })
+  @IsNumberString({}, { each: true })
+  interests?: number[];
+
+ 
 
   /**
    * Required when action = 'choose_gender'

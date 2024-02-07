@@ -59,6 +59,7 @@ export class AppController {
     @Body() generateRtcTokenDto: GenerateRtcTokenDto,
   ): Record<string, any> {
     const token = this.appService.generateRtcToken(generateRtcTokenDto);
+    console.log("RTC TOKEN", token)
     return { data: { token } };
   }
 
@@ -74,12 +75,8 @@ export class AppController {
     @Body() generateRtmTokenDto: GenerateRtmTokenDto,
   ): Record<string, any> {
     const token = this.appService.generateRtmToken(generateRtmTokenDto);
+    console.log("RTM TOKEN", token)
     return { data: { token } };
-  }
-
-  @Post('/callback/freshping')
-  freshpingCallback(@Req() req: Request) {
-    console.log(req.body);
   }
 
   constructor(

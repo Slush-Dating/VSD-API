@@ -25,7 +25,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
           'The email or password you entered did not match our records, please double-check and try again.',
       });
 
-    if (user.isDeactivated())
+    if (user.isDeactivated)
       throw new ForbiddenException('This account is deactivated');
 
     return user;

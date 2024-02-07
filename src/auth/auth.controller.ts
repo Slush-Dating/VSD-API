@@ -30,8 +30,6 @@ import { CheckPhoneExistDto } from './dto/check-phone-exist.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyForgotPasswordDto } from './dto/verify-forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { LogoutDto } from './dto/logout.dto';
-import { DeactivateAccountDto } from './dto/deactivate-account.dto';
 
 @Controller({
   path: 'auth',
@@ -137,6 +135,17 @@ export class AuthControllerV1 {
       createAuthTokens,
     );
     return { data };
+  }
+
+  /**
+   * Resend-verify-email
+  */
+  @Post('/send-verify-email')
+  @ApiOperation({ summary: 'Send/Re-send verification email' })
+  async sendVerificationEmail( @Body() resendmail: ForgotPasswordDto,
+  ): Promise<Record<string, any>> {
+    await this.authService.resendVerificationEmail(resendmail.email);
+    return { message: 'New Email sent successfully!' };
   }
 
   /**

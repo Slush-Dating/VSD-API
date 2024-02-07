@@ -10,6 +10,7 @@ export class SocialProviderFactory extends AbstractSocialProviderFactory {
    * Create instance
    */
   make(params: SocialLoginDto): AbstractSocialProviderAuthenticate {
+    console.log("PARAMS:", params)
     switch (params.socialProvider) {
       case SocialProviderTypeEnum.GOOGLE:
         return new GoogleSocialProvider(params.token);

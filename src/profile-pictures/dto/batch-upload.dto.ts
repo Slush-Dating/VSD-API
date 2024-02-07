@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class BatchUploadDto {
   /**
-   * profile pictures
+   * profile videos
    */
   @ApiProperty({
     isArray: true,

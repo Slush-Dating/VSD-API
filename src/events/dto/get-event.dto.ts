@@ -6,6 +6,7 @@ import { EventGenderEnum } from '../event.entity';
 export enum EventTypeEnum {
   MY_EVENTS = 'me',
   UPCOMING_EVENTS = 'upcoming',
+  POPULAR_EVENTS = 'popular'
 }
 
 export class GetEventDto {
@@ -30,7 +31,7 @@ export class GetEventDto {
   readonly distance?: number;
 
   /**
-   * The type of the event: ['me' = My Events, 'upcoming' = Upcoming events]
+   * The type of the event: ['me' = My Events, 'upcoming' = Upcoming events, 'popular' = Popular Events]
    */
   @IsEnum(EventTypeEnum)
   @IsNotEmpty()

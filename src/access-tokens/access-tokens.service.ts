@@ -4,11 +4,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, getConnection } from 'typeorm';
 import { AccessToken } from './access-token.entity';
 import { User } from '../users/user.entity';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { randomBytes } from 'crypto';
+import {readFileSync} from 'fs';
+import { JWTOptions } from 'google-auth-library';
 
 @Injectable()
 export class AccessTokenService {
+
   /**
    * Find one
    */
@@ -110,6 +113,35 @@ export class AccessTokenService {
       ? true
       : false;
   }
+
+  // createAppleLoginClientSecret(){
+  //   console.log("@PRIV KEY", this.privateKey)
+  //   const now = Math.floor(Date.now() / 1000);
+
+  //   const payload = {
+  //     iat: now,
+  //     expiresIn: now + (86400 * 18),
+  //   };
+  //   const options: JwtSignOptions = { 
+  //     // privateKey: this.privateKeyPEM,
+  //     keyid: process.env.APPLE_KEYID,
+  //     algorithm: 'ES256',
+  //     issuer: process.env.APPLE_TEAMID,
+  //     audience: 'https://appleid.apple.com',
+  //     subject: process.env.APPLE_CLIENTID,
+  //   };
+  //   console.log("@@@ JWT Payload", payload);
+  //   console.log("@@@ JWT OPTIONS", options);
+  //   return this.jwtService.sign(payload, options);
+  //   // try {
+  //   //   const token = this.jwtService.sign(payload, options);
+  //   //   return token
+  //   //   // ... further code handling the token
+  //   // } catch (error) {
+  //   //   console.error('Error creating token:', error);
+  //   //   // ... handle the error appropriately
+  //   // }
+  // }
 
   constructor(
     @InjectRepository(AccessToken)

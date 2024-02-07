@@ -30,3 +30,6 @@ $ npm run start:prod
 ```
 
 ## Stay in touch
+
+- Author - [Istiyak Tailor](mailto:tailoristiyak303@gmail.com)
+- Website - [https://thesam.codes](https://thesam.codes)

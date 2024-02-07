@@ -13,7 +13,7 @@ import {
 @Entity({ name: 'profile_pictures' })
 export class ProfilePicture extends BaseEntity {
   // avatar + 5 photos
-  static readonly MAX_PROFILE_PICTURES = 6;
+  static readonly MAX_PICTURES = 3;
 
   @Expose({ name: 'profilePictureId' })
   @PrimaryGeneratedColumn()

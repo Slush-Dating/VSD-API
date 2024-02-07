@@ -38,7 +38,7 @@ export class ParticipantsService {
   /**
    * Get participants
    */
-  async getParticipants(eventIds: string | string[]): Promise<Participant[]> {
+  async getParticipantsForEvent(eventIds: string | string[]): Promise<Participant[]> {
     try {
       const ids = Array.isArray(eventIds) ? eventIds : [eventIds];
 
@@ -63,6 +63,7 @@ export class ParticipantsService {
         .orderBy('p.createdAt', 'ASC')
         .getMany();
     } catch (error) {
+      console.error(error)
       throw error;
     }
   }
@@ -116,17 +117,17 @@ export class ParticipantsService {
     event: Event,
     user: User,
   ) {
-    const maleCount = participants.filter((p: Participant) =>
-      p.user.isMale(),
+    const maleCount = participants.filter(
+      (p: Participant) => p.user.isMale,
     ).length;
 
-    const femaleCount = participants.filter((p: Participant) =>
-      p.user.isFemale(),
+    const femaleCount = participants.filter(
+      (p: Participant) => p.user.isFemale,
     ).length;
 
-    const counter = event.hasFiveDates() ? 5 : 10;
+    const counter = event.hasFiveDates ? 5 : 10;
 
-    if (user.isMale() ? maleCount >= counter : femaleCount >= counter) {
+    if (user.isMale ? maleCount >= counter : femaleCount >= counter) {
       throw new BadRequestException(
         `Sorry! all slots for ${user.gender} have been booked!`,
       );

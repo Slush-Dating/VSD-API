@@ -17,4 +17,5 @@ export class SocialLoginDto {
   @IsString()
   @IsNotEmpty()
   readonly token?: string;
+
 }

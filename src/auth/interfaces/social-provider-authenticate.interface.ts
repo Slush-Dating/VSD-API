@@ -11,7 +11,9 @@ export class SocialProviderOutput extends PickType(User, [
 ]) {}
 
 export abstract class AbstractSocialProviderAuthenticate {
+
   private _token: string;
+
 
   constructor(token: string) {
     this._token = token;

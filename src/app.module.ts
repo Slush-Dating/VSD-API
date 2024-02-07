@@ -28,14 +28,20 @@ import * as winston from 'winston';
 import DailyRotateFile = require('winston-daily-rotate-file');
 import { AwsSdkModule } from 'nest-aws-sdk';
 import { Rekognition, S3 } from 'aws-sdk';
+import { EnvSchema } from './common/env.schema';
+import { ProfileVideosModule } from './profile-videos/profile-videos.module';
+import { InterestsModule } from './interests/interests.module';
+import { EthnicityModule } from './ethnicity/ethnicity.module';
+import { ProfileVideoLikesModule } from './profile-video-likes/profile-video-likes.module';
+import { VideoVerseModule } from './video-verse/video-verse.module';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mailchimp = require('@mailchimp/mailchimp_marketing');
 
 @Module({
   imports: [
-    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
+      validationSchema: EnvSchema,
       expandVariables: true,
       isGlobal: true,
     }),
@@ -91,7 +97,6 @@ const mailchimp = require('@mailchimp/mailchimp_marketing');
       },
       services: [Rekognition, S3],
     }),
-    EventEmitterModule.forRoot(),
     WinstonModule.forRoot({
       transports: [
         new DailyRotateFile({
@@ -107,6 +112,8 @@ const mailchimp = require('@mailchimp/mailchimp_marketing');
         }),
       ],
     }),
+    EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     AuthModule,
     AccessTokensModule,
     RefreshTokensModule,
@@ -120,6 +127,11 @@ const mailchimp = require('@mailchimp/mailchimp_marketing');
     AppVersionModule,
     ProfilePicturesModule,
     NotificationLogsModule,
+    ProfileVideosModule,
+    InterestsModule,
+    ProfileVideoLikesModule,
+    VideoVerseModule,
+    EthnicityModule,
   ],
   controllers: [AppController],
   providers: [
@@ -129,6 +141,7 @@ const mailchimp = require('@mailchimp/mailchimp_marketing');
       useClass: ValidatePathUserPipe,
     },
   ],
+  exports: [AppService],
 })
 export class AppModule {
   constructor(private configService: ConfigService) {

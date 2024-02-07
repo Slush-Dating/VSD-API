@@ -114,6 +114,14 @@ export class Event extends BaseEntity {
   isFree: boolean;
 
   /**
+   * @example false
+   */
+  @IsBoolean()
+  @Expose()
+  @Column({ type: 'boolean', default: false })
+  isPopular: boolean;
+
+  /**
    * @example straight
    */
   @IsEnum(EventGenderEnum)
@@ -216,19 +224,19 @@ export class Event extends BaseEntity {
     return this.gender === value;
   }
 
-  public hasFiveDates() {
+  public get hasFiveDates() {
     return this.type === EventTypeEnum.FIVE_DATES;
   }
 
-  public hasTenDates() {
+  public get hasTenDates() {
     return this.type === EventTypeEnum.TEN_DATES;
   }
 
-  public hasStarted() {
+  public get hasStarted() {
     return this.status === EventStatusEnum.STARTED;
   }
 
-  public hasCancelled() {
+  public get hasCancelled() {
     return this.status === EventStatusEnum.CANCELLED;
   }
 
@@ -236,24 +244,24 @@ export class Event extends BaseEntity {
    * Check if user's gender is eligible for the event
    */
   isGenderAllowed(user: User): boolean {
-    if (this.isEventFor(EventGenderEnum.STRAIGHT) && user.isStraight()) {
+    if (this.isEventFor(EventGenderEnum.STRAIGHT) && user.isStraight) {
       return true;
-    } else if (this.isEventFor(EventGenderEnum.GAY) && user.isGay()) {
+    } else if (this.isEventFor(EventGenderEnum.GAY) && user.isGay) {
       return true;
-    } else if (this.isEventFor(EventGenderEnum.LESBIAN) && user.isLesbian()) {
+    } else if (this.isEventFor(EventGenderEnum.LESBIAN) && user.isLesbian) {
       return true;
-    } else if (this.isEventFor(EventGenderEnum.BISEXUAL) && user.isBisexual()) {
+    } else if (this.isEventFor(EventGenderEnum.BISEXUAL) && user.isBisexual) {
       return true;
     } else if (
-      user.isBisexual() &&
-      user.isMale() &&
+      user.isBisexual &&
+      user.isMale &&
       (this.isEventFor(EventGenderEnum.STRAIGHT) ||
         this.isEventFor(EventGenderEnum.GAY))
     ) {
       return true;
     } else if (
-      user.isBisexual() &&
-      user.isFemale() &&
+      user.isBisexual &&
+      user.isFemale &&
       (this.isEventFor(EventGenderEnum.STRAIGHT) ||
         this.isEventFor(EventGenderEnum.LESBIAN))
     ) {

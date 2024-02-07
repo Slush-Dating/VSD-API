@@ -1,4 +1,5 @@
 import { MailerService } from '@nestjs-modules/mailer';
+import { InteractDto } from 'src/video-verse/dto/interact.dto';
 import {
   BadRequestException,
   ConflictException,
@@ -16,6 +17,7 @@ import {
   IPaginationOptions,
   paginate,
   Pagination,
+  PaginationTypeEnum,
 } from 'nestjs-typeorm-paginate';
 import { AuthService } from 'src/auth/auth.service';
 import { baseUrl } from 'src/common/helper';
@@ -26,8 +28,8 @@ import { ReportUserProfileDto } from 'src/user-report/dto/report-user-profile.dt
 import { UserReportService } from 'src/user-report/user-report.service';
 import {
   DeepPartial,
-  FindConditions,
   FindManyOptions,
+  FindOneOptions,
   getConnection,
   IsNull,
   Not,
@@ -38,9 +40,64 @@ import { ActionsEnum } from './dto/match-unmatch.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { NextActionEnum, RoleType, User } from './user.entity';
 import { InjectAwsService } from 'nest-aws-sdk';
+import { Interests } from 'src/interests/interests.entity';
+import { InterestsService } from 'src/interests/interests.service';
+import { ProfileVideoLikesService } from 'src/profile-video-likes/profile-video-likes.service';
+import { ProfileVideoLikeStatusEnum } from 'src/profile-video-likes/profile-video-like.entity';
+import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
+import { EthnicityService } from 'src/ethnicity/ethnicity.service';
 
 @Injectable()
 export class UsersService {
+  public async updateInterests(
+    authUser: User,
+    interestIds: number[],
+  ): Promise<Interests[]> {
+    const interests = await this.interestsService.findByIds(interestIds);
+
+    authUser.interests = interests;
+    await this.repository.save(authUser);
+
+    return this.getUserInterests(authUser);
+  }
+
+  
+  public async getUserInterests(authUser: User): Promise<Interests[]> {
+    try {
+      const user = await this.repository.findOne({
+        where: { id: authUser.id },
+        relations: ['interests'],
+      });
+      return user.interests;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async updateEthnicity(
+    authUser: User,
+    ethnicityIds: number[],
+  ): Promise<Ethnicity[]> {
+    const items = await this.ethnicityService.findByIds(ethnicityIds);
+
+    authUser.ethnicity = items;
+    await this.repository.save(authUser);
+
+    return this.getUserEthnicity(authUser);
+  }
+
+  public async getUserEthnicity(authUser: User): Promise<Ethnicity[]> {
+    try {
+      const user = await this.repository.findOne({
+        where: { id: authUser.id },
+        relations: ['ethnicity'],
+      });
+      return user.ethnicity;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   /**
    * Match / Un-match user
    */
@@ -66,6 +123,11 @@ export class UsersService {
           [FixtureStatus.JOINED, FixtureStatus.LIKED, FixtureStatus.DISLIKED],
         ],
       );
+
+      await this.profileVideoLikeService.interactWithUser(authUser, {
+        status: action as unknown as ProfileVideoLikeStatusEnum,
+        user: userId,
+      } as InteractDto);
     } catch (error) {
       throw error;
     }
@@ -86,11 +148,12 @@ export class UsersService {
       reportUserProfileDto,
     );
   }
+
   /**
    * Verify email verification link
    */
   async verifyEmailVerificationLink(token: string): Promise<User> {
-    const user = await this.userRepo.findOne({
+    const user = await this.repository.findOne({
       where: {
         emailVerificationToken: token,
       },
@@ -100,7 +163,7 @@ export class UsersService {
       throw new NotFoundException('The link is invalid or expired');
     }
 
-    await this.userRepo.update(user.id, {
+    await this.repository.update(user.id, {
       emailVerificationToken: null,
       emailVerificationTokenExpiresAt: null,
       emailVerifiedAt: new Date(),
@@ -114,12 +177,12 @@ export class UsersService {
    */
   async getUserProfile(userId: number): Promise<User> {
     try {
-      return await this.userRepo.findOneOrFail({
+      return await this.repository.findOneOrFail({
         where: {
           id: userId,
           role: RoleType.USER,
         },
-        relations: ['profilePictures'],
+        relations: ['profilePictures', 'interests', 'ethnicity'],
       });
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
@@ -134,7 +197,7 @@ export class UsersService {
    */
   async deactivateAccount(authUser: User): Promise<void> {
     authUser.deactivatedAt = new Date();
-    await this.userRepo.save(authUser);
+    await this.repository.save(authUser);
   }
 
   /**
@@ -149,7 +212,7 @@ export class UsersService {
       throw new BadRequestException('Your old email and new email are same');
     }
 
-    const user = await this.findOne({
+    const user = await this.findOneByAttribute({
       where: {
         email: newEmail,
         id: Not(authUser.id),
@@ -161,8 +224,8 @@ export class UsersService {
       throw new ConflictException('An account already exists with this email');
     }
 
-    const newUser = await this.userRepo.save(
-      this.userRepo.create({
+    const newUser = await this.repository.save(
+      this.repository.create({
         ...authUser,
         emailVerifiedAt: null,
         email: newEmail,
@@ -182,7 +245,7 @@ export class UsersService {
     // generate token
     const token = randomBytes(32).toString('hex');
 
-    await this.userRepo.update(authUser.id, {
+    await this.repository.update(authUser.id, {
       emailVerificationToken: token,
       emailVerificationTokenExpiresAt: moment
         .utc()
@@ -230,10 +293,12 @@ export class UsersService {
    * ##### Upload Avatar
    */
   async uploadAvatar(authUser: User, file: Express.Multer.File): Promise<void> {
-    await this.profilePicturesService.uploadAvatar(authUser, file);
-    await this.update(authUser.id, {
-      nextAction: NextActionEnum.FILL_PROFILE,
-    });
+    await Promise.all([
+      this.profilePicturesService.uploadAvatar(authUser, file),
+      this.update(authUser.id, {
+        nextAction: NextActionEnum.UPLOAD_VIDEO,
+      }),
+    ]);
   }
 
   /**
@@ -251,8 +316,12 @@ export class UsersService {
       dateOfBirth: moment(updateUserDto.dateOfBirth, 'YYYY-MM-DD').toDate(),
     };
 
-    await this.userRepo.save(
-      this.userRepo.create({
+    // const ids = await this.ethnicityService.findByIds(updateUserDto.ethnicityIds); 
+    // authUser.ethnicity = ids;
+    // await this.repository.save(authUser);
+
+    await this.repository.save(
+      this.repository.create({
         id: authUser.id,
         ...updateUserDto,
         ...notifications,
@@ -267,23 +336,49 @@ export class UsersService {
    * Find
    */
   find(options: FindManyOptions<User>): Promise<User[]> {
-    return this.userRepo.find(options);
+    return this.repository.find(options);
   }
 
-  getManyUser(data: {
-    ids: string[];
+  public async getManyUser(data: {
+    ids: string[] | number[];
     options?: IPaginationOptions;
     alias?: string;
     select?: string[];
   }) {
-    const queryBuilder = this.userRepo
-      .createQueryBuilder(data.alias || 'u')
-      .leftJoinAndSelect('u.profilePictures', 'pp')
-      .where('u.id IN (:ids)', { ids: data.ids ?? [1] });
+    try {
+      const queryBuilder = this.repository
+        .createQueryBuilder(data.alias || 'u')
+        .leftJoinAndSelect('u.profilePictures', 'pp')
+        .leftJoinAndSelect('u.profileVideos', 'pv')
+        .leftJoinAndSelect('u.interests', 'ui')
+        .leftJoinAndSelect('u.ethnicity', 'ue')
+        .where('u.deactivatedAt IS NULL')
+        .andWhere('u.id IN (:ids)', { ids: data.ids ?? [1] });
 
-    if (data.select) queryBuilder.select(data.select);
+      if (data.select) {
+        queryBuilder.select(data.select);
+      }
 
-    return paginate<User>(queryBuilder, data.options);
+      const totalItems = await queryBuilder.getCount();
+
+      return await paginate<User>(queryBuilder, {
+        ...data.options,
+        paginationType: PaginationTypeEnum.TAKE_AND_SKIP,
+        // https://github.com/nestjsx/nestjs-typeorm-paginate/issues/627
+        metaTransformer: ({ currentPage, itemCount, itemsPerPage }) => {
+          const totalPages = Math.round(totalItems / itemsPerPage);
+          return {
+            currentPage,
+            itemCount,
+            itemsPerPage,
+            totalItems,
+            totalPages: totalPages === 0 ? 1 : totalPages,
+          };
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
@@ -293,36 +388,28 @@ export class UsersService {
     if (authUser.id === user.id)
       throw new BadRequestException('You cannot delete your own user');
 
-    await this.userRepo.remove(user);
+    await this.repository.remove(user);
   }
 
   /**
    * Update/Create user
    */
   save(data: User | DeepPartial<User>): Promise<User> {
-    return this.userRepo.save(data);
+    return this.repository.save(data);
   }
 
   /**
    * Update user
    */
   update(id: number, data: QueryPartialEntity<User>) {
-    return this.userRepo.update(id, data);
+    return this.repository.update(id, data);
   }
 
   /**
    * Find one
    */
-  findOne({
-    where,
-    select,
-    relations = [],
-  }: {
-    where: FindConditions<User>;
-    select?: (keyof User)[];
-    relations?: any[];
-  }): Promise<User> {
-    return this.userRepo.findOne({ where, select, relations });
+  findOneByAttribute(options: FindOneOptions<User>): Promise<User | null> {
+    return this.repository.findOne(options);
   }
 
   /**
@@ -330,7 +417,7 @@ export class UsersService {
    */
   async findOneOrFail(where: DeepPartial<User>, relations = []): Promise<User> {
     try {
-      return await this.userRepo.findOneOrFail({ where, relations });
+      return await this.repository.findOneOrFail({ where, relations });
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('User not found!');
@@ -343,7 +430,7 @@ export class UsersService {
    * Get all users
    */
   getUsers(options: IPaginationOptions): Promise<Pagination<User>> {
-    const queryBuilder = this.userRepo
+    const queryBuilder = this.repository
       .createQueryBuilder('user')
       .orderBy('user.id', 'DESC');
 
@@ -354,7 +441,7 @@ export class UsersService {
    * Find one using username
    */
   findOneByEmail(email: string, relations = []): Promise<User> {
-    return this.userRepo.findOne({
+    return this.repository.findOne({
       where: {
         email,
       },
@@ -366,26 +453,26 @@ export class UsersService {
    * Find by id
    */
   findById(id: number) {
-    return this.userRepo.findOne(id);
+    return this.repository.findOne(id);
   }
 
   /**
    * Register user
    */
   async registerUser(data: DeepPartial<User>): Promise<User> {
-    const user = await this.userRepo.save(
-      this.userRepo.create({
+    const user = await this.repository.save(
+      this.repository.create({
         ...data,
         requiresAction: true,
-        nextAction: NextActionEnum.VERIFY_PHONE,
+        nextAction: NextActionEnum.UPLOAD_AVATAR,
       }),
     );
-
+    this.sendVerificationEmail(user);
     return user;
   }
 
   async checkPhoneExist(authUser: User, phoneNumber: string): Promise<boolean> {
-    const user = await this.userRepo
+    const user = await this.repository
       .createQueryBuilder('u')
       .where('u.phoneNumber =:phoneNumber', { phoneNumber })
       .andWhere('u.deactivatedAt IS NULL')
@@ -396,7 +483,7 @@ export class UsersService {
   }
 
   constructor(
-    @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(User) private repository: Repository<User>,
     @InjectAwsService(S3)
     private readonly amazonS3: S3,
     private configService: ConfigService,
@@ -404,7 +491,10 @@ export class UsersService {
     @Inject(forwardRef(() => AuthService))
     private authService: AuthService,
     private userReportService: UserReportService,
-    private profilePicturesService: ProfilePicturesService,
+    private profilePicturesService: ProfilePicturesService,    
     private fcmTokensService: FcmTokenService,
+    private interestsService: InterestsService,
+    private profileVideoLikeService: ProfileVideoLikesService,
+    private ethnicityService: EthnicityService
   ) {}
 }

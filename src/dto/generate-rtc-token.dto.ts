@@ -4,6 +4,7 @@ export class GenerateRtcTokenDto {
   @IsNumber()
   @IsNotEmpty()
   public readonly uid: number;
+  // public readonly account: string;
 
   @IsString()
   @IsNotEmpty()

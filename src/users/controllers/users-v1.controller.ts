@@ -16,15 +16,22 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { getMessaging } from 'firebase-admin/messaging';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AuthUser } from 'src/common/decorators/auth-user.decorator';
+import { UpdateInterestsDto } from 'src/interests/dto/update-interests.dto';
+import { Interests } from 'src/interests/interests.entity';
+import { InterestsService } from 'src/interests/interests.service';
 import { ReportUserProfileDto } from 'src/user-report/dto/report-user-profile.dto';
 import { ChangeEmailDto } from '../dto/change-email.dto';
 import { MatchUnmatchDto } from '../dto/match-unmatch.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { User } from '../user.entity';
 import { UsersService } from '../users.service';
-
+import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
+import { EthnicityService } from 'src/ethnicity/ethnicity.service';
+import { UpdateEthnicityDto } from 'src/ethnicity/dto/update-ethnicity.dto';
+import { NOTIFICATION } from 'src/common/constants';
 @Controller({
   path: 'users',
   version: '1',
@@ -135,8 +142,73 @@ export class UsersControllerV1 {
       user,
       matchUnmatchDto.action,
     );
+    console.log("USER ACTION" + matchUnmatchDto.action)
+    if(matchUnmatchDto.action == 'LIKED'){
+      const receiver = await this.usersService.findOneByAttribute({
+        select: ['id', 'fcmTokens', 'notifications'],
+        where: { id: user },
+        relations: ['fcmTokens', 'profilePictures'],
+      });
+      console.log(authUser.firstName + " liked " + receiver.firstName)
+      if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
+        await getMessaging().sendMulticast(
+          {
+            data: {
+              senderId: authUser.id.toString(),
+              type: 'like',
+              category: 'like',
+              message: authUser.firstName + " liked you.",
+              notificationCount:"1",
+            },
+            apns: {
+              payload: {
+                aps: {
+                  alert: {
+                    body: authUser.firstName + " liked you.",
+                  },
+                  category: 'like',
+                  badge:1,
+                  sound:"default",
+                  contentAvailable: true,
+                 },
+                },
+              },
+              tokens:receiver.rawFcmTokens,
+            });
+      }
+    }
     return { message: 'Success!' };
   }
 
-  constructor(private usersService: UsersService) {}
+  @Patch('interests')
+  @ApiOperation({ summary: 'Update Interests' })
+  public async updateInterests(
+    @AuthUser() authUser: User,
+    @Body() updateInterestsDto: UpdateInterestsDto,
+  ): Promise<{ data: Interests[] }> {
+    const interests = await this.usersService.updateInterests(
+      authUser,
+      updateInterestsDto.interests,
+    );
+    return { data: interests };
+  }
+
+  @Patch('ethnicity')
+  @ApiOperation({ summary: 'Update Ethnicity' })
+  public async updateEthnicity(
+    @AuthUser() authUser: User,
+    @Body() updateEthnicityDto: UpdateEthnicityDto,
+  ): Promise<{ data: Ethnicity[] }> {
+    const ethnicity = await this.usersService.updateEthnicity(
+      authUser,
+      updateEthnicityDto.ethnicity,
+    );
+    return { data: ethnicity };
+  }
+
+  constructor(
+    private usersService: UsersService,
+    private interestsService: InterestsService,
+    private ethnicityService: EthnicityService,
+  ) {}
 }

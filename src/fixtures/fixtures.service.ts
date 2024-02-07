@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { plainToClass } from 'class-transformer';
+import { plainToClass, plainToInstance } from 'class-transformer';
 import {
   IPaginationMeta,
   IPaginationOptions,
@@ -11,9 +11,13 @@ import { ReportFixtureUserDto } from 'src/events/dto/report-fixture-user.dto';
 import { UpdateFixtureStatusDto } from 'src/events/dto/update-fixture-status.dto';
 import { Participant } from 'src/participants/participant.entity';
 import { ProfilePicture } from 'src/profile-pictures/profile-picture.entity';
+import {
+  ProfileVideoLike,
+  ProfileVideoLikeStatusEnum,
+} from 'src/profile-video-likes/profile-video-like.entity';
 import { User } from 'src/users/user.entity';
 import { UsersService } from 'src/users/users.service';
-import { getConnection, Repository } from 'typeorm';
+import { Brackets, getConnection, getManager, Repository } from 'typeorm';
 import { UserFixtureListDto } from './dto/user-fixture-list.dto';
 import { Fixture, FixtureStatus } from './fixture.entity';
 
@@ -25,47 +29,124 @@ export class FixturesService {
   public async getUsersWhoLikedMe(
     authUserId: number,
     options: IPaginationOptions,
-    eventId: number | string,
+    eventId?: number | string,
   ): Promise<Pagination<User, IPaginationMeta>> {
-    const query: [string, any[]] = [
-      `
-        SELECT user_id FROM (
-            SELECT f1.id, fp1.user_id AS user_id,
-            (
-                SELECT COUNT(*) FROM fixtures f2
-                WHERE f2.status IN (?)
-                AND f2.first_participant_id = f1.second_participant_id
-                AND f2.second_participant_id = f1.first_participant_id
-            ) AS mutual_liked
-            FROM fixtures f1
-            INNER JOIN participants fp1 ON fp1.id = f1.first_participant_id
-            INNER JOIN participants sp1 ON sp1.id = f1.second_participant_id
-            WHERE sp1.user_id = ?
-            AND f1.status = ?
-            ${eventId ? 'AND (fp1.event_id = ? OR sp1.event_id = ?)' : ''}
-            HAVING mutual_liked = 0
-        ) temp_table
-        GROUP BY user_id;
-    `,
-      [
-        [FixtureStatus.LIKED, FixtureStatus.DISLIKED],
-        authUserId,
-        FixtureStatus.LIKED,
-        eventId,
-        eventId,
-      ].filter((x) => x),
-    ];
+    let matchedUsersIds = await this.getMatchedUsersIds(authUserId, eventId);
+    matchedUsersIds = matchedUsersIds.length ? matchedUsersIds : [0];
 
-    const users: { user_id: number }[] = await getConnection().query(...query);
+    const fixtureUserHasDislikeSubQuery = getManager()
+      .createQueryBuilder(Fixture, 'f2')
+      .select('COUNT(*)')
+      .innerJoin(Participant, 'fp2', 'fp2.id = f2.first_participant_id')
+      .innerJoin(Participant, 'sp2', 'sp2.id = f2.second_participant_id')
+      .where('f2.status = :dislike', {
+        dislike: FixtureStatus.DISLIKED,
+      })
+      .andWhere('f2.first_participant_id = f.second_participant_id')
+      .andWhere('f2.second_participant_id = f.first_participant_id');
+
+    const fixtureUserLikesQuery = this.fixtureRepo
+      .createQueryBuilder('f')
+      .select(['fp.user_id', 'f.updated_at'])
+      .innerJoin(Participant, 'fp', 'fp.id = f.first_participant_id')
+      .innerJoin(Participant, 'sp', 'sp.id = f.second_participant_id')
+      .where('f.status = :liked', { liked: FixtureStatus.LIKED })
+      .andWhere('sp.user_id = :authUserId', { authUserId })
+      .andWhere(
+        `(${fixtureUserHasDislikeSubQuery.getQuery()}) = 0`,
+        fixtureUserHasDislikeSubQuery.getParameters(),
+      );
+
+    if (eventId) {
+      fixtureUserHasDislikeSubQuery.andWhere(
+        new Brackets((qb) => {
+          return qb
+            .where('fp2.event_id = :eventId', { eventId })
+            .orWhere('sp2.event_id = :eventId', { eventId });
+        }),
+      );
+      fixtureUserLikesQuery.andWhere(
+        new Brackets((qb) => {
+          return qb
+            .where('fp.event_id = :eventId', { eventId })
+            .orWhere('sp.event_id = :eventId', { eventId });
+        }),
+      );
+
+      const [queryOne, parametersOne] =
+        fixtureUserLikesQuery.getQueryAndParameters();
+
+      const users: { user_id: number }[] = await getManager().query(
+        `SELECT user_id FROM (
+            ( ${queryOne} )
+        ) d3
+        WHERE user_id NOT IN (?)
+        GROUP BY user_id, updated_at
+        ORDER BY updated_at DESC`,
+        [...parametersOne, matchedUsersIds],
+      );
+
+      if (!users.length) {
+        return defaultPaginationPayload(options);
+      }
+
+      return this.usersService.getManyUser({
+        ids: users.map((u) => String(u.user_id)),
+        options,
+      });
+    }
+
+    const profileVideoHasDislikeSubQuery = getManager()
+      .createQueryBuilder(ProfileVideoLike, 'pvl_1')
+      .select('COUNT(*)')
+      .where('pvl_1.status = :disliked', {
+        disliked: ProfileVideoLikeStatusEnum.DISLIKED,
+      })
+      .andWhere('pvl_1.from_id = pvl.to_id')
+      .andWhere('pvl_1.to_id = pvl.from_id');
+
+    const profileVideoUserLikesQuery = getManager()
+      .createQueryBuilder(ProfileVideoLike, 'pvl')
+      .select(['pvl.from_id AS user_id', 'pvl.updated_at'])
+      .where('pvl.to_id = :authUserId', { authUserId })
+      .andWhere('pvl.status = :liked', {
+        liked: ProfileVideoLikeStatusEnum.LIKED,
+      })
+      .andWhere(
+        `(${profileVideoHasDislikeSubQuery.getQuery()}) = 0`,
+        profileVideoHasDislikeSubQuery.getParameters(),
+      );
+
+    const [queryOne, parametersOne] =
+      fixtureUserLikesQuery.getQueryAndParameters();
+
+    const [queryTwo, parametersTwo] =
+      profileVideoUserLikesQuery.getQueryAndParameters();
+
+    const users: { user_id: number }[] = await getManager().query(
+      `SELECT user_id FROM (
+            ( ${queryOne} )
+            UNION
+            ( ${queryTwo} )
+        ) d3
+        WHERE user_id NOT IN (?)
+        GROUP BY user_id, updated_at
+        ORDER BY updated_at DESC`,
+      [...parametersOne, ...parametersTwo, matchedUsersIds],
+    );
 
     if (!users.length) {
       return defaultPaginationPayload(options);
     }
 
-    return await this.usersService.getManyUser({
-      ids: users.map((u) => String(u.user_id)),
-      options,
-    });
+    try {
+      return await this.usersService.getManyUser({
+        ids: users.map((u) => String(u.user_id)),
+        options,
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
@@ -76,48 +157,16 @@ export class FixturesService {
     options: IPaginationOptions,
     eventId: string | number,
   ): Promise<Pagination<User>> {
-    try {
-      const users: Record<string, any>[] = await getConnection().query(
-        `
-        SELECT
-        p2.user_id AS userId
-        FROM fixtures f1
-        INNER JOIN participants p1 ON p1.id = f1.first_participant_id
-        INNER JOIN participants p2 ON p2.id = f1.second_participant_id
-        WHERE f1.status = ?
-        AND p1.user_id = ?
-        ${eventId ? 'AND p1.event_id = ?' : ''}
-        AND f1.second_participant_id IN (
-            SELECT f2.first_participant_id
-            FROM fixtures f2
-            INNER JOIN participants p3 ON p3.id = f2.second_participant_id
-            WHERE f2.status = ?
-            AND p3.user_id = ?
-            ${eventId ? 'AND p2.event_id = ?' : ''}
-        )
-        GROUP BY userId
-      `,
-        [
-          FixtureStatus.LIKED,
-          authUserId,
-          eventId,
-          FixtureStatus.LIKED,
-          authUserId,
-          eventId,
-        ].filter((x) => x),
-      );
+    const users = await this.getMatchedUsersIds(authUserId, eventId);
 
-      if (!users.length) {
-        return defaultPaginationPayload(options);
-      }
-
-      return await this.usersService.getManyUser({
-        ids: users.map((u) => String(u.userId)),
-        options,
-      });
-    } catch (error) {
-      throw error;
+    if (!users.length) {
+      return defaultPaginationPayload(options);
     }
+
+    return this.usersService.getManyUser({
+      ids: users,
+      options,
+    });
   }
 
   /**
@@ -155,7 +204,8 @@ export class FixturesService {
       })
       .getRawMany();
 
-    return plainToClass(UserFixtureListDto, data, {
+    // return plainToClass(UserFixtureListDto, data, {
+    return plainToInstance(UserFixtureListDto, data, {
       excludeExtraneousValues: true,
       enableImplicitConversion: true,
     });
@@ -260,6 +310,105 @@ export class FixturesService {
     }
 
     return fixture;
+  }
+
+  public async getMatchedUsersIds(
+    authUserId: number,
+    eventId?: string | number,
+  ): Promise<number[]> {
+    try {
+      const fixtureMatchesQuery = this.fixtureRepo
+        .createQueryBuilder('f')
+        .select(['p1.user_id AS user_id', 'p1.updated_at'])
+        .addSelect((qb) => {
+          qb.select('COUNT(*)')
+            .from(Fixture, 'f1')
+            .innerJoin(Participant, 'p3', 'p3.id = f1.first_participant_id')
+            .innerJoin(Participant, 'p4', 'p4.id = f1.second_participant_id')
+            .where('f1.status = :liked', {
+              liked: ProfileVideoLikeStatusEnum.LIKED,
+            })
+            .andWhere('p3.user_id = p2.user_id')
+            .andWhere('p4.user_id = p1.user_id');
+
+          if (eventId) {
+            qb.andWhere(
+              new Brackets((qb) => {
+                return qb
+                  .where('p3.event_id = :eventId', { eventId })
+                  .orWhere('p4.event_id = :eventId', { eventId });
+              }),
+            );
+          }
+
+          return qb;
+        }, 'mutual_like')
+        .innerJoin(Participant, 'p1', 'p1.id = f.first_participant_id')
+        .innerJoin(Participant, 'p2', 'p2.id = f.second_participant_id')
+        .where('f.status = :liked', { liked: FixtureStatus.LIKED })        
+        .andWhere('p2.user_id = :authUserId', { authUserId })
+        .having('mutual_like > 0');
+
+      if (eventId) {
+        fixtureMatchesQuery.andWhere(
+          new Brackets((qb) => {
+            return qb
+              .where('p1.event_id = :eventId', { eventId })
+              .orWhere('p2.event_id = :eventId', { eventId });
+          }),
+        );
+
+        const [queryOne, paramOne] =
+          fixtureMatchesQuery.getQueryAndParameters();
+
+        const users: { user_id: string }[] = await getManager().query(
+          `SELECT user_id FROM (${queryOne}) AS temp
+          GROUP BY user_id, updated_at
+          ORDER BY updated_at DESC;`,
+          paramOne,
+        );
+
+        return users.map((o) => Number(o.user_id));
+      }
+
+      const profileVideoMatchesQuery = getManager()
+        .createQueryBuilder(ProfileVideoLike, 'p1')
+        .select(['p1.from_id AS user_id', 'p1.updated_at'])
+        .addSelect((qb) => {
+          return qb
+            .select('COUNT(*)')
+            .from(ProfileVideoLike, 'p2')
+            .where('p2.status = :liked', {
+              liked: ProfileVideoLikeStatusEnum.LIKED,
+            })
+            .andWhere('p2.from_id = p1.to_id')
+            .andWhere('p2.to_id = p1.from_id');
+        }, 'mutual_like')
+        .where('p1.status = :liked', {
+          liked: ProfileVideoLikeStatusEnum.LIKED,
+        })
+        .andWhere('p1.to_id = :authUserId', { authUserId })
+        .having('mutual_like > 0');
+
+      const [queryOne, paramOne] = fixtureMatchesQuery.getQueryAndParameters();
+      const [queryTwo, paramTwo] =
+        profileVideoMatchesQuery.getQueryAndParameters();
+
+      const users: { user_id: string }[] = await getManager().query(
+        `SELECT user_id FROM (
+          (${queryOne})
+          UNION
+          (${queryTwo})
+      ) AS temp
+      GROUP BY user_id, updated_at
+      ORDER BY updated_at DESC;`,
+        [...paramOne, ...paramTwo],
+      );
+
+      return users.map((u) => Number(u.user_id));
+    } catch (error) {
+      throw error;
+    }
   }
 
   constructor(

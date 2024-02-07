@@ -5,6 +5,7 @@ import {
   Inject,
   Injectable,
   Logger,
+  Next,
   UnauthorizedException,
 } from '@nestjs/common';
 import { compare, hash } from 'bcrypt';
@@ -34,6 +35,7 @@ import { ConfigService } from '@nestjs/config';
 import { Md5 } from 'ts-md5';
 import * as moment from 'moment';
 import * as admin from 'firebase-admin';
+import { check } from 'prettier';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mailchimp = require('@mailchimp/mailchimp_marketing');
@@ -44,7 +46,7 @@ export class AuthService {
    * Reset Password
    */
   async resetPassword(data: ResetPasswordDto): Promise<void> {
-    const user = await this.usersService.findOne({
+    const user = await this.usersService.findOneByAttribute({
       where: {
         passwordResetToken: data.passwordResetToken,
       },
@@ -93,6 +95,17 @@ export class AuthService {
     });
 
     return resetPasswordToken;
+  }
+
+  /**
+   * resend verification email
+  */
+  async resendVerificationEmail(email: string): Promise<void> {
+    const user = await this.usersService.findOneByEmail(email);
+    if (!user)
+      throw new BadRequestException("Sorry! We couldn't find the account");
+
+      this.usersService.sendVerificationEmail(user);
   }
 
   /**
@@ -149,17 +162,29 @@ export class AuthService {
     }
 
     switch (action) {
-      case NextActionEnum.VERIFY_PHONE:
-        await this.verifyPhoneNumber(authUser, completeRegistrationDto);
-        break;
+      // case NextActionEnum.VERIFY_PHONE:
+      //   await this.verifyPhoneNumber(authUser, completeRegistrationDto);
+      //   break;
 
       case NextActionEnum.UPLOAD_AVATAR:
         await this.uploadAvatar(authUser, avatar);
         break;
+     
+        case NextActionEnum.UPLOAD_VIDEO:
+        await this.uploadVideo(authUser)
+        break;
 
       case NextActionEnum.FILL_PROFILE:
         completeRegistrationDto.avatar = avatar;
-        await this.completeProfile(authUser, completeRegistrationDto);
+        await this.fillProfile(authUser, completeRegistrationDto);
+        break;
+
+      case NextActionEnum.FILL_ETHNICITY:
+        await this.fillEthnicity(authUser, completeRegistrationDto.ethnicity);
+        break;
+      
+      case NextActionEnum.FILL_INTERESTS:
+        await this.fillInterests(authUser, completeRegistrationDto.interests);
         break;
 
       default:
@@ -167,30 +192,34 @@ export class AuthService {
         break;
     }
 
-    return this.usersService.findById(authUser.id);
+    return this.usersService.findOneOrFail({ id: authUser.id }, [
+      'interests',
+      'ethnicity',
+      'profilePictures',
+    ]);
   }
 
   /**
    * Fill Phone-number
    */
-  async fillPhoneNumber(authUser: User, phoneNumber: string): Promise<void> {
-    const checkPhoneNumber = await this.usersService.findOne({
-      where: {
-        phoneNumber,
-      },
-    });
+  // async fillPhoneNumber(authUser: User, phoneNumber: string): Promise<void> {
+  //   const checkPhoneNumber = await this.usersService.findOneByAttribute({
+  //     where: {
+  //       phoneNumber,
+  //     },
+  //   });
 
-    if (checkPhoneNumber)
-      throw new ConflictException(
-        'An account already exists with this phone number',
-      );
+  //   if (checkPhoneNumber)
+  //     throw new ConflictException(
+  //       'An account already exists with this phone number',
+  //     );
 
-    await this.usersService.update(authUser.id, {
-      phoneNumber,
-      requiresAction: true,
-      nextAction: NextActionEnum.VERIFY_PHONE,
-    });
-  }
+  //   await this.usersService.update(authUser.id, {
+  //     phoneNumber,
+  //     requiresAction: true,
+  //     nextAction: NextActionEnum.VERIFY_PHONE,
+  //   });
+  // }
 
   /**
    * Choose gender
@@ -206,13 +235,31 @@ export class AuthService {
   /**
    * Complete profile
    */
-  async completeProfile(
+  public async fillProfile(
     authUser: User,
     completeRegistrationDto: CompleteRegistrationDto,
   ): Promise<void> {
     const { avatar, ...data } = completeRegistrationDto;
     await this.usersService.save({
       ...data,
+      id: authUser.id,
+      nextAction: NextActionEnum.FILL_ETHNICITY,
+      ethnicity: [],
+      interests: [],
+    });
+  }
+
+  public async fillEthnicity(authUser: User, ethnicityIds: number[]) {
+    await this.usersService.updateEthnicity(authUser, ethnicityIds);
+    await this.usersService.save({
+      id: authUser.id,
+      nextAction: NextActionEnum.FILL_INTERESTS,
+    });
+  }
+
+  public async fillInterests(authUser: User, interestIds: number[]) {
+    await this.usersService.updateInterests(authUser, interestIds);
+    await this.usersService.save({
       id: authUser.id,
       nextAction: NextActionEnum.CHOOSE_GENDER,
     });
@@ -230,51 +277,61 @@ export class AuthService {
   }
 
   /**
+   * Upload video
+   */
+  async uploadVideo(authUser: User): Promise<void> {
+    await this.usersService.save({
+      id: authUser.id,
+      nextAction: NextActionEnum.FILL_PROFILE,
+    });
+  }
+
+  /**
    * Verify Phone Number
    */
-  async verifyPhoneNumber(
-    authUser: User,
-    completeRegistrationDto: CompleteRegistrationDto,
-  ): Promise<void> {
-    const phoneNumberExist = await this.usersService.checkPhoneExist(
-      authUser,
-      completeRegistrationDto.phoneNumber,
-    );
+  // async verifyPhoneNumber(
+  //   authUser: User,
+  //   completeRegistrationDto: CompleteRegistrationDto,
+  // ): Promise<void> {
+  //   const phoneNumberExist = await this.usersService.checkPhoneExist(
+  //     authUser,
+  //     completeRegistrationDto.phoneNumber,
+  //   );
 
-    if (phoneNumberExist) {
-      throw new ConflictException(
-        'The phone number is already associated with another account',
-      );
-    }
+  //   if (phoneNumberExist) {
+  //     throw new ConflictException(
+  //       'The phone number is already associated with another account',
+  //     );
+  //   }
 
-    try {
-      const result = await admin
-        .auth()
-        .verifyIdToken(completeRegistrationDto.token, true);
+  //   try {
+  //     const result = await admin
+  //       .auth()
+  //       .verifyIdToken(completeRegistrationDto.token, true);
 
-      if (
-        result.phone_number !==
-        completeRegistrationDto.phoneNumber.replace(' ', '')
-      ) {
-        throw new BadRequestException('Invalid token supplied');
-      }
+  //     if (
+  //       result.phone_number !==
+  //       completeRegistrationDto.phoneNumber.replace(' ', '')
+  //     ) {
+  //       throw new BadRequestException('Invalid token supplied');
+  //     }
 
-      await this.usersService.update(authUser.id, {
-        phoneNumber: completeRegistrationDto.phoneNumber,
-        nextAction: NextActionEnum.UPLOAD_AVATAR,
-      });
-    } catch (error) {
-      if (
-        ['auth/user-disabled', 'auth/id-token-revoked'].includes(error.name) ||
-        ['auth/argument-error'].includes(error.code)
-      ) {
-        throw new BadRequestException(error.message);
-      }
+  //     await this.usersService.update(authUser.id, {
+  //       phoneNumber: completeRegistrationDto.phoneNumber,
+  //       nextAction: NextActionEnum.UPLOAD_AVATAR,
+  //     });
+  //   } catch (error) {
+  //     if (
+  //       ['auth/user-disabled', 'auth/id-token-revoked'].includes(error.name) ||
+  //       ['auth/argument-error'].includes(error.code)
+  //     ) {
+  //       throw new BadRequestException(error.message);
+  //     }
 
-      Logger.log(error);
-      throw error;
-    }
-  }
+  //     Logger.log(error);
+  //     throw error;
+  //   }
+  // }
 
   /**
    * Generate Access & Refresh Token in exchange for a Refresh Token
@@ -327,7 +384,9 @@ export class AuthService {
    * Validate user
    */
   async validateUser(username: string, password: string): Promise<User | null> {
-    const user = await this.usersService.findOne({
+    console.log(username);
+    console.log(password);
+    const user = await this.usersService.findOneByAttribute({
       where: {
         email: username,
         deactivatedAt: IsNull(),
@@ -350,8 +409,8 @@ export class AuthService {
   validateSocialUser(
     data: SocialLoginDto,
   ): Promise<SocialProviderOutput | null> {
-    const socialProviderFactory = new SocialProviderFactory();
-    const socialProvider = socialProviderFactory.make(data);
+    const socialProviderFactory = new SocialProviderFactory()    
+    const socialProvider = socialProviderFactory.make(data);       
     return socialProvider.validate();
   }
 
@@ -359,11 +418,12 @@ export class AuthService {
    * Social Login
    */
   async socialLogin(data: SocialLoginDto) {
+    console.log("@ SOCIAL LOGIN DATA:", data)
     const socialUser = await this.validateSocialUser(data);
-
+    console.log("@ SOCIAL USER:", socialUser)
     if (!socialUser) throw new UnauthorizedException();
 
-    const user = await this.usersService.findOne({
+    const user = await this.usersService.findOneByAttribute({
       where: {
         email: socialUser.email,
         role: RoleType.USER,
@@ -405,7 +465,7 @@ export class AuthService {
    * Register user
    */
   async registerUser(registerDto: RegisterDto) {
-    const checkEmail = await this.usersService.findOne({
+    const checkEmail = await this.usersService.findOneByAttribute({
       where: {
         email: registerDto.email,
         deactivatedAt: IsNull(),

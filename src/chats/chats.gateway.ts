@@ -49,6 +49,10 @@ export class ChatsGateway {
       ...data,
       readBySender: new Date(),
     });
+    console.log("$$$ SOCKET:")
+    console.log(`User ${data.from} to User ${data.to} sending msg: ${data.content}`)
+    console.log("$$$ PM:")
+    console.log(`User ${chat.sender} to User ${chat.receiver} sending msg: ${chat.content}`)
     this.server.to(data.from).to(data.to).emit('private message', chat);
   }
 
@@ -69,11 +73,11 @@ export class ChatsGateway {
   async handleCheckOpponentUserOnlineStatus(
     @MessageBody() data: any,
   ): Promise<any> {
-    const user = await this.usersService.findOne({
+    const user = await this.usersService.findOneByAttribute({
       where: { id: data.userId },
     });
 
-    return { online: user?.isOnline() || false };
+    return { online: user?.isOnline || false };
   }
 
   constructor(

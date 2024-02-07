@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { plainToClass } from 'class-transformer';
+import { plainToClass, plainToInstance } from 'class-transformer';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AuthUser } from 'src/common/decorators/auth-user.decorator';
@@ -63,6 +63,30 @@ export class EventsControllerV1 {
   }
 
   /**
+   * Get Popular events
+   */
+  // @ApiOperation({ summary: 'Get Popular events' })
+  // @Get()
+  // public async getPopularEvents(
+  //   @AuthUser() authUser: User,
+  //   @Query() queryDto: GetEventDto,
+  //   @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
+  //   @Query('limit', new DefaultValuePipe(15), ParseIntPipe) limit?: number,
+  // ): Promise<Record<string, Pagination<Event>>> {
+  //   const { meta, items } = await this.eventsService.getPopularEvents(
+  //     authUser,
+  //     queryDto,
+  //     {
+  //       page,
+  //       limit,
+  //     },
+  //   );
+
+  //   return { data: { items, meta } };
+  // }
+
+
+  /**
    * Get event result
    */
   @ApiOperation({ summary: 'Get event result' })
@@ -73,7 +97,6 @@ export class EventsControllerV1 {
     @Query('limit', new DefaultValuePipe(15)) limit: number,
     @Query() query?: EventResultDto,
   ) {
-    console.log('reached');
     const data = await this.eventsService.getEventResult(authUser, query, {
       page,
       limit,
@@ -101,12 +124,13 @@ export class EventsControllerV1 {
   ): Promise<{ data: EventParticipant[] }> {
     await this.eventsService.bookEventTicket(authUser, bookEventTicketDto);
 
-    const participants = await this.participantsService.getParticipants(
+    const participants = await this.participantsService.getParticipantsForEvent(
       bookEventTicketDto.eventId.toString(),
     );
 
     return {
-      data: plainToClass(EventParticipant, participants, {
+      // data: plainToClass(EventParticipant, participants, {
+      data: plainToInstance(EventParticipant, participants, {
         enableImplicitConversion: true,
         excludeExtraneousValues: true,
       }),
@@ -186,7 +210,7 @@ export class EventsControllerV1 {
   @ApiTags('Test')
   @Post('test/fixtures')
   async testGenerateFixture() {
-    await this.generateFixturesService.handleEvents();
+    await this.generateFixturesService.manageEvents();
   }
 
   constructor(

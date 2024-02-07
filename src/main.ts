@@ -6,8 +6,8 @@ import { NestFactory } from '@nestjs/core';
 import { join } from 'path';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { SocketAdapter } from './chats/socket.adapter';
-import * as admin from 'firebase-admin';
 import { BaseExceptionFilter } from './common/filters/base-exception.filter';
+import * as admin from 'firebase-admin';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
