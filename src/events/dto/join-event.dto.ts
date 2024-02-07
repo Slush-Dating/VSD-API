@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsString } from 'class-validator';
+import { IsInt, IsNotEmpty } from 'class-validator';
 
 export class BookEventTicketDto {
   /**
@@ -8,7 +8,4 @@ export class BookEventTicketDto {
   @IsInt()
   @IsNotEmpty()
   readonly eventId: number;
-
-  @IsString()
-  password: string;
 }

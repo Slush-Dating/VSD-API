@@ -87,18 +87,6 @@ export class Event extends BaseEntity {
   @Column({ type: 'int' })
   minAge: number;
 
-
-  /**
- * @example Passsword
- */
-  @MinLength(3)
-  @IsString()
-  @Expose()
-  @Column()
-  password: string;
-
-
-
   /**
    * @example 21
    */
