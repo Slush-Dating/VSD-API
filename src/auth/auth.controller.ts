@@ -138,6 +138,17 @@ export class AuthControllerV1 {
   }
 
   /**
+   * Resend-verify-email
+  */
+  @Post('/send-verify-email')
+  @ApiOperation({ summary: 'Send/Re-send verification email' })
+  async sendVerificationEmail( @Body() resendmail: ForgotPasswordDto,
+  ): Promise<Record<string, any>> {
+    await this.authService.resendVerificationEmail(resendmail.email);
+    return { message: 'New Email sent successfully!' };
+  }
+
+  /**
    * Forgot Password
    */
   @Post('forgot-password')

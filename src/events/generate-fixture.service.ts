@@ -14,7 +14,7 @@ export class GenerateFixturesService {
   /**
    * Generate Draw/Fixtures
    */
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async manageEvents(): Promise<void> {
     console.log("#Manage Events called from cron")
     this.logger.log({

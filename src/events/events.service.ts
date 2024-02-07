@@ -536,12 +536,11 @@ export class EventsService {
    */
   async getReadyEvents(): Promise<Record<string, any>[]> {
     console.log("Checking if events are ready")
-    console.log(date.toString)
     try {
       return await this.eventRepo.query(
         `SELECT e.*
         FROM events e
-        WHERE (CURRENT_TIMESTAMP + INTERVAL 15 MINUTE) > e.starts_at
+        WHERE (CURRENT_TIMESTAMP + INTERVAL 30 SECOND) > e.starts_at
         AND e.status = ?`,
         [EventStatusEnum.NOT_YET_STARTED],
       );
