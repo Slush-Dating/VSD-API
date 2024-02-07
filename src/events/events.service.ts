@@ -38,7 +38,6 @@ import { ReportFixtureUserDto } from './dto/report-fixture-user.dto';
 import { EventResultDto, EventResultTypeEnum } from './dto/event-result.dto';
 import * as moment from 'moment';
 import { date } from 'joi';
-import { compare } from 'bcrypt';
 
 @Injectable()
 export class EventsService {
@@ -103,7 +102,7 @@ export class EventsService {
       event.participants = participants ?? [];
 
       // return plainToClass(EventList, event, {
-      return plainToInstance(EventList, event, {
+        return plainToInstance(EventList, event, {
         excludeExtraneousValues: true,
         enableImplicitConversion: true,
       });
@@ -262,7 +261,7 @@ export class EventsService {
    */
   findAll(query: PaginateQuery): Promise<Paginated<Event>> {
     return paginate(query, this.eventRepo, {
-      sortableColumns: ['gender', 'type', 'isFree', 'isPopular'],
+      sortableColumns: ['gender', 'type', 'isFree','isPopular'],
       searchableColumns: ['address', 'title'],
     });
   }
@@ -288,19 +287,8 @@ export class EventsService {
     authUser: User,
     data: BookEventTicketDto,
   ): Promise<void> {
-    const event: Event = await this.findOneOrFail({ id: data.eventId });
+    const event = await this.findOneOrFail({ id: data.eventId });
 
-    if (!event) {
-      throw new ForbiddenException(
-        `Please select valid event`,
-      );
-    }
-    const passwordCheck = await compare(data.password, event.password)
-    if (event && !passwordCheck) {
-      throw new ForbiddenException(
-        `Event password is incorrect... !`,
-      );
-    }
     if (!event.isGenderAllowed(authUser)) {
       throw new ForbiddenException(
         `Sorry! The event is only for ${event.gender}`,
@@ -314,120 +302,119 @@ export class EventsService {
     await this.participantsService.bookEventTicket(authUser, event);
   }
 
-
   /**
    * Get Events
    */
-  // async getEvents(
-  //   authUser: User,
-  //   getEventDto: GetEventDto,
-  //   options: PaginationOptions,
-  // ): Promise<Pagination<Event>> {
-  //   try {
-  //     const offset = options.page * options.limit - options.limit;
+  async getEvents(
+    authUser: User,
+    getEventDto: GetEventDto,
+    options: PaginationOptions,
+  ): Promise<Pagination<Event>> {
+    try {
+      const offset = options.page * options.limit - options.limit;
 
-  //     const queryBuilder = this.eventRepo
-  //       .createQueryBuilder('e')
-  //       .leftJoin('e.participants', 'p')
-  //       .orderBy('e.startsAt', 'ASC')
-  //       .groupBy('e.id');
+      const queryBuilder = this.eventRepo
+        .createQueryBuilder('e')
+        .leftJoin('e.participants', 'p')
+        .orderBy('e.startsAt', 'ASC')
+        .groupBy('e.id');
 
-  //     this.filterByEventTimeline(getEventDto, queryBuilder, authUser);
+      this.filterByEventTimeline(getEventDto, queryBuilder, authUser);
 
-  //     // count records
-  //     const { value: totalItems } = await queryBuilder.connection
-  //       .createQueryBuilder()
-  //       .select('COUNT(*)', 'value')
-  //       .from(`(${queryBuilder.getQuery()})`, 'uniqueTableAlias')
-  //       .setParameters(queryBuilder.getParameters())
-  //       .getRawOne();
+      // count records
+      const { value: totalItems } = await queryBuilder.connection
+        .createQueryBuilder()
+        .select('COUNT(*)', 'value')
+        .from(`(${queryBuilder.getQuery()})`, 'uniqueTableAlias')
+        .setParameters(queryBuilder.getParameters())
+        .getRawOne();
 
-  //     // add sub-queries and sorting
-  //     queryBuilder
-  //       .addSelect((qb) => {
-  //         return qb
-  //           .select('COUNT(*)', 'aggregate')
-  //           .from(Participant, 'p1')
-  //           .leftJoin('p1.user', 'p1u')
-  //           .where('p1.event = e.id')
-  //           .andWhere('p1u.gender = :male', { male: GenderEnum.male })
-  //           .andWhere('p1u.deactivatedAt IS NULL');
-  //       }, 'maleParticipants')
-  //       .addSelect((qb) => {
-  //         return qb
-  //           .select('COUNT(*)', 'aggregate')
-  //           .from(Participant, 'p1')
-  //           .leftJoin('p1.user', 'p1u')
-  //           .where('p1.event = e.id')
-  //           .andWhere('p1u.gender = :female', { female: GenderEnum.female })
-  //           .andWhere('p1u.deactivatedAt IS NULL');
-  //       }, 'femaleParticipants')
-  //       .addSelect((qb) => {
-  //         return qb
-  //           .select('COUNT(*)', 'aggregate')
-  //           .from(Participant, 'p1')
-  //           .leftJoin('p1.user', 'p1u')
-  //           .where('p1.event = e.id')
-  //           .andWhere('p1u.deactivatedAt IS NULL');
-  //       }, 'totalParticipants');
+      // add sub-queries and sorting
+      queryBuilder
+        .addSelect((qb) => {
+          return qb
+            .select('COUNT(*)', 'aggregate')
+            .from(Participant, 'p1')
+            .leftJoin('p1.user', 'p1u')
+            .where('p1.event = e.id')
+            .andWhere('p1u.gender = :male', { male: GenderEnum.male })
+            .andWhere('p1u.deactivatedAt IS NULL');
+        }, 'maleParticipants')
+        .addSelect((qb) => {
+          return qb
+            .select('COUNT(*)', 'aggregate')
+            .from(Participant, 'p1')
+            .leftJoin('p1.user', 'p1u')
+            .where('p1.event = e.id')
+            .andWhere('p1u.gender = :female', { female: GenderEnum.female })
+            .andWhere('p1u.deactivatedAt IS NULL');
+        }, 'femaleParticipants')
+        .addSelect((qb) => {
+          return qb
+            .select('COUNT(*)', 'aggregate')
+            .from(Participant, 'p1')
+            .leftJoin('p1.user', 'p1u')
+            .where('p1.event = e.id')
+            .andWhere('p1u.deactivatedAt IS NULL');
+        }, 'totalParticipants');
 
-  //     // fetch records
-  //     let items = await queryBuilder
-  //       .offset(offset)
-  //       .limit(options.limit)
-  //       .getRawMany();
+      // fetch records
+      let items = await queryBuilder
+        .offset(offset)
+        .limit(options.limit)
+        .getRawMany();
 
-  //     // early return if no events found
-  //     if (!items.length) {
-  //       return createPaginationObject({
-  //         items,
-  //         totalItems: Number(totalItems),
-  //         limit: options.limit,
-  //         currentPage: options.page,
-  //       });
-  //     }
+      // early return if no events found
+      if (!items.length) {
+        return createPaginationObject({
+          items,
+          totalItems: Number(totalItems),
+          limit: options.limit,
+          currentPage: options.page,
+        });
+      }
 
-  //     // - remove query alias
-  //     // - convert keys to camelCase
-  //     items = items.map(function (item: Record<string, any>) {
-  //       return Object.fromEntries(
-  //         Object.entries(item).map(([k, v]) => [
-  //           camelCase(k.replace('e_', '')),
-  //           v,
-  //         ]),
-  //       );
-  //     });
+      // - remove query alias
+      // - convert keys to camelCase
+      items = items.map(function (item: Record<string, any>) {
+        return Object.fromEntries(
+          Object.entries(item).map(([k, v]) => [
+            camelCase(k.replace('e_', '')),
+            v,
+          ]),
+        );
+      });
 
-  //     // get participants
-  //     const participants = await this.participantsService.getParticipantsForEvent(
-  //       items.map((item: any) => item.id),
-  //     );
+      // get participants
+      const participants = await this.participantsService.getParticipantsForEvent(
+        items.map((item: any) => item.id),
+      );
 
-  //     // hydrate participants to event
-  //     items.forEach(function (item: any): void {
-  //       const array = participants.filter(
-  //         (p: Participant) => p.event.id === item.id,
-  //       );
+      // hydrate participants to event
+      items.forEach(function (item: any): void {
+        const array = participants.filter(
+          (p: Participant) => p.event.id === item.id,
+        );
 
-  //       item.participants = array || [];
-  //     });
+        item.participants = array || [];
+      });
 
-  //     // convert to class
-  //     items = plainToClass(EventList, items, {
-  //       excludeExtraneousValues: true,
-  //       enableImplicitConversion: true,
-  //     });
+      // convert to class
+      items = plainToClass(EventList, items, {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      });
 
-  //     return createPaginationObject({
-  //       items,
-  //       totalItems: Number(totalItems),
-  //       limit: options.limit,
-  //       currentPage: options.page,
-  //     });
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
+      return createPaginationObject({
+        items,
+        totalItems: Number(totalItems),
+        limit: options.limit,
+        currentPage: options.page,
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
 
   /**
    * Get PopularEvents
@@ -543,47 +530,6 @@ export class EventsService {
   //     throw error;
   //   }
   // }
-  async getEvents(
-    authUser: User,
-    getEventDto: GetEventDto,
-    options: PaginationOptions,
-  ): Promise<Pagination<Event>> {
-    try {
-      const offset = options.page * options.limit - options.limit;
-
-      const queryBuilder = this.eventRepo
-        .createQueryBuilder('e')
-        .leftJoin('e.participants', 'p')
-        .orderBy('e.startsAt', 'ASC')
-        .groupBy('e.id');
-
-      this.filterByEventTimeline(getEventDto, queryBuilder, authUser);
-
-      queryBuilder.addSelect('COUNT(p.id)', 'participantCount');
-      const totalItemsQuery = queryBuilder.getQuery();
-      const { value: totalItems } = await queryBuilder.connection
-        .createQueryBuilder()
-        .select('COUNT(*)', 'value')
-        .from(`(${totalItemsQuery})`, 'uniqueTableAlias')
-        .setParameters(queryBuilder.getParameters())
-        .getRawOne();
-
-      let items = await queryBuilder
-        .offset(offset)
-        .limit(options.limit)
-        .getRawMany();
-
-      if (!items.length) {
-        return createPaginationObject({ items, totalItems: Number(totalItems), limit: options.limit, currentPage: options.page });
-      }
-
-      items = items.map(item => Object.fromEntries(Object.entries(item).map(([k, v]) => [camelCase(k.replace('e_', '')), v])));
-
-      return createPaginationObject({ items, totalItems: Number(totalItems), limit: options.limit, currentPage: options.page });
-    } catch (error) {
-      throw error;
-    }
-  }
 
   /**
    * - Get events which are about to start i.e before 15 min
@@ -691,7 +637,7 @@ export class EventsService {
         });
 
       // + INTERVAL 45 MINUTE
-    } else if (isPopularEvent) {
+    }else if(isPopularEvent) {
       queryBuilder
         .where('e.isPopular = :isPopular', {
           isPopular: true,
@@ -699,7 +645,7 @@ export class EventsService {
         .andWhere('(e.startsAt) > :currentDate', {
           currentDate: moment.utc().format('YYYY-MM-DD H:mm:ss'),
         });
-    } else {
+    }  else {
       this.filterByAge(authUser.age, queryBuilder);
 
       this.filterByGender(authUser, queryBuilder);
@@ -776,5 +722,5 @@ export class EventsService {
     @InjectRepository(Event) private eventRepo: Repository<Event>,
     private participantsService: ParticipantsService,
     private fixturesService: FixturesService,
-  ) { }
+  ) {}
 }
