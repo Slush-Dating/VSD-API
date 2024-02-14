@@ -19,6 +19,8 @@ export class EventList extends PickType(Event, [
   'latitude',
   'longitude',
   'type',
+  'hasPassword',
+  'password'
 ]) {
   @Expose({ name: 'id' })
   eventId: number;

@@ -214,6 +214,22 @@ export class Event extends BaseEntity {
   @Column({ type: 'datetime', nullable: true })
   notifyBeforeOne: Date;
 
+  /**
+   * @example false
+   */
+  @IsBoolean()
+  @Expose()
+  @Column({ type: 'boolean', default: false })
+  hasPassword: boolean;
+
+  /**
+   * @example Welcome to Speed date
+   */
+  @IsString()
+  @Expose()
+  @Column()
+  password: string;
+
   @OneToMany(() => Participant, (participant) => participant.event)
   participants?: Participant[];
 

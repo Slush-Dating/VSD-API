@@ -299,6 +299,18 @@ export class EventsService {
       throw new BadRequestException('Sorry! The booking time is over');
     }
 
+    if (event.hasPassword) {
+      if (data.password == '' || data.password == null) {
+        throw new ForbiddenException(
+          `Please provide password for event authentication`,
+        );
+      } else if (data.password != event.password) {
+        throw new ForbiddenException(
+          `Sorry! Provided password is incorrect`,
+        );
+      }
+    }
+
     await this.participantsService.bookEventTicket(authUser, event);
   }
 
