@@ -61,7 +61,6 @@ export class UsersService {
     return this.getUserInterests(authUser);
   }
 
-  
   public async getUserInterests(authUser: User): Promise<Interests[]> {
     try {
       const user = await this.repository.findOne({
@@ -316,7 +315,7 @@ export class UsersService {
       dateOfBirth: moment(updateUserDto.dateOfBirth, 'YYYY-MM-DD').toDate(),
     };
 
-    // const ids = await this.ethnicityService.findByIds(updateUserDto.ethnicityIds); 
+    // const ids = await this.ethnicityService.findByIds(updateUserDto.ethnicityIds);
     // authUser.ethnicity = ids;
     // await this.repository.save(authUser);
 
@@ -464,7 +463,7 @@ export class UsersService {
       this.repository.create({
         ...data,
         requiresAction: true,
-        nextAction: NextActionEnum.UPLOAD_AVATAR,
+        nextAction: NextActionEnum.FILL_PROFILE,
       }),
     );
     this.sendVerificationEmail(user);
@@ -491,10 +490,10 @@ export class UsersService {
     @Inject(forwardRef(() => AuthService))
     private authService: AuthService,
     private userReportService: UserReportService,
-    private profilePicturesService: ProfilePicturesService,    
+    private profilePicturesService: ProfilePicturesService,
     private fcmTokensService: FcmTokenService,
     private interestsService: InterestsService,
     private profileVideoLikeService: ProfileVideoLikesService,
-    private ethnicityService: EthnicityService
+    private ethnicityService: EthnicityService,
   ) {}
 }

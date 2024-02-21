@@ -83,6 +83,7 @@ export class ListVideoVerseService {
         'u.jobTitle',
         'u.bio',
         'u.address',
+        'u.height',
         'u.country',
       ])
       .addSelect('CONCAT(u.first_name, " ", u.last_name) AS fullName')
@@ -144,7 +145,7 @@ export class ListVideoVerseService {
 
     return createPaginationObject({
       items: plainToInstance(VideoVerseListDto, items, {
-      // items: plainToClass(VideoVerseListDto, items, {
+        // items: plainToClass(VideoVerseListDto, items, {
         excludeExtraneousValues: true,
       }),
       totalItems: Number(totalItems),

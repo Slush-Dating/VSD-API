@@ -63,6 +63,7 @@ export enum NextActionEnum {
   FILL_PROFILE = 'fill_profile',
   FILL_ETHNICITY = 'fill_ethnicity',
   FILL_INTERESTS = 'fill_interests',
+  FILL_HEIGHT = 'fill_height',
   CHOOSE_GENDER = 'choose_gender',
   NONE = 'none',
 }
@@ -228,6 +229,14 @@ export class User extends BaseEntity {
   socialProviderId?: string;
 
   /**
+   * @example "174 cm"
+   */
+  @IsString()
+  @IsNotEmpty()
+  @Column({ type: 'text', nullable: true })
+  height?: string;
+
+  /**
    * Turn notifications on/off
    * @example false
    */
@@ -243,6 +252,9 @@ export class User extends BaseEntity {
   @Exclude()
   @Column({ nullable: true })
   rememberToken?: string;
+
+  @Column({ type: 'text', nullable: true })
+  showOnProfile: string;
 
   /**
    * Forgot Password unique code
@@ -305,8 +317,6 @@ export class User extends BaseEntity {
   @ManyToMany(() => Interests)
   @JoinTable({ name: 'users_interests' })
   interests?: Interests[];
-
-  
   @ManyToMany(() => Ethnicity)
   @JoinTable({ name: 'users_ethnicity' })
   ethnicity?: Ethnicity[];

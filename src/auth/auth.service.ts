@@ -99,13 +99,13 @@ export class AuthService {
 
   /**
    * resend verification email
-  */
+   */
   async resendVerificationEmail(email: string): Promise<void> {
     const user = await this.usersService.findOneByEmail(email);
     if (!user)
       throw new BadRequestException("Sorry! We couldn't find the account");
 
-      this.usersService.sendVerificationEmail(user);
+    this.usersService.sendVerificationEmail(user);
   }
 
   /**
@@ -169,20 +169,33 @@ export class AuthService {
       case NextActionEnum.UPLOAD_AVATAR:
         await this.uploadAvatar(authUser, avatar);
         break;
-     
-        case NextActionEnum.UPLOAD_VIDEO:
-        await this.uploadVideo(authUser)
+
+      case NextActionEnum.UPLOAD_VIDEO:
+        await this.uploadVideo(authUser);
         break;
 
       case NextActionEnum.FILL_PROFILE:
         completeRegistrationDto.avatar = avatar;
-        await this.fillProfile(authUser, completeRegistrationDto);
+        await this.fillProfile(
+          authUser,
+          completeRegistrationDto,
+          completeRegistrationDto.displayOnProfile,
+        );
+        break;
+
+      case NextActionEnum.FILL_HEIGHT:
+        await this.fillHeight(
+          authUser,
+          completeRegistrationDto.height,
+          completeRegistrationDto.height_unit,
+          completeRegistrationDto.displayOnProfile,
+        );
         break;
 
       case NextActionEnum.FILL_ETHNICITY:
         await this.fillEthnicity(authUser, completeRegistrationDto.ethnicity);
         break;
-      
+
       case NextActionEnum.FILL_INTERESTS:
         await this.fillInterests(authUser, completeRegistrationDto.interests);
         break;
@@ -238,15 +251,96 @@ export class AuthService {
   public async fillProfile(
     authUser: User,
     completeRegistrationDto: CompleteRegistrationDto,
+    displayOnProfile: boolean,
   ): Promise<void> {
-    const { avatar, ...data } = completeRegistrationDto;
+    const data: Partial<User> = { id: authUser.id };
+
+    const userData = await this.usersService.findById(authUser.id);
+    // if (displayOnProfile) {
+    //   data.showOnProfile = data.showOnProfile
+    //     ? `${data.showOnProfile},dateOfBirth`
+    //     : 'dateOfBirth';
+    // }
+
+    if (
+      userData.showOnProfile &&
+      userData.showOnProfile?.includes('dateOfBirth') &&
+      displayOnProfile
+    ) {
+      data.showOnProfile = `${userData.showOnProfile}`;
+    } else if (displayOnProfile) {
+      data.showOnProfile = `${
+        userData.showOnProfile
+          ? userData.showOnProfile + ',dateOfBirth'
+          : 'dateOfBirth'
+      }`;
+    }
+
     await this.usersService.save({
       ...data,
       id: authUser.id,
-      nextAction: NextActionEnum.FILL_ETHNICITY,
+      nextAction: NextActionEnum.FILL_HEIGHT,
       ethnicity: [],
       interests: [],
     });
+  }
+
+  public async fillHeight(
+    authUser: User,
+    heightDto: string,
+    heightUnit: string,
+    displayOnProfile: boolean,
+  ) {
+    let heightInCm: number;
+
+    if (heightUnit && heightDto) {
+      if (heightUnit?.toLowerCase() === 'ft') {
+        const heightValue = parseFloat(heightDto);
+        if (isNaN(heightValue)) {
+          throw new BadRequestException('Invalid height value.');
+        }
+
+        heightInCm = heightValue * 30.48;
+      } else if (heightUnit?.toLowerCase() === 'cm') {
+        heightInCm = parseFloat(heightDto);
+        if (isNaN(heightInCm)) {
+          throw new BadRequestException('Invalid height value.');
+        }
+      } else {
+        throw new BadRequestException(
+          'Invalid height unit. Supported units are "ft" and "cm".',
+        );
+      }
+    }
+
+    const data: Partial<User> = { id: authUser.id };
+
+    const userData = await this.usersService.findById(authUser.id);
+
+    console.log('profile', userData.showOnProfile?.includes('height'));
+    if (
+      userData.showOnProfile &&
+      userData.showOnProfile?.includes('height') &&
+      displayOnProfile
+    ) {
+      data.showOnProfile = `${userData.showOnProfile}`;
+    } else if (displayOnProfile) {
+      data.showOnProfile = `${
+        userData.showOnProfile ? userData.showOnProfile + ', height' : 'height'
+      }`;
+    }
+
+    await this.usersService.save({
+      height: heightInCm ? heightInCm?.toFixed(0).toString() : '',
+      ...data,
+      nextAction: NextActionEnum.FILL_PROFILE,
+    });
+
+    // await this.usersService.save({
+    //   height: heightDto,
+    //   id: authUser.id,
+    //   // nextAction: NextActionEnum.FILL_ETHNICITY,
+    // });
   }
 
   public async fillEthnicity(authUser: User, ethnicityIds: number[]) {
@@ -409,8 +503,8 @@ export class AuthService {
   validateSocialUser(
     data: SocialLoginDto,
   ): Promise<SocialProviderOutput | null> {
-    const socialProviderFactory = new SocialProviderFactory()    
-    const socialProvider = socialProviderFactory.make(data);       
+    const socialProviderFactory = new SocialProviderFactory();
+    const socialProvider = socialProviderFactory.make(data);
     return socialProvider.validate();
   }
 
@@ -418,9 +512,9 @@ export class AuthService {
    * Social Login
    */
   async socialLogin(data: SocialLoginDto) {
-    console.log("@ SOCIAL LOGIN DATA:", data)
+    console.log('@ SOCIAL LOGIN DATA:', data);
     const socialUser = await this.validateSocialUser(data);
-    console.log("@ SOCIAL USER:", socialUser)
+    console.log('@ SOCIAL USER:', socialUser);
     if (!socialUser) throw new UnauthorizedException();
 
     const user = await this.usersService.findOneByAttribute({
@@ -555,3 +649,22 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 }
+
+export const convertHeightToCm = (height: string): number => {
+  const heightParts = height.split(' ');
+  const heightValue = parseFloat(heightParts[0]);
+  const unit = heightParts[1];
+  console.log(heightValue);
+  console.log(unit);
+
+  // Convert height to centimeters
+  switch (unit) {
+    case 'cm':
+      return heightValue;
+    case 'ft':
+      // Assuming 1 foot = 30.48 cm
+      return heightValue * 30.48;
+    default:
+      throw new Error('Invalid height unit');
+  }
+};

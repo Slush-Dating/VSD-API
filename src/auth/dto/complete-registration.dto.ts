@@ -18,7 +18,6 @@ import {
 } from '../../users/user.entity';
 
 export class CompleteRegistrationDto {
- 
   @IsEnum(NextActionEnum)
   @IsNotEmpty()
   action!: NextActionEnum;
@@ -53,7 +52,6 @@ export class CompleteRegistrationDto {
     format: 'binary',
   })
   avatar?: Express.Multer.File;
-
 
   /**
    * Required when action = 'upload_video'
@@ -98,6 +96,24 @@ export class CompleteRegistrationDto {
   @IsDateString()
   @IsNotEmpty()
   dateOfBirth?: string;
+
+  /**
+   * @example "174"
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_HEIGHT,
+  )
+  @IsNotEmpty()
+  height?: string;
+
+  /**
+   * @example "cm"
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_HEIGHT,
+  )
+  @IsNotEmpty()
+  height_unit?: string;
 
   /**
    * Required when action = 'fill_profile'
@@ -176,12 +192,11 @@ export class CompleteRegistrationDto {
   @IsNotEmpty()
   bio?: string;
 
-
-   /**
+  /**
    * Required when action = 'ethnicity'
    * @example [1, 2]
    */
-   @ValidateIf(
+  @ValidateIf(
     (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_ETHNICITY,
   )
   @IsArray()
@@ -201,8 +216,6 @@ export class CompleteRegistrationDto {
   @IsNumberString({}, { each: true })
   interests?: number[];
 
- 
-
   /**
    * Required when action = 'choose_gender'
    * @example male
@@ -213,4 +226,12 @@ export class CompleteRegistrationDto {
   @IsEnum(GenderEnum)
   @IsNotEmpty()
   gender?: GenderEnum;
+
+  @ValidateIf(
+    (o: CompleteRegistrationDto) =>
+      o.action === NextActionEnum.FILL_HEIGHT ||
+      o.action === NextActionEnum.FILL_PROFILE,
+  )
+  @IsNotEmpty()
+  displayOnProfile?: boolean;
 }
