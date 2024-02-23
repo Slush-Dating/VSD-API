@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Post,
   Request,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -25,7 +27,11 @@ import { RegisterDto } from './dto/register.dto';
 import { SocialLoginDto } from './dto/social-login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  AnyFilesInterceptor,
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 import { CheckPhoneExistDto } from './dto/check-phone-exist.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyForgotPasswordDto } from './dto/verify-forgot-password.dto';
@@ -58,17 +64,34 @@ export class AuthControllerV1 {
   @ApiConsumes('multipart/form-data')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('avatar'))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'avatar', maxCount: 1 },
+      { name: 'video', maxCount: 1 },
+    ]),
+  )
+  // @UseInterceptors(FileInterceptor('avatar'))
+  // @UseInterceptors(FileInterceptor('video'))
   async completeRegistration(
     @AuthUser() authUser: User,
     @Body() completeRegistrationDto: CompleteRegistrationDto,
-    @UploadedFile() avatar?: Express.Multer.File,
+    @UploadedFiles() avatar?: { avatar: Express.Multer.File[] },
+    @UploadedFiles() video?: { video: Express.Multer.File[] },
   ) {
+    if (!avatar?.avatar || avatar?.avatar.length === 0) {
+      throw new BadRequestException(`The avatar field is required`);
+    }
+    if (!video?.video || video?.video.length === 0) {
+      throw new BadRequestException(`The video field is required`);
+    }
+
     const user = await this.authService.completeRegistration(
       authUser,
       completeRegistrationDto,
-      avatar,
+      avatar.avatar[0],
+      video.video[0],
     );
+
     return { data: user };
   }
 
@@ -139,10 +162,11 @@ export class AuthControllerV1 {
 
   /**
    * Resend-verify-email
-  */
+   */
   @Post('/send-verify-email')
   @ApiOperation({ summary: 'Send/Re-send verification email' })
-  async sendVerificationEmail( @Body() resendmail: ForgotPasswordDto,
+  async sendVerificationEmail(
+    @Body() resendmail: ForgotPasswordDto,
   ): Promise<Record<string, any>> {
     await this.authService.resendVerificationEmail(resendmail.email);
     return { message: 'New Email sent successfully!' };

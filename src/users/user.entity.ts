@@ -49,22 +49,40 @@ export enum AuthType {
 export enum GenderEnum {
   male = 'male',
   female = 'female',
+  other = 'other',
+}
+
+export enum LookingForEnum {
+  meet_new_people = 'meet new people',
+  casual_dating = 'casual dating',
+  ready_for_relationship = 'ready for relationship',
 }
 
 export enum SexualityEnum {
   STRAIGHT = 'straight',
-  GAY_OR_LESBIAN = 'gay_or_lesbian',
+  GAY = 'gay',
+  LESBIAN = 'lesbian',
   BISEXUAL = 'bisexual',
+  ASEXUAL = 'asexual',
+  DEMISEXUAL = 'demisexual',
+  PANSEXUAL = 'pansexual',
+  QUEER = 'queer',
+  QUESTIONING = 'questioning',
 }
 
 export enum NextActionEnum {
+  FILL_FIRSTNAME = 'fill_firstname',
+  FILL_DATEOFBIRTH = 'fill_dateofbirth',
+  FILL_HEIGHT = 'fill_height',
+  CHOOSE_GENDER = 'choose_gender',
+  FILL_LOOKINGFOR = 'fill_lookingfor',
+  FILL_SEXUAL_ORIENTATION = 'fill_sexual_orientation',
+  FILL_ETHNICITY = 'fill_ethnicity',
+  FILL_LOCATION = 'fill_location',
   UPLOAD_AVATAR = 'upload_avatar',
   UPLOAD_VIDEO = 'upload_video',
   FILL_PROFILE = 'fill_profile',
-  FILL_ETHNICITY = 'fill_ethnicity',
   FILL_INTERESTS = 'fill_interests',
-  FILL_HEIGHT = 'fill_height',
-  CHOOSE_GENDER = 'choose_gender',
   NONE = 'none',
 }
 
@@ -161,6 +179,14 @@ export class User extends BaseEntity {
   @IsNotEmpty()
   @Column({ type: 'enum', enum: GenderEnum, nullable: true })
   gender?: GenderEnum;
+
+  /**
+   * @example meet new people
+   */
+  @IsEnum(LookingForEnum)
+  @IsNotEmpty()
+  @Column({ type: 'enum', enum: LookingForEnum, nullable: true })
+  lookingFor?: LookingForEnum;
 
   /**
    * @example female
@@ -347,6 +373,13 @@ export class User extends BaseEntity {
     );
   }
 
+  public get video(): string | null {
+    return (
+      (this.profileVideos?.[0]?.key && bucketUrl(this.profileVideos[0].key)) ??
+      null
+    );
+  }
+
   public get rawFcmTokens(): string[] {
     if (this.fcmTokens?.length) {
       return this.fcmTokens.map((f) => f.token);
@@ -425,15 +458,13 @@ export class User extends BaseEntity {
 
   public get isGay(): boolean {
     return (
-      this.sexuality === SexualityEnum.GAY_OR_LESBIAN &&
-      this.gender === GenderEnum.male
+      this.sexuality === SexualityEnum.GAY && this.gender === GenderEnum.male
     );
   }
 
   public get isLesbian(): boolean {
     return (
-      this.sexuality === SexualityEnum.GAY_OR_LESBIAN &&
-      this.gender === GenderEnum.female
+      this.sexuality === SexualityEnum.GAY && this.gender === GenderEnum.female
     );
   }
 

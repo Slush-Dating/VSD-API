@@ -14,8 +14,10 @@ import { RefreshTokenService } from 'src/refresh-tokens/refresh-tokens.service';
 import { CompleteRegistrationDto } from 'src/auth/dto/complete-registration.dto';
 import {
   GenderEnum,
+  LookingForEnum,
   NextActionEnum,
   RoleType,
+  SexualityEnum,
   User,
 } from 'src/users/user.entity';
 import { UsersService } from 'src/users/users.service';
@@ -152,6 +154,7 @@ export class AuthService {
     authUser: User,
     completeRegistrationDto: CompleteRegistrationDto,
     avatar?: Express.Multer.File,
+    video?: Express.Multer.File,
   ): Promise<User> {
     const { action } = completeRegistrationDto;
 
@@ -166,20 +169,14 @@ export class AuthService {
       //   await this.verifyPhoneNumber(authUser, completeRegistrationDto);
       //   break;
 
-      case NextActionEnum.UPLOAD_AVATAR:
-        await this.uploadAvatar(authUser, avatar);
+      case NextActionEnum.FILL_FIRSTNAME:
+        await this.fillFirstName(authUser, completeRegistrationDto.firstName);
         break;
 
-      case NextActionEnum.UPLOAD_VIDEO:
-        await this.uploadVideo(authUser);
-        break;
-
-      case NextActionEnum.FILL_PROFILE:
-        completeRegistrationDto.avatar = avatar;
-        await this.fillProfile(
+      case NextActionEnum.FILL_DATEOFBIRTH:
+        await this.fillDateOfBirth(
           authUser,
-          completeRegistrationDto,
-          completeRegistrationDto.displayOnProfile,
+          completeRegistrationDto.dateOfBirth,
         );
         break;
 
@@ -192,8 +189,59 @@ export class AuthService {
         );
         break;
 
+      case NextActionEnum.CHOOSE_GENDER: {
+        await this.chooseGender(
+          authUser,
+          completeRegistrationDto.gender,
+          completeRegistrationDto.displayOnProfile,
+        );
+        break;
+      }
+      case NextActionEnum.FILL_LOOKINGFOR: {
+        await this.fillLookingfor(
+          authUser,
+          completeRegistrationDto.lookingFor,
+          completeRegistrationDto.displayOnProfile,
+        );
+        break;
+      }
+
+      case NextActionEnum.FILL_SEXUAL_ORIENTATION: {
+        await this.fillSexualOrientation(
+          authUser,
+          completeRegistrationDto.sexuality,
+          completeRegistrationDto.displayOnProfile,
+        );
+        break;
+      }
+
       case NextActionEnum.FILL_ETHNICITY:
         await this.fillEthnicity(authUser, completeRegistrationDto.ethnicity);
+        break;
+
+      case NextActionEnum.FILL_LOCATION:
+        await this.fillLocation(
+          authUser,
+          completeRegistrationDto.latitude,
+          completeRegistrationDto.longitude,
+        );
+        break;
+
+      case NextActionEnum.UPLOAD_AVATAR:
+        await this.uploadAvatar(authUser, avatar);
+        break;
+
+      case NextActionEnum.UPLOAD_VIDEO:
+        await this.uploadVideo(authUser, video);
+        break;
+
+      case NextActionEnum.FILL_PROFILE:
+        completeRegistrationDto.avatar[0] = avatar;
+        await this.fillProfile(
+          authUser,
+          completeRegistrationDto,
+          completeRegistrationDto.displayOnProfile,
+        );
         break;
 
       case NextActionEnum.FILL_INTERESTS:
@@ -201,7 +249,7 @@ export class AuthService {
         break;
 
       default:
-        await this.chooseGender(authUser, completeRegistrationDto.gender);
+        // await this.chooseGender(authUser, completeRegistrationDto.gender);
         break;
     }
 
@@ -209,6 +257,7 @@ export class AuthService {
       'interests',
       'ethnicity',
       'profilePictures',
+      'profileVideos',
     ]);
   }
 
@@ -235,53 +284,22 @@ export class AuthService {
   // }
 
   /**
-   * Choose gender
+   * Complete profile
    */
-  async chooseGender(authUser: User, gender: GenderEnum): Promise<void> {
-    await this.usersService.update(authUser.id, {
-      gender,
-      requiresAction: false,
-      nextAction: NextActionEnum.NONE,
+
+  public async fillFirstName(authUser: User, firstName: string) {
+    await this.usersService.save({
+      id: authUser.id,
+      firstName: firstName,
+      nextAction: NextActionEnum.FILL_DATEOFBIRTH,
     });
   }
 
-  /**
-   * Complete profile
-   */
-  public async fillProfile(
-    authUser: User,
-    completeRegistrationDto: CompleteRegistrationDto,
-    displayOnProfile: boolean,
-  ): Promise<void> {
-    const data: Partial<User> = { id: authUser.id };
-
-    const userData = await this.usersService.findById(authUser.id);
-    // if (displayOnProfile) {
-    //   data.showOnProfile = data.showOnProfile
-    //     ? `${data.showOnProfile},dateOfBirth`
-    //     : 'dateOfBirth';
-    // }
-
-    if (
-      userData.showOnProfile &&
-      userData.showOnProfile?.includes('dateOfBirth') &&
-      displayOnProfile
-    ) {
-      data.showOnProfile = `${userData.showOnProfile}`;
-    } else if (displayOnProfile) {
-      data.showOnProfile = `${
-        userData.showOnProfile
-          ? userData.showOnProfile + ',dateOfBirth'
-          : 'dateOfBirth'
-      }`;
-    }
-
+  public async fillDateOfBirth(authUser: User, dateOfBirth: string) {
     await this.usersService.save({
-      ...data,
       id: authUser.id,
+      dateOfBirth: dateOfBirth,
       nextAction: NextActionEnum.FILL_HEIGHT,
-      ethnicity: [],
-      interests: [],
     });
   }
 
@@ -289,7 +307,7 @@ export class AuthService {
     authUser: User,
     heightDto: string,
     heightUnit: string,
-    displayOnProfile: boolean,
+    displayOnProfile: string,
   ) {
     let heightInCm: number;
 
@@ -316,46 +334,203 @@ export class AuthService {
     const data: Partial<User> = { id: authUser.id };
 
     const userData = await this.usersService.findById(authUser.id);
-
-    console.log('profile', userData.showOnProfile?.includes('height'));
-    if (
-      userData.showOnProfile &&
-      userData.showOnProfile?.includes('height') &&
-      displayOnProfile
+    if (displayOnProfile === 'true') {
+      if (
+        userData.showOnProfile?.includes('height') &&
+        displayOnProfile === 'true'
+      ) {
+        data.showOnProfile = `${userData.showOnProfile}`;
+      } else {
+        data.showOnProfile = `${
+          userData.showOnProfile
+            ? userData.showOnProfile + ', height'
+            : 'height'
+        }`;
+      }
+    } else if (
+      displayOnProfile === 'false' &&
+      userData.showOnProfile?.includes('height')
     ) {
-      data.showOnProfile = `${userData.showOnProfile}`;
-    } else if (displayOnProfile) {
-      data.showOnProfile = `${
-        userData.showOnProfile ? userData.showOnProfile + ', height' : 'height'
-      }`;
+      if (
+        userData.showOnProfile.includes('height') &&
+        displayOnProfile === 'false'
+      ) {
+        let fields = userData.showOnProfile.split(', ');
+        fields = fields.filter((item) => item !== 'height');
+        data.showOnProfile = fields.join(', ');
+      }
     }
 
     await this.usersService.save({
-      height: heightInCm ? heightInCm?.toFixed(0).toString() : '',
+      height: heightInCm?.toFixed(0).toString(),
       ...data,
-      nextAction: NextActionEnum.FILL_PROFILE,
+      nextAction: NextActionEnum.CHOOSE_GENDER,
     });
 
     // await this.usersService.save({
     //   height: heightDto,
     //   id: authUser.id,
-    //   // nextAction: NextActionEnum.FILL_ETHNICITY,
+    //   nextAction: NextActionEnum.FILL_ETHNICITY,
     // });
+  }
+
+  /**
+   * Choose gender
+   */
+  async chooseGender(
+    authUser: User,
+    gender: GenderEnum,
+    displayOnProfile: string,
+  ): Promise<void> {
+    const data: Partial<User> = { id: authUser.id };
+
+    const userData = await this.usersService.findById(authUser.id);
+    if (displayOnProfile === 'true') {
+      if (
+        userData.showOnProfile?.includes('gender') &&
+        displayOnProfile === 'true'
+      ) {
+        data.showOnProfile = `${userData.showOnProfile}`;
+      } else {
+        data.showOnProfile = `${
+          userData.showOnProfile
+            ? userData.showOnProfile + ', gender'
+            : 'gender'
+        }`;
+      }
+    } else if (
+      displayOnProfile === 'false' &&
+      userData.showOnProfile?.includes('gender')
+    ) {
+      if (
+        userData.showOnProfile.includes('gender') &&
+        displayOnProfile === 'false'
+      ) {
+        let fields = userData.showOnProfile.split(', ');
+        fields = fields.filter((item) => item !== 'gender');
+        data.showOnProfile = fields.join(', ');
+      }
+    }
+    await this.usersService.update(authUser.id, {
+      gender,
+      ...data,
+      // requiresAction: false,
+      nextAction: NextActionEnum.FILL_LOOKINGFOR,
+    });
+  }
+
+  /**
+   * Choose Looking for
+   */
+  async fillLookingfor(
+    authUser: User,
+    lookingFor: LookingForEnum,
+    displayOnProfile: string,
+  ): Promise<void> {
+    const data: Partial<User> = { id: authUser.id };
+
+    const userData = await this.usersService.findById(authUser.id);
+
+    if (displayOnProfile === 'true') {
+      if (
+        userData.showOnProfile.includes('lookingFor') &&
+        displayOnProfile === 'true'
+      ) {
+        data.showOnProfile = `${userData.showOnProfile}`;
+      } else {
+        data.showOnProfile = `${
+          userData.showOnProfile
+            ? userData.showOnProfile + ', lookingFor'
+            : 'lookingFor'
+        }`;
+      }
+    } else if (
+      displayOnProfile === 'false' &&
+      userData.showOnProfile?.includes('lookingFor')
+    ) {
+      if (
+        userData.showOnProfile.includes('lookingFor') &&
+        displayOnProfile === 'false'
+      ) {
+        let fields = userData.showOnProfile.split(', ');
+        fields = fields.filter((item) => item !== 'lookingFor');
+        data.showOnProfile = fields.join(', ');
+      }
+    }
+
+    await this.usersService.update(authUser.id, {
+      lookingFor,
+      ...data,
+      nextAction: NextActionEnum.FILL_SEXUAL_ORIENTATION,
+    });
+  }
+
+  /**
+   * Fill Sexual orientation
+   */
+  async fillSexualOrientation(
+    authUser: User,
+    sexuality: SexualityEnum,
+    displayOnProfile: string,
+  ): Promise<void> {
+    const data: Partial<User> = { id: authUser.id };
+
+    const userData = await this.usersService.findById(authUser.id);
+
+    if (displayOnProfile === 'true') {
+      if (
+        userData.showOnProfile.includes('sexuality') &&
+        displayOnProfile === 'true'
+      ) {
+        data.showOnProfile = `${userData.showOnProfile}`;
+      } else {
+        data.showOnProfile = `${
+          userData.showOnProfile
+            ? userData.showOnProfile + ', sexuality'
+            : 'sexuality'
+        }`;
+      }
+    } else if (
+      displayOnProfile === 'false' &&
+      userData.showOnProfile?.includes('sexuality')
+    ) {
+      if (
+        userData.showOnProfile.includes('sexuality') &&
+        displayOnProfile === 'false'
+      ) {
+        let fields = userData.showOnProfile.split(', ');
+        fields = fields.filter((item) => item !== 'sexuality');
+        data.showOnProfile = fields.join(', ');
+      }
+    }
+
+    await this.usersService.update(authUser.id, {
+      sexuality,
+      ...data,
+      nextAction: NextActionEnum.FILL_ETHNICITY,
+    });
   }
 
   public async fillEthnicity(authUser: User, ethnicityIds: number[]) {
     await this.usersService.updateEthnicity(authUser, ethnicityIds);
     await this.usersService.save({
       id: authUser.id,
-      nextAction: NextActionEnum.FILL_INTERESTS,
+      nextAction: NextActionEnum.FILL_LOCATION,
     });
   }
 
-  public async fillInterests(authUser: User, interestIds: number[]) {
-    await this.usersService.updateInterests(authUser, interestIds);
+  // fill location
+
+  public async fillLocation(
+    authUser: User,
+    latitude: string,
+    longitude: string,
+  ) {
     await this.usersService.save({
       id: authUser.id,
-      nextAction: NextActionEnum.CHOOSE_GENDER,
+      latitude: latitude,
+      longitude: longitude,
+      nextAction: NextActionEnum.UPLOAD_AVATAR,
     });
   }
 
@@ -363,20 +538,58 @@ export class AuthService {
    * Upload avatar
    */
   async uploadAvatar(authUser: User, file: Express.Multer.File): Promise<void> {
-    if (!file) {
-      throw new BadRequestException(`The avatar field is required`);
-    }
-
     await this.usersService.uploadAvatar(authUser, file);
   }
 
   /**
    * Upload video
    */
-  async uploadVideo(authUser: User): Promise<void> {
+  async uploadVideo(authUser: User, video: Express.Multer.File): Promise<void> {
+    await this.usersService.uploadVideo(authUser, video);
+
+    // await this.usersService.save({
+    //   id: authUser.id,
+    //   // nextAction: NextActionEnum.FILL_FIRSTNAME,
+    // });
+  }
+
+  public async fillProfile(
+    authUser: User,
+    completeRegistrationDto: CompleteRegistrationDto,
+    displayOnProfile: string,
+  ): Promise<void> {
+    const data: Partial<User> = { id: authUser.id };
+
+    const userData = await this.usersService.findById(authUser.id);
+
+    if (
+      userData.showOnProfile &&
+      userData.showOnProfile?.includes('dateOfBirth') &&
+      displayOnProfile
+    ) {
+      data.showOnProfile = `${userData.showOnProfile}`;
+    } else if (displayOnProfile) {
+      data.showOnProfile = `${
+        userData.showOnProfile
+          ? userData.showOnProfile + ',dateOfBirth'
+          : 'dateOfBirth'
+      }`;
+    }
+
+    await this.usersService.save({
+      ...data,
+      id: authUser.id,
+      nextAction: NextActionEnum.FILL_FIRSTNAME,
+      ethnicity: [],
+      interests: [],
+    });
+  }
+
+  public async fillInterests(authUser: User, interestIds: number[]) {
+    await this.usersService.updateInterests(authUser, interestIds);
     await this.usersService.save({
       id: authUser.id,
-      nextAction: NextActionEnum.FILL_PROFILE,
+      // nextAction: NextActionEnum.CHOOSE_GENDER,
     });
   }
 

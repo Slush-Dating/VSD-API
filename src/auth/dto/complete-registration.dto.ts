@@ -13,9 +13,11 @@ import {
 } from 'class-validator';
 import {
   GenderEnum,
+  LookingForEnum,
   NextActionEnum,
   SexualityEnum,
 } from '../../users/user.entity';
+import { isBoolean } from 'lodash';
 
 export class CompleteRegistrationDto {
   @IsEnum(NextActionEnum)
@@ -67,7 +69,7 @@ export class CompleteRegistrationDto {
    * @example John
    */
   @ValidateIf(
-    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_FIRSTNAME,
   )
   @MinLength(3)
   @IsString()
@@ -91,7 +93,8 @@ export class CompleteRegistrationDto {
    * @example 1996-12-16
    */
   @ValidateIf(
-    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+    (o: CompleteRegistrationDto) =>
+      o.action === NextActionEnum.FILL_DATEOFBIRTH,
   )
   @IsDateString()
   @IsNotEmpty()
@@ -142,7 +145,7 @@ export class CompleteRegistrationDto {
    * @example 21.1820972
    */
   @ValidateIf(
-    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_LOCATION,
   )
   @IsString()
   @IsNotEmpty()
@@ -153,7 +156,7 @@ export class CompleteRegistrationDto {
    * @example 72.7905927
    */
   @ValidateIf(
-    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_LOCATION,
   )
   @IsString()
   @IsNotEmpty()
@@ -175,7 +178,8 @@ export class CompleteRegistrationDto {
    * @example female
    */
   @ValidateIf(
-    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+    (o: CompleteRegistrationDto) =>
+      o.action === NextActionEnum.FILL_SEXUAL_ORIENTATION,
   )
   @IsEnum(SexualityEnum)
   @IsNotEmpty()
@@ -227,11 +231,24 @@ export class CompleteRegistrationDto {
   @IsNotEmpty()
   gender?: GenderEnum;
 
+  /**
+   * Required when action = 'fill_lookingfor'
+   * @example meet new people
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_LOOKINGFOR,
+  )
+  @IsEnum(LookingForEnum)
+  @IsNotEmpty()
+  lookingFor?: LookingForEnum;
+
   @ValidateIf(
     (o: CompleteRegistrationDto) =>
       o.action === NextActionEnum.FILL_HEIGHT ||
-      o.action === NextActionEnum.FILL_PROFILE,
+      o.action === NextActionEnum.CHOOSE_GENDER ||
+      o.action === NextActionEnum.FILL_LOOKINGFOR ||
+      o.action === NextActionEnum.FILL_SEXUAL_ORIENTATION,
   )
   @IsNotEmpty()
-  displayOnProfile?: boolean;
+  displayOnProfile?: string;
 }

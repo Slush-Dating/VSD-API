@@ -46,6 +46,7 @@ import { ProfileVideoLikesService } from 'src/profile-video-likes/profile-video-
 import { ProfileVideoLikeStatusEnum } from 'src/profile-video-likes/profile-video-like.entity';
 import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
 import { EthnicityService } from 'src/ethnicity/ethnicity.service';
+import { ProfileVideosService } from 'src/profile-videos/profile-videos.service';
 
 @Injectable()
 export class UsersService {
@@ -301,6 +302,19 @@ export class UsersService {
   }
 
   /**
+   * #### Registration Step
+   * ##### Upload video
+   */
+  async uploadVideo(authUser: User, video: Express.Multer.File): Promise<void> {
+    await Promise.all([
+      this.profileVideosService.storeMany(authUser, [video]),
+      this.update(authUser.id, {
+        // nextAction: NextActionEnum.FILL_FIRSTNAME,
+      }),
+    ]);
+  }
+
+  /**
    * Update user profile
    */
   async updateUserProfile(
@@ -463,7 +477,7 @@ export class UsersService {
       this.repository.create({
         ...data,
         requiresAction: true,
-        nextAction: NextActionEnum.FILL_PROFILE,
+        nextAction: NextActionEnum.FILL_FIRSTNAME,
       }),
     );
     this.sendVerificationEmail(user);
@@ -491,6 +505,7 @@ export class UsersService {
     private authService: AuthService,
     private userReportService: UserReportService,
     private profilePicturesService: ProfilePicturesService,
+    private profileVideosService: ProfileVideosService,
     private fcmTokensService: FcmTokenService,
     private interestsService: InterestsService,
     private profileVideoLikeService: ProfileVideoLikesService,
