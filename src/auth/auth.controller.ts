@@ -2,6 +2,8 @@ import {
   BadRequestException,
   Body,
   Controller,
+  HttpCode,
+  HttpStatus,
   Post,
   Request,
   UploadedFile,
@@ -36,6 +38,8 @@ import { CheckPhoneExistDto } from './dto/check-phone-exist.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyForgotPasswordDto } from './dto/verify-forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ignoreElements } from 'rxjs';
+import { UpdateLocationDto } from './dto/update-location.dto';
 
 @Controller({
   path: 'auth',
@@ -70,28 +74,64 @@ export class AuthControllerV1 {
       { name: 'video', maxCount: 1 },
     ]),
   )
-  // @UseInterceptors(FileInterceptor('avatar'))
-  // @UseInterceptors(FileInterceptor('video'))
   async completeRegistration(
     @AuthUser() authUser: User,
     @Body() completeRegistrationDto: CompleteRegistrationDto,
     @UploadedFiles() avatar?: { avatar: Express.Multer.File[] },
     @UploadedFiles() video?: { video: Express.Multer.File[] },
   ) {
-    if (!avatar?.avatar || avatar?.avatar.length === 0) {
-      throw new BadRequestException(`The avatar field is required`);
+    if (completeRegistrationDto.action === 'upload_avatar') {
+      if (!avatar?.avatar || avatar?.avatar.length === 0) {
+        throw new BadRequestException(`The avatar field is required`);
+      }
     }
-    if (!video?.video || video?.video.length === 0) {
-      throw new BadRequestException(`The video field is required`);
+    if (completeRegistrationDto.action === 'upload_video') {
+      if (!video?.video || video?.video.length === 0) {
+        throw new BadRequestException(`The video field is required`);
+      }
     }
+
+    const avatarFile =
+      avatar?.avatar && avatar.avatar.length > 0 ? avatar.avatar[0] : undefined;
+    const videoFile =
+      video?.video && video.video.length > 0 ? video.video[0] : undefined;
 
     const user = await this.authService.completeRegistration(
       authUser,
       completeRegistrationDto,
-      avatar.avatar[0],
-      video.video[0],
+      avatarFile,
+      videoFile,
     );
 
+    return { data: user };
+  }
+
+  /**
+   * enable location
+   */
+  @Post('update/location')
+  @ApiOperation({ summary: 'update location' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(AnyFilesInterceptor())
+  @UseGuards(JwtAuthGuard)
+  async updateLocation(
+    @AuthUser() authUser: User,
+    @Body('latitude') latitude: string,
+    @Body('longitude') longitude: string,
+  ) {
+    if (!latitude || !longitude) {
+      throw new BadRequestException(
+        'latitude and longitude should not be empty',
+      );
+    }
+
+    const user = await this.authService.updateLocation(
+      authUser,
+      latitude,
+      longitude,
+    );
     return { data: user };
   }
 

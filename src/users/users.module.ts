@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { UsersService } from './users.service';
@@ -17,12 +18,13 @@ import { ProfileVideosModule } from 'src/profile-videos/profile-videos.module';
     TypeOrmModule.forFeature([User]),
     forwardRef(() => AuthModule),
     forwardRef(() => ProfilePicturesModule),
-    forwardRef(() => ProfileVideoLikesModule),    
+    forwardRef(() => ProfileVideoLikesModule),
     UserReportModule,
     FcmTokenModule,
     InterestsModule,
     EthnicityModule,
-    forwardRef(() => ProfileVideosModule), 
+    forwardRef(() => ProfileVideosModule),
+    HttpModule,
   ],
   providers: [UsersService],
   exports: [UsersService],

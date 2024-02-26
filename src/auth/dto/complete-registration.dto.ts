@@ -134,7 +134,7 @@ export class CompleteRegistrationDto {
    * @example London
    */
   @ValidateIf(
-    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PROFILE,
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_LOCATION,
   )
   @IsString()
   @IsNotEmpty()
@@ -230,6 +230,26 @@ export class CompleteRegistrationDto {
   @IsEnum(GenderEnum)
   @IsNotEmpty()
   gender?: GenderEnum;
+
+  /**
+   * Required when action = 'fill_password'
+   * @example password
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PASSWORD,
+  )
+  @IsNotEmpty()
+  password?: string;
+
+  /**
+   * Required when action = 'fill_password'
+   * @example password
+   */
+  @ValidateIf(
+    (o: CompleteRegistrationDto) => o.action === NextActionEnum.FILL_PASSWORD,
+  )
+  @IsNotEmpty()
+  confirm_password?: string;
 
   /**
    * Required when action = 'fill_lookingfor'

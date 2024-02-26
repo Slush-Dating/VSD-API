@@ -8,6 +8,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { S3 } from 'aws-sdk';
@@ -309,7 +310,34 @@ export class UsersService {
     await Promise.all([
       this.profileVideosService.storeMany(authUser, [video]),
       this.update(authUser.id, {
-        // nextAction: NextActionEnum.FILL_FIRSTNAME,
+        nextAction: NextActionEnum.FILL_PASSWORD,
+      }),
+    ]);
+  }
+
+  /**
+   * #### Update Location
+   */
+  async updateLocation(
+    authUser: User,
+    latitude: string,
+    longitude: string,
+  ): Promise<void> {
+    const response = await this.httpService
+      .get(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyABAEzRgBWl9f0AS8jN-KX8--_VwhpN-R8`,
+      )
+      .toPromise();
+
+    // Extract relevant data from the response
+    const locationData = response.data.results[0]?.formatted_address;
+    console.log('locationData', locationData);
+
+    await Promise.all([
+      this.update(authUser.id, {
+        latitude: latitude,
+        longitude: longitude,
+        address: locationData,
       }),
     ]);
   }
@@ -510,5 +538,6 @@ export class UsersService {
     private interestsService: InterestsService,
     private profileVideoLikeService: ProfileVideoLikesService,
     private ethnicityService: EthnicityService,
+    private httpService: HttpService,
   ) {}
 }

@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { AuthService } from './auth.service';
 import { AuthControllerV1 } from './auth.controller';
 import { UsersModule } from 'src/users/users.module';
@@ -27,6 +28,7 @@ import { FcmTokenModule } from 'src/fcm-token/fcm-token.module';
     AccessTokensModule,
     RefreshTokensModule,
     FcmTokenModule,
+    HttpModule,
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],
   exports: [AuthService],

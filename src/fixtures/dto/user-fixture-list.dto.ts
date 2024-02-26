@@ -29,4 +29,7 @@ export class UserFixtureListDto extends PickType(User, [
   @CastToBucket()
   @Expose()
   readonly avatar: string;
+
+  @Expose()
+  readonly video: string;
 }

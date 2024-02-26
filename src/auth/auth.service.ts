@@ -8,6 +8,7 @@ import {
   Next,
   UnauthorizedException,
 } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { compare, hash } from 'bcrypt';
 import { AccessTokenService } from 'src/access-tokens/access-tokens.service';
 import { RefreshTokenService } from 'src/refresh-tokens/refresh-tokens.service';
@@ -38,6 +39,8 @@ import { Md5 } from 'ts-md5';
 import * as moment from 'moment';
 import * as admin from 'firebase-admin';
 import { check } from 'prettier';
+import { UpdateLocationDto } from './dto/update-location.dto';
+import { validate } from 'class-validator';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mailchimp = require('@mailchimp/mailchimp_marketing');
@@ -222,6 +225,7 @@ export class AuthService {
       case NextActionEnum.FILL_LOCATION:
         await this.fillLocation(
           authUser,
+          completeRegistrationDto.address,
           completeRegistrationDto.latitude,
           completeRegistrationDto.longitude,
         );
@@ -235,21 +239,12 @@ export class AuthService {
         await this.uploadVideo(authUser, video);
         break;
 
-      case NextActionEnum.FILL_PROFILE:
-        completeRegistrationDto.avatar[0] = avatar;
-        await this.fillProfile(
-          authUser,
-          completeRegistrationDto,
-          completeRegistrationDto.displayOnProfile,
-        );
-        break;
-
-      case NextActionEnum.FILL_INTERESTS:
-        await this.fillInterests(authUser, completeRegistrationDto.interests);
-        break;
-
       default:
-        // await this.chooseGender(authUser, completeRegistrationDto.gender);
+        await this.fillPassword(
+          authUser,
+          completeRegistrationDto.password,
+          completeRegistrationDto.confirm_password,
+        );
         break;
     }
 
@@ -259,6 +254,24 @@ export class AuthService {
       'profilePictures',
       'profileVideos',
     ]);
+  }
+
+  /* 
+  update location
+  */
+  async updateLocation(authUser: User, latitude: string, longitude: string) {
+    // const response = await this.httpService
+    //   .get(
+    //     `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=YOUR_API_KEY`,
+    //   )
+    //   .toPromise();
+
+    // Extract relevant data from the response
+    // const locationData = response.data;
+
+    // console.log('location data', locationData);
+
+    await this.usersService.updateLocation(authUser, latitude, longitude);
   }
 
   /**
@@ -515,7 +528,7 @@ export class AuthService {
     await this.usersService.updateEthnicity(authUser, ethnicityIds);
     await this.usersService.save({
       id: authUser.id,
-      nextAction: NextActionEnum.FILL_LOCATION,
+      nextAction: NextActionEnum.UPLOAD_AVATAR,
     });
   }
 
@@ -523,11 +536,13 @@ export class AuthService {
 
   public async fillLocation(
     authUser: User,
+    address: string,
     latitude: string,
     longitude: string,
   ) {
     await this.usersService.save({
       id: authUser.id,
+      address: address,
       latitude: latitude,
       longitude: longitude,
       nextAction: NextActionEnum.UPLOAD_AVATAR,
@@ -546,11 +561,26 @@ export class AuthService {
    */
   async uploadVideo(authUser: User, video: Express.Multer.File): Promise<void> {
     await this.usersService.uploadVideo(authUser, video);
+  }
 
-    // await this.usersService.save({
-    //   id: authUser.id,
-    //   // nextAction: NextActionEnum.FILL_FIRSTNAME,
-    // });
+  /**
+   * Enhance security
+   */
+  async fillPassword(
+    authUser: User,
+    password: string,
+    confirm_password: string,
+  ): Promise<void> {
+    if (password !== confirm_password) {
+      throw new BadRequestException('Passwords do not match');
+    }
+
+    await this.usersService.save({
+      id: authUser.id,
+      password: await hash(password, 12),
+      requiresAction: false,
+      nextAction: NextActionEnum.NONE,
+    });
   }
 
   public async fillProfile(
@@ -860,6 +890,7 @@ export class AuthService {
     private refreshTokensService: RefreshTokenService,
     private fcmTokensService: FcmTokenService,
     private configService: ConfigService,
+    private httpService: HttpService,
   ) {}
 }
 

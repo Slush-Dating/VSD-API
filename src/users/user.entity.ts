@@ -33,6 +33,7 @@ import { EventGenderEnum } from 'src/events/event.entity';
 import { Interests } from 'src/interests/interests.entity';
 import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
 import { bucketUrl, calculateAge } from 'src/common/helper';
+import { Vacation } from 'src/vacation/vacation.entity';
 
 export enum RoleType {
   USER = 'USER',
@@ -81,6 +82,7 @@ export enum NextActionEnum {
   FILL_LOCATION = 'fill_location',
   UPLOAD_AVATAR = 'upload_avatar',
   UPLOAD_VIDEO = 'upload_video',
+  FILL_PASSWORD = 'fill_password',
   FILL_PROFILE = 'fill_profile',
   FILL_INTERESTS = 'fill_interests',
   NONE = 'none',
@@ -343,12 +345,20 @@ export class User extends BaseEntity {
   @ManyToMany(() => Interests)
   @JoinTable({ name: 'users_interests' })
   interests?: Interests[];
+
   @ManyToMany(() => Ethnicity)
   @JoinTable({ name: 'users_ethnicity' })
   ethnicity?: Ethnicity[];
 
   @Expose()
   ethnicityIds?: number[];
+
+  @ManyToMany(() => Vacation)
+  @JoinTable({ name: 'users_vacation' })
+  vacation?: Vacation[];
+
+  @Expose()
+  vacationIds?: number[];
 
   @Column({
     type: 'datetime',
