@@ -39,6 +39,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyForgotPasswordDto } from './dto/verify-forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ignoreElements } from 'rxjs';
+import { CompleteDetailDto } from './dto/complete-detail.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 
 @Controller({
@@ -107,10 +108,31 @@ export class AuthControllerV1 {
   }
 
   /**
+   * Complete detail
+   */
+  @Post('detail/complete')
+  @ApiOperation({ summary: 'Complete Details' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth()
+  @UseInterceptors(AnyFilesInterceptor())
+  @UseGuards(JwtAuthGuard)
+  async completeDetail(
+    @AuthUser() authUser: User,
+    @Body() completeDetailDto: CompleteDetailDto,
+  ) {
+    const user = await this.authService.completeDetail(
+      authUser,
+      completeDetailDto,
+    );
+
+    return { data: user };
+  }
+
+  /**
    * enable location
    */
   @Post('update/location')
-  @ApiOperation({ summary: 'update location' })
+  @ApiOperation({ summary: 'Update Location' })
   @ApiConsumes('multipart/form-data')
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
@@ -118,9 +140,10 @@ export class AuthControllerV1 {
   @UseGuards(JwtAuthGuard)
   async updateLocation(
     @AuthUser() authUser: User,
-    @Body('latitude') latitude: string,
-    @Body('longitude') longitude: string,
+    @Body() updateLocationDto: UpdateLocationDto,
   ) {
+    const { latitude, longitude } = updateLocationDto;
+
     if (!latitude || !longitude) {
       throw new BadRequestException(
         'latitude and longitude should not be empty',

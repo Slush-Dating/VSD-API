@@ -14,11 +14,15 @@ import { AccessTokenService } from 'src/access-tokens/access-tokens.service';
 import { RefreshTokenService } from 'src/refresh-tokens/refresh-tokens.service';
 import { CompleteRegistrationDto } from 'src/auth/dto/complete-registration.dto';
 import {
+  CookingSkillEnum,
   GenderEnum,
+  IdealVacationEnum,
   LookingForEnum,
   NextActionEnum,
+  NextDetailActionEnum,
   RoleType,
   SexualityEnum,
+  SmokingOpinionEnum,
   User,
 } from 'src/users/user.entity';
 import { UsersService } from 'src/users/users.service';
@@ -39,8 +43,8 @@ import { Md5 } from 'ts-md5';
 import * as moment from 'moment';
 import * as admin from 'firebase-admin';
 import { check } from 'prettier';
-import { UpdateLocationDto } from './dto/update-location.dto';
 import { validate } from 'class-validator';
+import { CompleteDetailDto } from './dto/complete-detail.dto';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mailchimp = require('@mailchimp/mailchimp_marketing');
@@ -222,14 +226,14 @@ export class AuthService {
         await this.fillEthnicity(authUser, completeRegistrationDto.ethnicity);
         break;
 
-      case NextActionEnum.FILL_LOCATION:
-        await this.fillLocation(
-          authUser,
-          completeRegistrationDto.address,
-          completeRegistrationDto.latitude,
-          completeRegistrationDto.longitude,
-        );
-        break;
+      // case NextActionEnum.FILL_LOCATION:
+      //   await this.fillLocation(
+      //     authUser,
+      //     completeRegistrationDto.address,
+      //     completeRegistrationDto.latitude,
+      //     completeRegistrationDto.longitude,
+      //   );
+      //   break;
 
       case NextActionEnum.UPLOAD_AVATAR:
         await this.uploadAvatar(authUser, avatar);
@@ -257,21 +261,66 @@ export class AuthService {
   }
 
   /* 
+  Complete detail
+  */
+  async completeDetail(
+    authUser: User,
+    completeDetailDto: CompleteDetailDto,
+  ): Promise<User> {
+    const { action } = completeDetailDto;
+
+    if (authUser.nextDetailAction !== action) {
+      throw new BadRequestException(
+        `Wrong action attempted, Your next detail action should be '${authUser.nextDetailAction}'`,
+      );
+    }
+
+    switch (action) {
+      case NextDetailActionEnum.FILL_IDEAL_VACATION:
+        await this.fillIdealVacation(
+          authUser,
+          completeDetailDto.ideal_vacation,
+        );
+        break;
+
+      case NextDetailActionEnum.FILL_DISTANCE:
+        await this.fillDistance(authUser, completeDetailDto.distance);
+        break;
+
+      case NextDetailActionEnum.FILL_COOKING_SKILL:
+        await this.fillCooking(authUser, completeDetailDto.cooking_skill);
+        break;
+
+      case NextDetailActionEnum.FILL_OPINION_SMOKING: {
+        await this.fillSmokingOpinion(
+          authUser,
+          completeDetailDto.smoking_opinion,
+        );
+        break;
+      }
+
+      default:
+        await this.fillSmokingOpinion(
+          authUser,
+          completeDetailDto.smoking_opinion,
+        );
+        break;
+    }
+
+    return this.usersService.findOneOrFail({ id: authUser.id }, []);
+  }
+
+  /* 
   update location
   */
   async updateLocation(authUser: User, latitude: string, longitude: string) {
-    // const response = await this.httpService
-    //   .get(
-    //     `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=YOUR_API_KEY`,
-    //   )
-    //   .toPromise();
-
-    // Extract relevant data from the response
-    // const locationData = response.data;
-
-    // console.log('location data', locationData);
-
     await this.usersService.updateLocation(authUser, latitude, longitude);
+    return this.usersService.findOneOrFail({ id: authUser.id }, [
+      'interests',
+      'ethnicity',
+      'profilePictures',
+      'profileVideos',
+    ]);
   }
 
   /**
@@ -620,6 +669,60 @@ export class AuthService {
     await this.usersService.save({
       id: authUser.id,
       // nextAction: NextActionEnum.CHOOSE_GENDER,
+    });
+  }
+
+  /**
+   * fill ideal vacation
+   */
+
+  public async fillIdealVacation(
+    authUser: User,
+    ideal_vacation: IdealVacationEnum,
+  ) {
+    await this.usersService.save({
+      id: authUser.id,
+      ideal_vacation: ideal_vacation,
+      nextDetailAction: NextDetailActionEnum.FILL_DISTANCE,
+    });
+  }
+
+  /**
+   * fill distance
+   */
+
+  public async fillDistance(authUser: User, distance: number) {
+    await this.usersService.save({
+      id: authUser.id,
+      distance: distance,
+      nextDetailAction: NextDetailActionEnum.FILL_COOKING_SKILL,
+    });
+  }
+
+  /**
+   * fill cooking skill
+   */
+
+  public async fillCooking(authUser: User, cooking_skill: CookingSkillEnum) {
+    await this.usersService.save({
+      id: authUser.id,
+      cooking_skill: cooking_skill,
+      nextDetailAction: NextDetailActionEnum.FILL_OPINION_SMOKING,
+    });
+  }
+
+  /**
+   * fill smoking skill
+   */
+
+  public async fillSmokingOpinion(
+    authUser: User,
+    smoking_opinion: SmokingOpinionEnum,
+  ) {
+    await this.usersService.save({
+      id: authUser.id,
+      smoking_opinion: smoking_opinion,
+      nextDetailAction: NextDetailActionEnum.NONE,
     });
   }
 

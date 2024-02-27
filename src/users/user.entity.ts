@@ -33,7 +33,6 @@ import { EventGenderEnum } from 'src/events/event.entity';
 import { Interests } from 'src/interests/interests.entity';
 import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
 import { bucketUrl, calculateAge } from 'src/common/helper';
-import { Vacation } from 'src/vacation/vacation.entity';
 
 export enum RoleType {
   USER = 'USER',
@@ -71,6 +70,26 @@ export enum SexualityEnum {
   QUESTIONING = 'questioning',
 }
 
+export enum IdealVacationEnum {
+  beach_bum_bliss = 'Beach Bum Bliss',
+  mountain_marvels = 'Mountain Marvels',
+  city_slicker_escapades = 'City Slicker Escapades',
+  cultural_quests_feasts = 'Cultural Quests & Feasts',
+}
+
+export enum CookingSkillEnum {
+  master_of_the_spatula = 'Master of the Spatula',
+  microwave_magician = 'Microwave Magician',
+  recipe_rescuer = 'Recipe Rescuer',
+  burnt_offerings_specialist = 'Burnt Offerings Specialist',
+}
+
+export enum SmokingOpinionEnum {
+  cant_stand_it = "Can't stand it",
+  dont_mind_it = "Don't mind it",
+  i_love_and_embrace_it = 'I love and embrace it',
+}
+
 export enum NextActionEnum {
   FILL_FIRSTNAME = 'fill_firstname',
   FILL_DATEOFBIRTH = 'fill_dateofbirth',
@@ -85,6 +104,14 @@ export enum NextActionEnum {
   FILL_PASSWORD = 'fill_password',
   FILL_PROFILE = 'fill_profile',
   FILL_INTERESTS = 'fill_interests',
+  NONE = 'none',
+}
+
+export enum NextDetailActionEnum {
+  FILL_IDEAL_VACATION = 'fill_ideal_vacation',
+  FILL_DISTANCE = 'fill_distance',
+  FILL_COOKING_SKILL = 'fill_cooking_skill',
+  FILL_OPINION_SMOKING = 'fill_opinion_smoking',
   NONE = 'none',
 }
 
@@ -284,6 +311,41 @@ export class User extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   showOnProfile: string;
 
+  @Column({ type: 'enum', enum: NextDetailActionEnum, nullable: true })
+  nextDetailAction: NextDetailActionEnum;
+
+  /**
+   * @example Beach Bum Bliss
+   */
+  @IsEnum(IdealVacationEnum)
+  @IsNotEmpty()
+  @Column({ type: 'enum', enum: IdealVacationEnum, nullable: true })
+  ideal_vacation?: IdealVacationEnum;
+
+  /**
+   * @example 500
+   */
+  @IsNumber()
+  @IsNotEmpty()
+  @Column({ nullable: true })
+  distance?: number;
+
+  /**
+   * @example Master of the Spatula
+   */
+  @IsEnum(CookingSkillEnum)
+  @IsNotEmpty()
+  @Column({ type: 'enum', enum: CookingSkillEnum, nullable: true })
+  cooking_skill?: CookingSkillEnum;
+
+  /**
+   * @example Can't stand it
+   */
+  @IsEnum(SmokingOpinionEnum)
+  @IsNotEmpty()
+  @Column({ type: 'enum', enum: SmokingOpinionEnum, nullable: true })
+  smoking_opinion?: SmokingOpinionEnum;
+
   /**
    * Forgot Password unique code
    * @example 8765
@@ -352,10 +414,6 @@ export class User extends BaseEntity {
 
   @Expose()
   ethnicityIds?: number[];
-
-  @ManyToMany(() => Vacation)
-  @JoinTable({ name: 'users_vacation' })
-  vacation?: Vacation[];
 
   @Expose()
   vacationIds?: number[];
@@ -430,12 +488,22 @@ export class User extends BaseEntity {
         EventGenderEnum.STRAIGHT,
         EventGenderEnum.BISEXUAL,
         EventGenderEnum.GAY,
+        EventGenderEnum.ASEXUAL,
+        EventGenderEnum.DEMISEXUAL,
+        EventGenderEnum.PANSEXUAL,
+        EventGenderEnum.QUEER,
+        EventGenderEnum.QUESTIONING,
       );
     } else if (this.isBisexual && this.isFemale) {
       allowedGender.push(
         EventGenderEnum.STRAIGHT,
         EventGenderEnum.BISEXUAL,
         EventGenderEnum.LESBIAN,
+        EventGenderEnum.ASEXUAL,
+        EventGenderEnum.DEMISEXUAL,
+        EventGenderEnum.PANSEXUAL,
+        EventGenderEnum.QUEER,
+        EventGenderEnum.QUESTIONING,
       );
     }
 
@@ -474,7 +542,8 @@ export class User extends BaseEntity {
 
   public get isLesbian(): boolean {
     return (
-      this.sexuality === SexualityEnum.GAY && this.gender === GenderEnum.female
+      this.sexuality === SexualityEnum.LESBIAN &&
+      this.gender === GenderEnum.female
     );
   }
 

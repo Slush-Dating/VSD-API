@@ -39,7 +39,12 @@ import {
 import { QueryPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { ActionsEnum } from './dto/match-unmatch.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { NextActionEnum, RoleType, User } from './user.entity';
+import {
+  NextActionEnum,
+  NextDetailActionEnum,
+  RoleType,
+  User,
+} from './user.entity';
 import { InjectAwsService } from 'nest-aws-sdk';
 import { Interests } from 'src/interests/interests.entity';
 import { InterestsService } from 'src/interests/interests.service';
@@ -329,9 +334,7 @@ export class UsersService {
       )
       .toPromise();
 
-    // Extract relevant data from the response
-    const locationData = response.data.results[0]?.formatted_address;
-    console.log('locationData', locationData);
+    const locationData = response.data?.results[0]?.formatted_address;
 
     await Promise.all([
       this.update(authUser.id, {
@@ -506,6 +509,7 @@ export class UsersService {
         ...data,
         requiresAction: true,
         nextAction: NextActionEnum.FILL_FIRSTNAME,
+        nextDetailAction: NextDetailActionEnum.FILL_IDEAL_VACATION,
       }),
     );
     this.sendVerificationEmail(user);
