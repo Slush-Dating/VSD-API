@@ -1,13 +1,16 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event, EventGenderEnum } from 'src/events/event.entity';
 import { User } from 'src/users/user.entity';
 import { DeepPartial, Repository } from 'typeorm';
 import { Participant } from './participant.entity';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class ParticipantsService {
@@ -38,7 +41,9 @@ export class ParticipantsService {
   /**
    * Get participants
    */
-  async getParticipantsForEvent(eventIds: string | string[]): Promise<Participant[]> {
+  async getParticipantsForEvent(
+    eventIds: string | string[],
+  ): Promise<Participant[]> {
     try {
       const ids = Array.isArray(eventIds) ? eventIds : [eventIds];
 
@@ -63,7 +68,7 @@ export class ParticipantsService {
         .orderBy('p.createdAt', 'ASC')
         .getMany();
     } catch (error) {
-      console.error(error)
+      console.error(error);
       throw error;
     }
   }
@@ -97,6 +102,7 @@ export class ParticipantsService {
       this.participantRepo.create({
         event,
         user,
+        status: 'booked',
       }),
     );
   }
@@ -105,7 +111,36 @@ export class ParticipantsService {
    * Cancel Event Ticket
    */
   async cancelEventTicket(user: Participant): Promise<void> {
-    await this.participantRepo.remove(user);
+    await this.participantRepo.update(user.id, {
+      status: 'cancelled',
+    });
+  }
+
+  /**
+   * get Event History
+   */
+  async getEventHistory(userId: number): Promise<void> {
+    if (userId) {
+      console.log('User ID:', userId);
+      const participant = await this.participantRepo
+        .createQueryBuilder('p')
+        .where('u.id = :userId', { userId })
+        .leftJoin('p.user', 'u')
+        .addSelect(['u.id', 'e.id', 'e.title'])
+        .leftJoin('p.event', 'e')
+        .orderBy('p.createdAt', 'ASC')
+        .getMany();
+      // const participant = await this.participantRepo.find({
+      //   where: { user: { id: userId } },
+      // });
+      if (participant) {
+        console.log('Participant record found for User ID:', participant);
+      } else {
+        console.log('No participant record found for User ID:', userId);
+      }
+    } else {
+      throw new BadRequestException('User not fount with this email');
+    }
   }
 
   /**

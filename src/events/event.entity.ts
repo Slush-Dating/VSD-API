@@ -34,6 +34,11 @@ export enum EventGenderEnum {
   GAY = 'gay',
   LESBIAN = 'lesbian',
   BISEXUAL = 'bisexual',
+  ASEXUAL = 'asexual',
+  DEMISEXUAL = 'demisexual',
+  PANSEXUAL = 'pansexual',
+  QUEER = 'queer',
+  QUESTIONING = 'questioning',
 }
 
 export enum EventTypeEnum {

@@ -478,7 +478,7 @@ export class User extends BaseEntity {
     const allowedGender: EventGenderEnum[] = [];
 
     if (this.isStraight) {
-      allowedGender.push(EventGenderEnum.STRAIGHT);
+      allowedGender.push(EventGenderEnum.STRAIGHT, EventGenderEnum.QUESTIONING);
     } else if (this.isGay) {
       allowedGender.push(EventGenderEnum.GAY, EventGenderEnum.BISEXUAL);
     } else if (this.isLesbian) {
@@ -531,20 +531,18 @@ export class User extends BaseEntity {
   }
 
   public get isStraight(): boolean {
-    return this.sexuality === SexualityEnum.STRAIGHT;
+    return (
+      this.sexuality === SexualityEnum.STRAIGHT ||
+      this.sexuality === SexualityEnum.QUESTIONING
+    );
   }
 
   public get isGay(): boolean {
-    return (
-      this.sexuality === SexualityEnum.GAY && this.gender === GenderEnum.male
-    );
+    return this.gender === GenderEnum.male;
   }
 
   public get isLesbian(): boolean {
-    return (
-      this.sexuality === SexualityEnum.LESBIAN &&
-      this.gender === GenderEnum.female
-    );
+    return this.gender === GenderEnum.female;
   }
 
   public get isBisexual(): boolean {

@@ -30,6 +30,8 @@ import {
   EventList,
   Participant as EventParticipant,
 } from './../dto/event-list.dto';
+import { EventHistoryDto } from '../dto/event-history.dto';
+import { AuthService } from 'src/auth/auth.service';
 
 @Controller({
   path: 'events',
@@ -84,7 +86,6 @@ export class EventsControllerV1 {
 
   //   return { data: { items, meta } };
   // }
-
 
   /**
    * Get event result
@@ -145,6 +146,15 @@ export class EventsControllerV1 {
   ) {
     await this.eventsService.cancelTicket(eventId, authUser);
     return { message: 'Event ticket cancelled successfully' };
+  }
+
+  /**
+   * Get user event history
+   */
+  @Post('/history')
+  @ApiOperation({ summary: 'User event history' })
+  async eventHistory(@AuthUser() authUser: User): Promise<void> {
+    await this.participantsService.getEventHistory(authUser.id);
   }
 
   /**

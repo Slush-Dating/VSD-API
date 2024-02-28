@@ -527,6 +527,11 @@ export class UsersService {
     return !!user;
   }
 
+  async getUserIdByEmail(email: string): Promise<number | undefined> {
+    const user = await this.repository.findOne({ where: { email } });
+    return user ? user.id : undefined;
+  }
+
   constructor(
     @InjectRepository(User) private repository: Repository<User>,
     @InjectAwsService(S3)
