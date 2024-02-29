@@ -10,7 +10,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { plainToClass, plainToInstance } from 'class-transformer';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -32,6 +37,8 @@ import {
 } from './../dto/event-list.dto';
 import { EventHistoryDto } from '../dto/event-history.dto';
 import { AuthService } from 'src/auth/auth.service';
+import { Participant } from 'src/participants/participant.entity';
+import { IsOptional } from 'class-validator';
 
 @Controller({
   path: 'events',
@@ -153,8 +160,22 @@ export class EventsControllerV1 {
    */
   @Post('/history')
   @ApiOperation({ summary: 'User event history' })
-  async eventHistory(@AuthUser() authUser: User): Promise<void> {
-    await this.participantsService.getEventHistory(authUser.id);
+  @ApiQuery({ name: 'filter', required: false })
+  async eventHistory(
+    @AuthUser() authUser: User,
+    @Query('page', new DefaultValuePipe(1)) page: number,
+    @Query('limit', new DefaultValuePipe(15)) limit: number,
+    @Query('filter') filter?: string,
+  ): Promise<Pagination<Participant[]>> {
+    const events = await this.participantsService.getEventHistory(
+      authUser.id,
+      {
+        page,
+        limit,
+      },
+      filter,
+    );
+    return events;
   }
 
   /**

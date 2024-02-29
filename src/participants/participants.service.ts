@@ -11,6 +11,9 @@ import { User } from 'src/users/user.entity';
 import { DeepPartial, Repository } from 'typeorm';
 import { Participant } from './participant.entity';
 import { UsersService } from 'src/users/users.service';
+import { PaginationOptions } from 'src/common/pagination-options';
+import { Pagination, createPaginationObject } from 'nestjs-typeorm-paginate';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class ParticipantsService {
@@ -119,27 +122,62 @@ export class ParticipantsService {
   /**
    * get Event History
    */
-  async getEventHistory(userId: number): Promise<void> {
+  async getEventHistory(
+    userId: number,
+    options: PaginationOptions,
+    filter?: string,
+  ): Promise<Pagination<Participant[]>> {
+    const offset = options.page * options.limit - options.limit;
     if (userId) {
-      console.log('User ID:', userId);
-      const participant = await this.participantRepo
+      let query = this.participantRepo
         .createQueryBuilder('p')
         .where('u.id = :userId', { userId })
+        .addSelect([
+          'e.id',
+          'e.title',
+          'e.coverImage',
+          'e.type',
+          'e.startsAt',
+          'e.country',
+          'e.longitude',
+          'e.latitude',
+        ])
         .leftJoin('p.user', 'u')
-        .addSelect(['u.id', 'e.id', 'e.title'])
         .leftJoin('p.event', 'e')
-        .orderBy('p.createdAt', 'ASC')
-        .getMany();
-      // const participant = await this.participantRepo.find({
-      //   where: { user: { id: userId } },
-      // });
-      if (participant) {
-        console.log('Participant record found for User ID:', participant);
+        .orderBy('p.createdAt', 'ASC');
+
+      // Apply filtering if the filter parameter is provided
+      if (filter && (filter === 'booked' || filter === 'cancelled')) {
+        query = query.andWhere('p.status = :status', { status: filter });
+      }
+
+      // count records
+      const { value: totalItems } = await query.connection
+        .createQueryBuilder()
+        .select('COUNT(*)', 'value')
+        .from(`(${query.getQuery()})`, 'uniqueTableAlias')
+        .setParameters(query.getParameters())
+        .getRawOne();
+
+      const items = await query
+        .offset(offset)
+        .limit(options.limit)
+        .getRawMany();
+
+      if (items) {
+        return createPaginationObject({
+          items,
+          totalItems: Number(totalItems),
+          limit: options.limit,
+          currentPage: options.page,
+        });
       } else {
-        console.log('No participant record found for User ID:', userId);
+        throw new BadRequestException(
+          'No participant record found for User ID:',
+        );
       }
     } else {
-      throw new BadRequestException('User not fount with this email');
+      throw new BadRequestException('User not found with this email');
     }
   }
 

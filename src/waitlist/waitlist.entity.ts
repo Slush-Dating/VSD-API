@@ -4,9 +4,9 @@ import { Event } from 'src/events/event.entity';
 import { User } from 'src/users/user.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity({ name: 'participants' })
-export class Participant extends BaseEntity {
-  @Expose({ name: 'participantId' })
+@Entity({ name: 'waitlist' })
+export class WaitList extends BaseEntity {
+  @Expose({ name: 'waitlistId' })
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -24,7 +24,4 @@ export class Participant extends BaseEntity {
 
   @Column({ default: 0 })
   entryFee: number;
-
-  @Column({ default: null })
-  status: string;
 }
