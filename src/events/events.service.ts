@@ -95,14 +95,15 @@ export class EventsService {
       );
 
       // get participants
-      const participants = await this.participantsService.getParticipantsForEvent([
-        eventId.toString(),
-      ]);
+      const participants =
+        await this.participantsService.getParticipantsForEvent([
+          eventId.toString(),
+        ]);
 
       event.participants = participants ?? [];
 
       // return plainToClass(EventList, event, {
-        return plainToInstance(EventList, event, {
+      return plainToInstance(EventList, event, {
         excludeExtraneousValues: true,
         enableImplicitConversion: true,
       });
@@ -144,9 +145,10 @@ export class EventsService {
     if (query.event) {
       const event = await this.findOneOrFail({ id: Number(query.event) });
 
-      const participants = await this.participantsService.getParticipantsForEvent(
-        event.id.toString(),
-      );
+      const participants =
+        await this.participantsService.getParticipantsForEvent(
+          event.id.toString(),
+        );
 
       const participant = participants.find((p) => p?.user?.id === authUser.id);
 
@@ -261,7 +263,7 @@ export class EventsService {
    */
   findAll(query: PaginateQuery): Promise<Paginated<Event>> {
     return paginate(query, this.eventRepo, {
-      sortableColumns: ['gender', 'type', 'isFree','isPopular'],
+      sortableColumns: ['gender', 'type', 'isFree', 'isPopular'],
       searchableColumns: ['address', 'title'],
     });
   }
@@ -305,9 +307,7 @@ export class EventsService {
           `Please provide password for event authentication`,
         );
       } else if (data.password != event.password) {
-        throw new ForbiddenException(
-          `Sorry! Provided password is incorrect`,
-        );
+        throw new ForbiddenException(`Sorry! Provided password is incorrect`);
       }
     }
 
@@ -398,9 +398,10 @@ export class EventsService {
       });
 
       // get participants
-      const participants = await this.participantsService.getParticipantsForEvent(
-        items.map((item: any) => item.id),
-      );
+      const participants =
+        await this.participantsService.getParticipantsForEvent(
+          items.map((item: any) => item.id),
+        );
 
       // hydrate participants to event
       items.forEach(function (item: any): void {
@@ -547,7 +548,7 @@ export class EventsService {
    * - Get events which are about to start i.e before 15 min
    */
   async getReadyEvents(): Promise<Record<string, any>[]> {
-    console.log("Checking if events are ready")
+    console.log('Checking if events are ready');
     try {
       return await this.eventRepo.query(
         `SELECT e.*
@@ -638,7 +639,7 @@ export class EventsService {
   ): void {
     const isMyEvent = getEventDto.events === EventTypeEnum.MY_EVENTS;
     const isPopularEvent = getEventDto.events === EventTypeEnum.POPULAR_EVENTS;
-    console.log("GET EVENT DTO", getEventDto)
+    console.log('GET EVENT DTO', getEventDto);
     if (isMyEvent) {
       queryBuilder
         .where('p.user = :user', {
@@ -649,7 +650,7 @@ export class EventsService {
         });
 
       // + INTERVAL 45 MINUTE
-    }else if(isPopularEvent) {
+    } else if (isPopularEvent) {
       queryBuilder
         .where('e.isPopular = :isPopular', {
           isPopular: true,
@@ -657,14 +658,20 @@ export class EventsService {
         .andWhere('(e.startsAt) > :currentDate', {
           currentDate: moment.utc().format('YYYY-MM-DD H:mm:ss'),
         });
-    }  else {
+    } else {
       this.filterByAge(authUser.age, queryBuilder);
 
       this.filterByGender(authUser, queryBuilder);
 
       this.filterByDate(getEventDto.date, queryBuilder);
 
-      this.filterByDistance(queryBuilder, authUser, getEventDto.distance);
+      this.filterByDistance(
+        queryBuilder,
+        authUser,
+        getEventDto.distance,
+        getEventDto.latitude,
+        getEventDto.longitude,
+      );
 
       queryBuilder.andWhere('e.startsAt > :currentDate', {
         currentDate: moment.utc().format('YYYY-MM-DD H:mm:ss'),
@@ -693,6 +700,7 @@ export class EventsService {
     queryBuilder.andWhere('e.gender IN (:allowedGender)', {
       allowedGender,
     });
+    console.log('allowed gender', allowedGender);
   }
 
   private filterByDate(
@@ -710,23 +718,46 @@ export class EventsService {
     queryBuilder: SelectQueryBuilder<Event>,
     authUser: User,
     distance = 500,
+    latitude: string,
+    longitude: string,
   ): void {
-    if (authUser.coordinates) {
-      const { latitude, longitude } = authUser;
+    console.log(latitude);
+    console.log(longitude);
 
-      queryBuilder
-        .addSelect(
-          `( 3959 * acos( cos( radians(:latitude) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(:longitude) ) + sin( radians(:latitude) ) * sin(radians(latitude)) ) )`,
-          'distance',
-        )
-        .setParameters({
-          latitude: latitude.trim(),
-          longitude: longitude.trim(),
-        })
-        .having('distance <= :distance', { distance })
-        .addOrderBy('distance', 'ASC');
+    if (latitude !== undefined && longitude !== undefined) {
+      if (latitude && longitude) {
+        queryBuilder
+          .addSelect(
+            `( 3959 * acos( cos( radians(:latitude) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(:longitude) ) + sin( radians(:latitude) ) * sin(radians(latitude)) ) )`,
+            'distance',
+          )
+          .setParameters({
+            latitude: latitude.trim(),
+            longitude: longitude.trim(),
+          })
+          .having('distance <= :distance', { distance })
+          .addOrderBy('distance', 'ASC');
+      } else {
+        queryBuilder.addSelect('0 AS distance');
+      }
     } else {
-      queryBuilder.addSelect('0 AS distance');
+      if (authUser.coordinates) {
+        const { latitude, longitude } = authUser;
+
+        queryBuilder
+          .addSelect(
+            `( 3959 * acos( cos( radians(:latitude) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(:longitude) ) + sin( radians(:latitude) ) * sin(radians(latitude)) ) )`,
+            'distance',
+          )
+          .setParameters({
+            latitude: latitude.trim(),
+            longitude: longitude.trim(),
+          })
+          .having('distance <= :distance', { distance })
+          .addOrderBy('distance', 'ASC');
+      } else {
+        queryBuilder.addSelect('0 AS distance');
+      }
     }
   }
 

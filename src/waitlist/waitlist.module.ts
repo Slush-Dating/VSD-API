@@ -8,4 +8,4 @@ import { WaitListService } from './waitlist.service';
   providers: [WaitListService],
   exports: [WaitListService],
 })
-export class ParticipantsModule {}
+export class WaitListModule {}

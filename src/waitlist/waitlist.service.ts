@@ -22,6 +22,23 @@ export class WaitListService {
     return this.waitListRepo.create(data);
   }
 
+  /**
+   * Add to waitlist
+   */
+
+  async addToWaitlist(user: User, event: Event): Promise<WaitList> {
+    // console.log('user waitlist', user);
+    // console.log('event waitlist', event);
+    const waitlistData = this.waitListRepo.save(
+      this.waitListRepo.create({
+        event,
+        user,
+      }),
+    );
+
+    return waitlistData;
+  }
+
   constructor(
     @InjectRepository(WaitList)
     private waitListRepo: Repository<WaitList>,

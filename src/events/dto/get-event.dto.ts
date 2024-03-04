@@ -1,12 +1,18 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { EventGenderEnum } from '../event.entity';
 
 export enum EventTypeEnum {
   MY_EVENTS = 'me',
   UPCOMING_EVENTS = 'upcoming',
-  POPULAR_EVENTS = 'popular'
+  POPULAR_EVENTS = 'popular',
 }
 
 export class GetEventDto {
@@ -37,4 +43,12 @@ export class GetEventDto {
   @IsNotEmpty()
   @IsOptional()
   readonly events?: EventTypeEnum;
+
+  @IsOptional()
+  @IsString()
+  latitude?: string;
+
+  @IsOptional()
+  @IsString()
+  longitude?: string;
 }

@@ -15,6 +15,7 @@ import { BaseEntity } from 'src/common/base.entity';
 import { CastToUnixTimestamp } from 'src/common/decorators/cast-to-unix-timestamp.decorator';
 import { Participant } from 'src/participants/participant.entity';
 import { User } from 'src/users/user.entity';
+import { WaitList } from 'src/waitlist/waitlist.entity';
 import {
   Column,
   Entity,
@@ -237,6 +238,9 @@ export class Event extends BaseEntity {
 
   @OneToMany(() => Participant, (participant) => participant.event)
   participants?: Participant[];
+
+  @OneToMany(() => WaitList, (waitlist) => waitlist.event)
+  waitlist?: WaitList[];
 
   /**
    * Check if event is for given gender

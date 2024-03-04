@@ -415,9 +415,6 @@ export class User extends BaseEntity {
   @Expose()
   ethnicityIds?: number[];
 
-  @Expose()
-  vacationIds?: number[];
-
   @Column({
     type: 'datetime',
     nullable: true,

@@ -14,6 +14,7 @@ import { UsersService } from 'src/users/users.service';
 import { PaginationOptions } from 'src/common/pagination-options';
 import { Pagination, createPaginationObject } from 'nestjs-typeorm-paginate';
 import { plainToClass } from 'class-transformer';
+import { WaitListService } from 'src/waitlist/waitlist.service';
 
 @Injectable()
 export class ParticipantsService {
@@ -79,7 +80,7 @@ export class ParticipantsService {
   /**
    * Book Event Ticket
    */
-  async bookEventTicket(user: User, event: Event): Promise<Participant> {
+  async bookEventTicket(user: User, event: Event): Promise<void> {
     const participants = await this.participantRepo
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.user', 'pu')
@@ -100,14 +101,6 @@ export class ParticipantsService {
     if (event.isEventFor(EventGenderEnum.STRAIGHT)) {
       this.checkMaleToFemaleRatioOrFail(participants, event, user);
     }
-
-    return this.participantRepo.save(
-      this.participantRepo.create({
-        event,
-        user,
-        status: 'booked',
-      }),
-    );
   }
 
   /**
@@ -185,7 +178,7 @@ export class ParticipantsService {
    * - Check for male to female ratio i.e 1:1
    * - If event is already booked for the specified ratio of respective gender then throw error
    */
-  private checkMaleToFemaleRatioOrFail(
+  private async checkMaleToFemaleRatioOrFail(
     participants: Participant[],
     event: Event,
     user: User,
@@ -201,8 +194,14 @@ export class ParticipantsService {
     const counter = event.hasFiveDates ? 5 : 10;
 
     if (user.isMale ? maleCount >= counter : femaleCount >= counter) {
-      throw new BadRequestException(
-        `Sorry! all slots for ${user.gender} have been booked!`,
+      return await this.waitlistService.addToWaitlist(user, event);
+    } else {
+      return this.participantRepo.save(
+        this.participantRepo.create({
+          event,
+          user,
+          status: 'booked',
+        }),
       );
     }
   }
@@ -210,5 +209,6 @@ export class ParticipantsService {
   constructor(
     @InjectRepository(Participant)
     private participantRepo: Repository<Participant>,
+    private waitlistService: WaitListService,
   ) {}
 }

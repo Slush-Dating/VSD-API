@@ -20,7 +20,7 @@ export class EventList extends PickType(Event, [
   'longitude',
   'type',
   'hasPassword',
-  'password'
+  'password',
 ]) {
   @Expose({ name: 'id' })
   eventId: number;
@@ -53,6 +53,10 @@ export class EventList extends PickType(Event, [
   @Expose()
   participants: Participant[];
 
+  @Type(() => WaitList)
+  @Expose()
+  waitlist: WaitList[];
+
   @CastToUnixTimestamp()
   @Expose()
   createdAt: number;
@@ -70,6 +74,14 @@ class User {
 export class Participant {
   @Expose({ name: 'id' })
   participantId: number;
+
+  @Type(() => User)
+  @Expose()
+  user: User;
+}
+export class WaitList {
+  @Expose({ name: 'id' })
+  waitlistId: number;
 
   @Type(() => User)
   @Expose()
