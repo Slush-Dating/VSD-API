@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   forwardRef,
@@ -80,7 +81,7 @@ export class ParticipantsService {
   /**
    * Book Event Ticket
    */
-  async bookEventTicket(user: User, event: Event): Promise<void> {
+  async bookEventTicket(user: User, event: Event): Promise<Participant> {
     const participants = await this.participantRepo
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.user', 'pu')
@@ -92,24 +93,82 @@ export class ParticipantsService {
       (p: Participant) => p.user.id === user.id,
     );
 
-    if (participant)
+    if (participant) {
       throw new ConflictException({
         title: 'Check your tickets!',
         message: 'You have already booked a ticket for this event',
       });
-
-    if (event.isEventFor(EventGenderEnum.STRAIGHT)) {
-      this.checkMaleToFemaleRatioOrFail(participants, event, user);
     }
+
+    if (
+      event.isEventFor(EventGenderEnum.STRAIGHT) ||
+      event.isEventFor(EventGenderEnum.QUESTIONING)
+    ) {
+      await this.checkMaleToFemaleRatioOrFail(participants, event, user);
+      return null;
+    }
+
+    if (
+      event.isEventFor(EventGenderEnum.ASEXUAL) ||
+      event.isEventFor(EventGenderEnum.BISEXUAL) ||
+      event.isEventFor(EventGenderEnum.DEMISEXUAL) ||
+      event.isEventFor(EventGenderEnum.GAY) ||
+      event.isEventFor(EventGenderEnum.LESBIAN) ||
+      event.isEventFor(EventGenderEnum.PANSEXUAL) ||
+      event.isEventFor(EventGenderEnum.QUEER)
+    ) {
+      await this.checkRegistrationRatio(participants, event, user);
+      return null;
+    }
+
+    return this.participantRepo.save(
+      this.participantRepo.create({
+        event,
+        user,
+        status: 'booked',
+      }),
+    );
   }
 
   /**
    * Cancel Event Ticket
    */
-  async cancelEventTicket(user: Participant): Promise<void> {
+  async cancelEventTicket(
+    event: Event,
+    user: Participant,
+  ): Promise<Participant> {
+    const participants = await this.participantRepo
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.user', 'pu')
+      .where('p.event = :event', { event: event.id })
+      .andWhere('pu.deactivatedAt IS NULL')
+      .getMany();
+
+    console.log('user', user.user.sexuality);
+
     await this.participantRepo.update(user.id, {
       status: 'cancelled',
     });
+
+    const waitlistEntries =
+      await this.waitlistService.getWaitlistEntriesForEventAndGender(
+        event,
+        user.user,
+      );
+
+    console.log('waitlist', waitlistEntries);
+
+    if (!event.isGenderAllowed(waitlistEntries.user)) {
+      return null;
+    } else {
+      return await this.participantRepo.save(
+        this.participantRepo.create({
+          event,
+          user: waitlistEntries.user,
+          status: 'booked',
+        }),
+      );
+    }
   }
 
   /**
@@ -194,7 +253,58 @@ export class ParticipantsService {
     const counter = event.hasFiveDates ? 5 : 10;
 
     if (user.isMale ? maleCount >= counter : femaleCount >= counter) {
-      return await this.waitlistService.addToWaitlist(user, event);
+      const waitlistRecord = await this.waitlistService.getWaitlistRecord(
+        user,
+        event,
+      );
+      if (waitlistRecord) {
+        throw new ConflictException({
+          title: 'Already in waitlist!',
+          message: 'You are already in the waitlist for this event',
+        });
+      } else {
+        await this.waitlistService.addToWaitlist(user, event);
+        throw new BadRequestException(
+          `Sorry! all slots for ${user.gender} have been booked! You've been added to the waitlist.`,
+        );
+      }
+    } else {
+      return this.participantRepo.save(
+        this.participantRepo.create({
+          event,
+          user,
+          status: 'booked',
+        }),
+      );
+    }
+  }
+
+  /**
+   * - Check for ratio for another events
+   */
+  private async checkRegistrationRatio(
+    participants: Participant[],
+    event: Event,
+    user: User,
+  ) {
+    const counter = event.hasFiveDates ? 10 : 20;
+
+    if (participants.length >= counter) {
+      const waitlistRecord = await this.waitlistService.getWaitlistRecord(
+        user,
+        event,
+      );
+      if (waitlistRecord) {
+        throw new ConflictException({
+          title: 'Already in waitlist!',
+          message: 'You are already in the waitlist for this event',
+        });
+      } else {
+        await this.waitlistService.addToWaitlist(user, event);
+        throw new BadRequestException(
+          `Sorry! all slots for this event have been booked! You've been added to the waitlist.`,
+        );
+      }
     } else {
       return this.participantRepo.save(
         this.participantRepo.create({

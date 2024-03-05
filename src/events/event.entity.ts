@@ -14,7 +14,7 @@ import {
 import { BaseEntity } from 'src/common/base.entity';
 import { CastToUnixTimestamp } from 'src/common/decorators/cast-to-unix-timestamp.decorator';
 import { Participant } from 'src/participants/participant.entity';
-import { User } from 'src/users/user.entity';
+import { SexualityEnum, User } from 'src/users/user.entity';
 import { WaitList } from 'src/waitlist/waitlist.entity';
 import {
   Column,
@@ -269,26 +269,30 @@ export class Event extends BaseEntity {
    * Check if user's gender is eligible for the event
    */
   isGenderAllowed(user: User): boolean {
-    if (this.isEventFor(EventGenderEnum.STRAIGHT) && user.isStraight) {
-      return true;
-    } else if (this.isEventFor(EventGenderEnum.GAY) && user.isGay) {
-      return true;
-    } else if (this.isEventFor(EventGenderEnum.LESBIAN) && user.isLesbian) {
-      return true;
-    } else if (this.isEventFor(EventGenderEnum.BISEXUAL) && user.isBisexual) {
-      return true;
-    } else if (
-      user.isBisexual &&
-      user.isMale &&
+    if (
       (this.isEventFor(EventGenderEnum.STRAIGHT) ||
-        this.isEventFor(EventGenderEnum.GAY))
+        this.isEventFor(EventGenderEnum.QUESTIONING)) &&
+      user.isStraight
     ) {
       return true;
     } else if (
-      user.isBisexual &&
-      user.isFemale &&
-      (this.isEventFor(EventGenderEnum.STRAIGHT) ||
-        this.isEventFor(EventGenderEnum.LESBIAN))
+      (this.isEventFor(EventGenderEnum.GAY) ||
+        this.isEventFor(EventGenderEnum.ASEXUAL) ||
+        this.isEventFor(EventGenderEnum.BISEXUAL) ||
+        this.isEventFor(EventGenderEnum.DEMISEXUAL) ||
+        this.isEventFor(EventGenderEnum.PANSEXUAL) ||
+        this.isEventFor(EventGenderEnum.QUEER)) &&
+      user.isMale
+    ) {
+      return true;
+    } else if (
+      (this.isEventFor(EventGenderEnum.LESBIAN) ||
+        this.isEventFor(EventGenderEnum.ASEXUAL) ||
+        this.isEventFor(EventGenderEnum.BISEXUAL) ||
+        this.isEventFor(EventGenderEnum.DEMISEXUAL) ||
+        this.isEventFor(EventGenderEnum.PANSEXUAL) ||
+        this.isEventFor(EventGenderEnum.QUEER)) &&
+      user.isFemale
     ) {
       return true;
     }

@@ -249,7 +249,7 @@ export class EventsService {
         throw new BadRequestException('No tickets found for this event');
       }
 
-      await this.participantsService.cancelEventTicket(ticket);
+      await this.participantsService.cancelEventTicket(event, ticket);
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('Event not found');
@@ -700,7 +700,6 @@ export class EventsService {
     queryBuilder.andWhere('e.gender IN (:allowedGender)', {
       allowedGender,
     });
-    console.log('allowed gender', allowedGender);
   }
 
   private filterByDate(

@@ -476,31 +476,23 @@ export class User extends BaseEntity {
 
     if (this.isStraight) {
       allowedGender.push(EventGenderEnum.STRAIGHT, EventGenderEnum.QUESTIONING);
-    } else if (this.isGay) {
-      allowedGender.push(EventGenderEnum.GAY, EventGenderEnum.BISEXUAL);
-    } else if (this.isLesbian) {
-      allowedGender.push(EventGenderEnum.LESBIAN, EventGenderEnum.BISEXUAL);
-    } else if (this.isBisexual && this.isMale) {
+    } else if (this.isMale) {
       allowedGender.push(
-        EventGenderEnum.STRAIGHT,
         EventGenderEnum.BISEXUAL,
         EventGenderEnum.GAY,
         EventGenderEnum.ASEXUAL,
         EventGenderEnum.DEMISEXUAL,
         EventGenderEnum.PANSEXUAL,
         EventGenderEnum.QUEER,
-        EventGenderEnum.QUESTIONING,
       );
-    } else if (this.isBisexual && this.isFemale) {
+    } else if (this.isFemale) {
       allowedGender.push(
-        EventGenderEnum.STRAIGHT,
         EventGenderEnum.BISEXUAL,
         EventGenderEnum.LESBIAN,
         EventGenderEnum.ASEXUAL,
         EventGenderEnum.DEMISEXUAL,
         EventGenderEnum.PANSEXUAL,
         EventGenderEnum.QUEER,
-        EventGenderEnum.QUESTIONING,
       );
     }
 
@@ -535,15 +527,27 @@ export class User extends BaseEntity {
   }
 
   public get isGay(): boolean {
-    return this.gender === GenderEnum.male;
+    return this.sexuality === SexualityEnum.GAY;
   }
 
   public get isLesbian(): boolean {
-    return this.gender === GenderEnum.female;
+    return this.sexuality === SexualityEnum.LESBIAN;
   }
 
   public get isBisexual(): boolean {
     return this.sexuality === SexualityEnum.BISEXUAL;
+  }
+  public get isAsexual(): boolean {
+    return this.sexuality === SexualityEnum.ASEXUAL;
+  }
+  public get isDemisexual(): boolean {
+    return this.sexuality === SexualityEnum.DEMISEXUAL;
+  }
+  public get isPansexual(): boolean {
+    return this.sexuality === SexualityEnum.PANSEXUAL;
+  }
+  public get isQueer(): boolean {
+    return this.sexuality === SexualityEnum.QUEER;
   }
 
   public get hasUploadAtleastOneProfileVideo(): boolean {

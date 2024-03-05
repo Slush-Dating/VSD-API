@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event, EventGenderEnum } from 'src/events/event.entity';
-import { User } from 'src/users/user.entity';
+import { GenderEnum, User } from 'src/users/user.entity';
 import { DeepPartial, Repository } from 'typeorm';
 import { PaginationOptions } from 'src/common/pagination-options';
 import { Pagination, createPaginationObject } from 'nestjs-typeorm-paginate';
@@ -23,20 +23,49 @@ export class WaitListService {
   }
 
   /**
+   * get waitlist waitlist
+   */
+
+  async getWaitlistRecord(user: User, event: Event): Promise<WaitList | null> {
+    return await this.waitListRepo.findOne({
+      where: {
+        user,
+        event,
+      },
+    });
+  }
+
+  /**
    * Add to waitlist
    */
 
   async addToWaitlist(user: User, event: Event): Promise<WaitList> {
-    // console.log('user waitlist', user);
-    // console.log('event waitlist', event);
-    const waitlistData = this.waitListRepo.save(
+    return await this.waitListRepo.save(
       this.waitListRepo.create({
         event,
         user,
       }),
     );
+  }
 
-    return waitlistData;
+  async getWaitlistEntriesForEventAndGender(
+    event: Event,
+    user: User,
+  ): Promise<WaitList | undefined> {
+    let query = this.waitListRepo
+      .createQueryBuilder('p')
+      .where('p.event_id = :eventId', { eventId: event.id })
+      .addSelect(['u'])
+      .leftJoin('p.user', 'u')
+      .orderBy('p.createdAt', 'ASC');
+
+    if (event.gender === 'straight' || event.gender === 'questioning') {
+      query = query.andWhere('u.gender = :userGender', {
+        userGender: user.gender,
+      });
+    }
+    console.log(query.getOne());
+    return query.getOne();
   }
 
   constructor(
