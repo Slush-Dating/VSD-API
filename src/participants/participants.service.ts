@@ -137,14 +137,15 @@ export class ParticipantsService {
     event: Event,
     user: Participant,
   ): Promise<Participant> {
-    const participants = await this.participantRepo
-      .createQueryBuilder('p')
-      .leftJoinAndSelect('p.user', 'pu')
-      .where('p.event = :event', { event: event.id })
-      .andWhere('pu.deactivatedAt IS NULL')
-      .getMany();
+    const existingParticipant = await this.participantRepo.findOne(user.id);
 
-    console.log('user', user.user.sexuality);
+    if (!existingParticipant) {
+      throw new BadRequestException('Participant not found');
+    }
+
+    if (existingParticipant.status === 'cancelled') {
+      throw new BadRequestException('Participant has already been cancelled');
+    }
 
     await this.participantRepo.update(user.id, {
       status: 'cancelled',
@@ -156,19 +157,17 @@ export class ParticipantsService {
         user.user,
       );
 
-    console.log('waitlist', waitlistEntries);
+    const participant = await this.participantRepo.save(
+      this.participantRepo.create({
+        event,
+        user: waitlistEntries.user,
+        status: 'booked',
+      }),
+    );
 
-    if (!event.isGenderAllowed(waitlistEntries.user)) {
-      return null;
-    } else {
-      return await this.participantRepo.save(
-        this.participantRepo.create({
-          event,
-          user: waitlistEntries.user,
-          status: 'booked',
-        }),
-      );
-    }
+    await this.waitlistService.removeWaitlistEntry(waitlistEntries.user.id);
+
+    return participant;
   }
 
   /**

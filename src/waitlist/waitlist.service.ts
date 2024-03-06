@@ -64,8 +64,20 @@ export class WaitListService {
         userGender: user.gender,
       });
     }
-    console.log(query.getOne());
     return query.getOne();
+  }
+
+  async removeWaitlistEntry(userId: number): Promise<void> {
+    console.log('waitlist user id', userId);
+    const waitlistEntry = await this.waitListRepo.findOne({
+      user: { id: userId },
+    });
+    if (waitlistEntry) {
+      console.log('remove');
+      await this.waitListRepo.remove(waitlistEntry);
+    } else {
+      throw new Error('Waitlist entry not found');
+    }
   }
 
   constructor(
