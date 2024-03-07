@@ -16,36 +16,35 @@ export class GenerateFixturesService {
    */
   @Cron(CronExpression.EVERY_10_SECONDS)
   async manageEvents(): Promise<void> {
-    console.log("#Manage Events called from cron")
+    console.log('#Manage Events called from cron');
     this.logger.log({
       level: 'info',
       message: `Manage Events called!`,
     });
     const events = await this.eventsService.getReadyEvents();
     const eventIds = events.map((e: { id: any }) => e.id);
-    
     if (!eventIds.length) {
       // No events available to generate fixtures
       return;
     }
-    
-    // Handle Participants 
-    this.manageParticipants(eventIds)
+
+    // Handle Participants
+    this.manageParticipants(eventIds);
   }
 
-/**
- * Manage Participants
- * @param eventIds 
- * @returns 
- */
+  /**
+   * Manage Participants
+   * @param eventIds
+   * @returns
+   */
   private async manageParticipants(eventIds: any[]): Promise<void> {
-    console.log("##  Manage Participants  ##", eventIds)
+    console.log('##  Manage Participants  ##', eventIds);
     // Getting list of participants for the event/s
     const participants = await this.participantsService.getParticipantsForEvent(
       eventIds,
     );
 
-    if (!participants.length){
+    if (!participants.length) {
       // No Any Participants found for events
       this.logger.log({
         level: 'info',
@@ -56,10 +55,9 @@ export class GenerateFixturesService {
 
     // Group Participants By Event
     const participantsByEvent = groupBy(participants, 'event.id');
-    console.log(`PARTICIPANTS BY EVENT`, participantsByEvent)
+    console.log(`PARTICIPANTS BY EVENT`, participantsByEvent);
 
     for (const [eventId, participants] of Object.entries(participantsByEvent)) {
-
       if (!participants.length) {
         // Cancel Event with No Participants
         await this.cancelEvent([Number(eventId)]);
@@ -68,28 +66,34 @@ export class GenerateFixturesService {
 
       // Here start event means event is allowed to be started
       await this.startEvent([Number(eventId)]);
-      this.sortParticipants(participants, eventIds)
+      this.sortParticipants(participants, eventIds);
     }
   }
 
   /**
    * Sort Participants
-   * @param participants 
-   * @param eventIds 
-   * @returns 
+   * @param participants
+   * @param eventIds
+   * @returns
    */
-  private async sortParticipants(participants: Participant[], eventIds: any[]): Promise<void> {
+  private async sortParticipants(
+    participants: Participant[],
+    eventIds: any[],
+  ): Promise<void> {
     // sort
     participants.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    if (participants[0].event.isEventFor(EventGenderEnum.STRAIGHT)) {
-      console.log(`## Straight event!`)
+    if (
+      participants[0].event.isEventFor(EventGenderEnum.STRAIGHT) ||
+      participants[0].event.isEventFor(EventGenderEnum.QUESTIONING)
+    ) {
+      console.log(`## Straight event && ## questioning event!`);
 
       // Separating Male and Female Participants
       const males = participants.filter((p: Participant) => p.user.isMale);
-      const females = participants.filter((p: Participant) => p.user.isFemale,);
+      const females = participants.filter((p: Participant) => p.user.isFemale);
 
-      // If any males or females didn't participated to the event 
+      // If any males or females didn't participated to the event
       // we have to sadly cancel the event :(
       if (!males.length || !females.length) {
         await this.cancelEvent(eventIds);
@@ -98,47 +102,55 @@ export class GenerateFixturesService {
 
       // Inserting the participant with max no participants
       // if there is maximum males then insert males to the maxParticipants and vice versa
-      let moreParticipants: Participant[] = []
-      let fewerParticipants: Participant[] = []
+      let moreParticipants: Participant[] = [];
+      let fewerParticipants: Participant[] = [];
 
       if (males.length == females.length) {
-        // When there is equal no of participant doesn't matter 
+        // When there is equal no of participant doesn't matter
         // either male and female participants can be inserted into any array
-        moreParticipants = males
-        fewerParticipants = females
-      }else if (males.length > females.length) {
-        moreParticipants = males
-        fewerParticipants = females
-      }else{
-        moreParticipants = females
-        fewerParticipants = males
+        moreParticipants = males;
+        fewerParticipants = females;
+      } else if (males.length > females.length) {
+        moreParticipants = males;
+        fewerParticipants = females;
+      } else {
+        moreParticipants = females;
+        fewerParticipants = males;
       }
 
-      await this.generateFixtures(moreParticipants, fewerParticipants, participants);
+      await this.generateFixtures(
+        moreParticipants,
+        fewerParticipants,
+        participants,
+      );
     } else {
-      console.log(`### Other Sexuality event!`)
+      console.log(`### Other Sexuality event!`);
       const half = Math.ceil(participants.length / 2);
       const moreParticipants = participants.slice(0, half);
       const fewerParticipants = participants.slice(half, participants.length);
-      await this.generateFixtures(moreParticipants, fewerParticipants, participants);
+      await this.generateFixtures(
+        moreParticipants,
+        fewerParticipants,
+        participants,
+      );
     }
   }
 
   /**
    * Generate Fixtures
-   * @param moreParticipants 
-   * @param fewerParticipants 
-   * @param participants 
+   * @param moreParticipants
+   * @param fewerParticipants
+   * @param participants
    */
   private async generateFixtures(
     moreParticipants: Participant[],
     fewerParticipants: Participant[],
     participants: Participant[],
   ) {
-    console.log(`## Generating Fixtures event!`)
+    console.log(`## Generating Fixtures event!`);
     let j = 0;
     const fixtures = [];
-    
+
     if (moreParticipants.length === fewerParticipants.length) {
       let j = -1;
 
@@ -166,20 +178,28 @@ export class GenerateFixturesService {
               pairs[l];
 
             // Generate unique channel name
-            const channelName = [firstParticipant.event.id,  firstParticipant.user.id,  secondParticipant.user.id]
-            .sort().toString().replace(/,/gi, '-');
+            const channelName = [
+              firstParticipant.event.id,
+              firstParticipant.user.id,
+              secondParticipant.user.id,
+            ]
+              .sort()
+              .toString()
+              .replace(/,/gi, '-');
 
             if (firstParticipant === participants[k]) {
               pair = {
                 firstParticipant,
                 secondParticipant,
                 channelName,
+                event: firstParticipant.event,
               };
             } else if (secondParticipant === participants[k]) {
               pair = {
                 firstParticipant: secondParticipant,
                 secondParticipant: firstParticipant,
                 channelName,
+                event: firstParticipant.event,
               };
             }
           }
@@ -188,6 +208,7 @@ export class GenerateFixturesService {
             pair = {
               channelName: null,
               status: FixtureStatus.BY,
+              event: participants[0].event,
             };
           } else {
             row.push(pair);
@@ -200,7 +221,10 @@ export class GenerateFixturesService {
         const row = [];
         const pairs = [];
 
-        if (fewerParticipants.length % 2 === 0 && moreParticipants.length % 2 === 0) {
+        if (
+          fewerParticipants.length % 2 === 0 &&
+          moreParticipants.length % 2 === 0
+        ) {
           j++;
 
           if (j === moreParticipants.length) {
@@ -224,6 +248,7 @@ export class GenerateFixturesService {
           let pair: Partial<Fixture> = {
             firstParticipant: participants[k],
             status: FixtureStatus.BY,
+            event: participants[k].event,
           };
 
           // check if user already paired
@@ -246,12 +271,14 @@ export class GenerateFixturesService {
                 firstParticipant,
                 secondParticipant,
                 channelName,
+                event: firstParticipant.event,
               };
             } else if (secondParticipant === participants[k]) {
               pair = {
                 firstParticipant: secondParticipant,
                 secondParticipant: firstParticipant,
                 channelName,
+                event: firstParticipant.event,
               };
             }
           }
@@ -293,7 +320,7 @@ export class GenerateFixturesService {
     finalFixtures: Fixture[],
     participants: Participant[],
   ) {
-    console.log(`$$$ Storing Fixtures`)
+    console.log(`$$$ Storing Fixtures`);
     // get a connection and create a new query runner
     const connection = getConnection();
     const queryRunner = connection.createQueryRunner();

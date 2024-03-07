@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -241,6 +242,13 @@ export class EventsService {
         relations: ['participants', 'participants.user'],
       });
 
+      const eventStartsSoon = await this.checkEventStarts(eventId);
+      if (eventStartsSoon) {
+        throw new BadRequestException(
+          'Event is starting within 15 minutes. Cannot cancel ticket.',
+        );
+      }
+
       const ticket = event.participants.find(
         (p: Participant) => p.user.id === authUser.id,
       );
@@ -249,12 +257,31 @@ export class EventsService {
         throw new BadRequestException('No tickets found for this event');
       }
 
-      await this.participantsService.cancelEventTicket(event, ticket);
+      // await this.participantsService.cancelEventTicket(event, ticket);
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('Event not found');
       }
       throw error;
+    }
+  }
+
+  async checkEventStarts(event_id: number): Promise<boolean> {
+    const event = await this.eventRepo.findOne({ where: { id: event_id } });
+    if (!event) {
+      throw new NotFoundException(`Event with ID ${event_id} not found`);
+    }
+
+    // Calculate the time difference between the current time and the event start time
+    const currentTime = moment.utc().format('YYYY-MM-DD H:mm:ss');
+    const eventStartTime = moment(event.startsAt);
+    const timeDifferenceMinutes = eventStartTime.diff(currentTime, 'minutes');
+
+    // Check if the event starts within 15 minutes
+    if (timeDifferenceMinutes <= 15) {
+      return true;
+    } else {
+      return false;
     }
   }
 
@@ -311,7 +338,54 @@ export class EventsService {
       }
     }
 
+    const userexist = await this.participantsService.checkUser(
+      authUser.id,
+      data.eventId,
+    );
+
+    if (userexist) {
+      throw new ConflictException({
+        title: 'Check your tickets!',
+        message: 'You have already booked a ticket for this event',
+      });
+    } else {
+      const isAlreadyBooked = await this.isUserAlreadyBooked(
+        authUser.id,
+        data.eventId,
+      );
+
+      if (isAlreadyBooked) {
+        throw new ConflictException(
+          'User is already booked for an event at the same time',
+        );
+      }
+    }
     await this.participantsService.bookEventTicket(authUser, event);
+  }
+
+  async isUserAlreadyBooked(userId: number, eventId: number): Promise<boolean> {
+    const { startsAt, endsAt } = await this.getEventStartAndEndTime(eventId);
+
+    const existingParticipant =
+      await this.participantsService.checkEventParticipantBeforeBooking(
+        userId,
+        startsAt,
+      );
+
+    return !!existingParticipant;
+  }
+
+  async getEventStartAndEndTime(
+    eventId: number,
+  ): Promise<{ startsAt: Date; endsAt: Date }> {
+    const event = await this.eventRepo.findOne(eventId);
+    if (!event) {
+      throw new Error(`Event with ID ${eventId} not found`);
+    }
+
+    const { startsAt, endsAt } = event;
+
+    return { startsAt, endsAt };
   }
 
   /**
@@ -550,6 +624,8 @@ export class EventsService {
   async getReadyEvents(): Promise<Record<string, any>[]> {
     console.log('Checking if events are ready');
     try {
+      const currentDate = moment.utc().format('YYYY-MM-DD H:mm:ss');
+      console.log(currentDate);
       return await this.eventRepo.query(
         `SELECT e.*
         FROM events e

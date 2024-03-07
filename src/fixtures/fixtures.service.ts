@@ -204,6 +204,8 @@ export class FixturesService {
       })
       .getRawMany();
 
+    console.log(data.length);
+
     // return plainToClass(UserFixtureListDto, data, {
     return plainToInstance(UserFixtureListDto, data, {
       excludeExtraneousValues: true,
@@ -345,7 +347,7 @@ export class FixturesService {
         }, 'mutual_like')
         .innerJoin(Participant, 'p1', 'p1.id = f.first_participant_id')
         .innerJoin(Participant, 'p2', 'p2.id = f.second_participant_id')
-        .where('f.status = :liked', { liked: FixtureStatus.LIKED })        
+        .where('f.status = :liked', { liked: FixtureStatus.LIKED })
         .andWhere('p2.user_id = :authUserId', { authUserId })
         .having('mutual_like > 0');
 

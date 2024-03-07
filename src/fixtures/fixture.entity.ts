@@ -1,5 +1,6 @@
 import { Expose } from 'class-transformer';
 import { BaseEntity } from 'src/common/base.entity';
+import { Event } from 'src/events/event.entity';
 import { Participant } from 'src/participants/participant.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -46,4 +47,10 @@ export class Fixture extends BaseEntity {
 
   @Column({ nullable: true })
   reportReason?: string;
+
+  @ManyToOne(() => Event, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  event: Event;
 }

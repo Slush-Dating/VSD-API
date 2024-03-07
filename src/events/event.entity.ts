@@ -13,6 +13,7 @@ import {
 } from 'class-validator';
 import { BaseEntity } from 'src/common/base.entity';
 import { CastToUnixTimestamp } from 'src/common/decorators/cast-to-unix-timestamp.decorator';
+import { Fixture } from 'src/fixtures/fixture.entity';
 import { Participant } from 'src/participants/participant.entity';
 import { SexualityEnum, User } from 'src/users/user.entity';
 import { WaitList } from 'src/waitlist/waitlist.entity';
@@ -238,6 +239,9 @@ export class Event extends BaseEntity {
 
   @OneToMany(() => Participant, (participant) => participant.event)
   participants?: Participant[];
+
+  @OneToMany(() => Fixture, (fixture) => fixture.event)
+  fixture?: Fixture[];
 
   @OneToMany(() => WaitList, (waitlist) => waitlist.event)
   waitlist?: WaitList[];

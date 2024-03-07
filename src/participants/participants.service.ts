@@ -40,6 +40,7 @@ export class ParticipantsService {
       .leftJoin('p.event', 'e')
       .where('p.event = :eventId', { eventId })
       .andWhere('p.user = :userId', { userId })
+      .andWhere('p.status = :status', { status: 'booked' })
       .getOne();
   }
 
@@ -70,11 +71,25 @@ export class ParticipantsService {
         .leftJoin('p.event', 'e')
         .where('p.event IN (:...ids)', { ids })
         .andWhere('u.deactivatedAt IS NULL')
+        .andWhere('p.status = :status', { status: 'booked' })
         .orderBy('p.createdAt', 'ASC')
         .getMany();
     } catch (error) {
       console.error(error);
       throw error;
+    }
+  }
+
+  // if user exist than only check
+
+  async checkUser(user_id: number, event_id: number): Promise<boolean> {
+    const participant = await this.participantRepo.findOne({
+      where: { user: { id: user_id }, event: { id: event_id } },
+    });
+    if (participant) {
+      return true;
+    } else {
+      return false;
     }
   }
 
@@ -313,6 +328,25 @@ export class ParticipantsService {
         }),
       );
     }
+  }
+
+  /**
+   * - Check for same time event booking
+   */
+
+  async checkEventParticipantBeforeBooking(user_id: number, startTime: Date) {
+    const query = this.participantRepo
+      .createQueryBuilder('p')
+      .where('u.id = :user_id', { user_id })
+      .where('e.startsAt = :startTime', { startTime })
+      .addSelect(['e.id', 'e.startsAt', 'u.id'])
+      .leftJoin('p.user', 'u')
+      .leftJoin('p.event', 'e')
+      .getOne();
+
+    console.log(query);
+
+    return query;
   }
 
   constructor(
