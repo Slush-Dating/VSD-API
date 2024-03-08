@@ -45,6 +45,7 @@ import * as admin from 'firebase-admin';
 import { check } from 'prettier';
 import { validate } from 'class-validator';
 import { CompleteDetailDto } from './dto/complete-detail.dto';
+import { getMessaging } from 'firebase-admin/messaging';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mailchimp = require('@mailchimp/mailchimp_marketing');
@@ -984,6 +985,55 @@ export class AuthService {
   async logOutAllSessionsOfUser(authUserId: number): Promise<void> {
     await this.accessTokensService.revokeAllTokens(authUserId);
     await this.refreshTokensService.revokeAllTokens(authUserId);
+    const percentage = await this.getProfilePercentage(authUserId);
+    const user = await this.usersService.findUserById(authUserId);
+
+    console.log('percentage', percentage);
+
+    await this.sendProfilePercentageNotification(user, percentage);
+  }
+
+  // get filled profile percent
+
+  async getProfilePercentage(authUserId: number) {
+    const findUser = await this.usersService.findOneById(authUserId);
+    return findUser;
+  }
+
+  async sendProfilePercentageNotification(
+    authUser: User,
+    profilePercentage: number,
+  ) {
+    const receiver = await this.usersService.findOneByAttribute({
+      select: ['id', 'fcmTokens', 'notifications'],
+      where: { id: authUser.id },
+      relations: ['fcmTokens', 'profilePictures'],
+    });
+
+    if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
+      await getMessaging().sendMulticast({
+        data: {
+          senderId: authUser.id.toString(),
+          type: 'profile_percentage',
+          message: `Your profile is ${profilePercentage}% complete!`,
+          notificationCount: '1',
+        },
+        apns: {
+          payload: {
+            aps: {
+              alert: {
+                body: `Your profile is ${profilePercentage}% complete!`,
+              },
+              badge: 1,
+              sound: 'default',
+              contentAvailable: true,
+            },
+          },
+        },
+        tokens: receiver.rawFcmTokens,
+      });
+      console.log('Profile percentage notification sent');
+    }
   }
 
   constructor(

@@ -532,6 +532,35 @@ export class UsersService {
     return user ? user.id : undefined;
   }
 
+  async findOneById(authUserId: number): Promise<number> {
+    const findUser = await this.repository.findOne({
+      where: { id: authUserId },
+    });
+    let totalFields = 0;
+    let filledFields = 0;
+
+    // Iterate over user object properties
+    for (const key in findUser) {
+      if (Object.prototype.hasOwnProperty.call(findUser, key)) {
+        totalFields++;
+        if (findUser[key] !== null) {
+          filledFields++;
+        }
+      }
+    }
+
+    // Calculate percentage
+    const percentage = Math.floor((filledFields / totalFields) * 100);
+    return percentage;
+  }
+
+  async findUserById(authUserId: number): Promise<User> {
+    const findUser = await this.repository.findOne({
+      where: { id: authUserId },
+    });
+    return findUser;
+  }
+
   constructor(
     @InjectRepository(User) private repository: Repository<User>,
     @InjectAwsService(S3)

@@ -257,7 +257,7 @@ export class EventsService {
         throw new BadRequestException('No tickets found for this event');
       }
 
-      // await this.participantsService.cancelEventTicket(event, ticket);
+      await this.participantsService.cancelEventTicket(event, ticket);
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('Event not found');
@@ -272,13 +272,7 @@ export class EventsService {
       throw new NotFoundException(`Event with ID ${event_id} not found`);
     }
 
-    // Calculate the time difference between the current time and the event start time
-    const currentTime = moment.utc().format('YYYY-MM-DD H:mm:ss');
-    const eventStartTime = moment(event.startsAt);
-    const timeDifferenceMinutes = eventStartTime.diff(currentTime, 'minutes');
-
-    // Check if the event starts within 15 minutes
-    if (timeDifferenceMinutes <= 15) {
+    if (event.status === EventStatusEnum.STARTED) {
       return true;
     } else {
       return false;
@@ -623,13 +617,18 @@ export class EventsService {
    */
   async getReadyEvents(): Promise<Record<string, any>[]> {
     console.log('Checking if events are ready');
+
+    const event = await this.getEventById();
+
+    console.log('event', event.startsAt);
+
     try {
       const currentDate = moment.utc().format('YYYY-MM-DD H:mm:ss');
       console.log(currentDate);
       return await this.eventRepo.query(
         `SELECT e.*
         FROM events e
-        WHERE (CURRENT_TIMESTAMP + INTERVAL 30 SECOND) > e.starts_at
+        WHERE TIMESTAMPADD(MINUTE, 15, CURRENT_TIMESTAMP) > e.starts_at
         AND e.status = ?`,
         [EventStatusEnum.NOT_YET_STARTED],
       );
@@ -689,6 +688,12 @@ export class EventsService {
   /**
    * - Get events which are about to start i.e before 5 min
    */
+
+  async getEventById(): Promise<Event> {
+    const event = await this.eventRepo.findOne({ where: { id: 1001 } });
+    return event;
+  }
+
   async getEventsStartingInFifteenMinutes(): Promise<Record<string, any>[]> {
     try {
       return await this.eventRepo.query(
