@@ -46,6 +46,11 @@ export enum AuthType {
   FACEBOOK = 'facebook',
 }
 
+export enum SubscriptionPurchased {
+  No = 'no',
+  Yes = 'yes',
+}
+
 export enum GenderEnum {
   male = 'male',
   female = 'female',
@@ -421,6 +426,14 @@ export class User extends BaseEntity {
     default: () => 'CURRENT_TIMESTAMP',
   })
   eventSevenDayReminder?: Date;
+
+  /**
+   * @example yes
+   */
+  @IsEnum(SubscriptionPurchased)
+  @IsNotEmpty()
+  @Column({ type: 'enum', enum: SubscriptionPurchased, nullable: true })
+  isSubscriptionPurchased?: SubscriptionPurchased;
 
   public get age(): number {
     if (this.dateOfBirth) {

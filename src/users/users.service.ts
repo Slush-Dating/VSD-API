@@ -43,6 +43,7 @@ import {
   NextActionEnum,
   NextDetailActionEnum,
   RoleType,
+  SubscriptionPurchased,
   User,
 } from './user.entity';
 import { InjectAwsService } from 'nest-aws-sdk';
@@ -205,6 +206,10 @@ export class UsersService {
     authUser.deactivatedAt = new Date();
     await this.repository.save(authUser);
   }
+
+  /**
+   * delete user profile
+   */
 
   /**
    * Change email
@@ -510,6 +515,7 @@ export class UsersService {
         requiresAction: true,
         nextAction: NextActionEnum.FILL_FIRSTNAME,
         nextDetailAction: NextDetailActionEnum.FILL_IDEAL_VACATION,
+        isSubscriptionPurchased: SubscriptionPurchased.No,
       }),
     );
     this.sendVerificationEmail(user);
