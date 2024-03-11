@@ -41,6 +41,8 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ignoreElements } from 'rxjs';
 import { CompleteDetailDto } from './dto/complete-detail.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
+import { DeactivateAccountDto } from './dto/deactivate-account.dto';
+import { DeactivateProfileDto } from 'src/users/dto/deactivateprofile.dto';
 
 @Controller({
   path: 'auth',
@@ -72,36 +74,34 @@ export class AuthControllerV1 {
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'avatar', maxCount: 1 },
-      { name: 'video', maxCount: 1 },
+      { name: 'video', maxCount: 3 },
     ]),
   )
   async completeRegistration(
     @AuthUser() authUser: User,
     @Body() completeRegistrationDto: CompleteRegistrationDto,
-    @UploadedFiles() avatar?: { avatar: Express.Multer.File[] },
-    @UploadedFiles() video?: { video: Express.Multer.File[] },
+    @UploadedFiles()
+    files: { avatar?: Express.Multer.File[]; video?: Express.Multer.File[] },
   ) {
     if (completeRegistrationDto.action === 'upload_avatar') {
-      if (!avatar?.avatar || avatar?.avatar.length === 0) {
+      if (!files.avatar || files.avatar.length === 0) {
         throw new BadRequestException(`The avatar field is required`);
       }
     }
     if (completeRegistrationDto.action === 'upload_video') {
-      if (!video?.video || video?.video.length === 0) {
+      if (!files.video || files.video.length === 0) {
         throw new BadRequestException(`The video field is required`);
       }
     }
 
-    const avatarFile =
-      avatar?.avatar && avatar.avatar.length > 0 ? avatar.avatar[0] : undefined;
-    const videoFile =
-      video?.video && video.video.length > 0 ? video.video[0] : undefined;
+    const avatarFile = files.avatar ? files.avatar[0] : undefined;
+    const videoFiles = files.video || [];
 
     const user = await this.authService.completeRegistration(
       authUser,
       completeRegistrationDto,
       avatarFile,
-      videoFile,
+      videoFiles,
     );
 
     return { data: user };
@@ -277,10 +277,18 @@ export class AuthControllerV1 {
    */
   @Post('/deactivate-account')
   @ApiOperation({ summary: 'Deactivate your account' })
+  @ApiConsumes('multipart/form-data')
   @ApiBearerAuth()
+  @UseInterceptors(AnyFilesInterceptor())
   @UseGuards(JwtAuthGuard)
-  async deactivateAccount(@AuthUser() authUser: User) {
-    await this.authService.deactivateAccount(authUser);
+  async deactivateAccount(
+    @AuthUser() authUser: User,
+    @Body() deactivateProfile: DeactivateProfileDto,
+  ) {
+    await this.authService.deactivateAccount(
+      authUser,
+      deactivateProfile.reason,
+    );
     return { message: 'Your account has been deactivated' };
   }
 

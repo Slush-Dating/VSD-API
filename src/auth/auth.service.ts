@@ -150,8 +150,8 @@ export class AuthService {
   /**
    * De-activate account
    */
-  async deactivateAccount(authUser: User): Promise<void> {
-    await this.usersService.deactivateAccount(authUser);
+  async deactivateAccount(authUser: User, reason: string): Promise<void> {
+    await this.usersService.deactivateAccount(authUser, reason);
     await this.logOut(authUser);
   }
 
@@ -162,7 +162,7 @@ export class AuthService {
     authUser: User,
     completeRegistrationDto: CompleteRegistrationDto,
     avatar?: Express.Multer.File,
-    video?: Express.Multer.File,
+    video?: Express.Multer.File[],
   ): Promise<User> {
     const { action } = completeRegistrationDto;
 
@@ -609,7 +609,10 @@ export class AuthService {
   /**
    * Upload video
    */
-  async uploadVideo(authUser: User, video: Express.Multer.File): Promise<void> {
+  async uploadVideo(
+    authUser: User,
+    video: Express.Multer.File[],
+  ): Promise<void> {
     await this.usersService.uploadVideo(authUser, video);
   }
 

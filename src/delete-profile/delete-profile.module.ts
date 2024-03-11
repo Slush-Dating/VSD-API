@@ -8,4 +8,4 @@ import { DeleteProfileService } from './delete-profile.service';
   providers: [DeleteProfileService],
   exports: [DeleteProfileService],
 })
-export class WaitListModule {}
+export class DeleteProfileModule {}

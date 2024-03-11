@@ -33,6 +33,7 @@ import { EventGenderEnum } from 'src/events/event.entity';
 import { Interests } from 'src/interests/interests.entity';
 import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
 import { bucketUrl, calculateAge } from 'src/common/helper';
+import { string } from 'joi';
 
 export enum RoleType {
   USER = 'USER',
@@ -388,6 +389,15 @@ export class User extends BaseEntity {
   @Expose()
   @Column({ type: 'datetime', nullable: true })
   deactivatedAt?: Date;
+
+  /**
+   * deactivate profile reason
+   * @example Too busy
+   */
+  @Column({ type: 'text', nullable: true })
+  @IsString()
+  @IsNotEmpty()
+  deactiveProfileReason: string;
 
   @OneToMany(() => FcmToken, (fcmToken) => fcmToken.user, {
     onDelete: 'CASCADE',

@@ -54,6 +54,10 @@ import { ProfileVideoLikeStatusEnum } from 'src/profile-video-likes/profile-vide
 import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
 import { EthnicityService } from 'src/ethnicity/ethnicity.service';
 import { ProfileVideosService } from 'src/profile-videos/profile-videos.service';
+import { DeleteProfileService } from 'src/delete-profile/delete-profile.service';
+import { DeleteProfileDto } from 'src/delete-profile/delete-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { hash } from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -202,8 +206,9 @@ export class UsersService {
   /**
    * De-active account
    */
-  async deactivateAccount(authUser: User): Promise<void> {
+  async deactivateAccount(authUser: User, reason: string): Promise<void> {
     authUser.deactivatedAt = new Date();
+    authUser.deactiveProfileReason = reason;
     await this.repository.save(authUser);
   }
 
@@ -316,9 +321,12 @@ export class UsersService {
    * #### Registration Step
    * ##### Upload video
    */
-  async uploadVideo(authUser: User, video: Express.Multer.File): Promise<void> {
+  async uploadVideo(
+    authUser: User,
+    videos: Express.Multer.File[],
+  ): Promise<void> {
     await Promise.all([
-      this.profileVideosService.storeMany(authUser, [video]),
+      this.profileVideosService.storeMany(authUser, videos),
       this.update(authUser.id, {
         nextAction: NextActionEnum.FILL_PASSWORD,
       }),
@@ -365,6 +373,105 @@ export class UsersService {
       dateOfBirth: moment(updateUserDto.dateOfBirth, 'YYYY-MM-DD').toDate(),
     };
 
+    if (updateUserDto.height) {
+      if (!updateUserDto.height_unit) {
+        throw new BadRequestException('Height unit is required');
+      }
+      if (!updateUserDto.displayOnProfile) {
+        throw new BadRequestException('Display on profile is required');
+      }
+    }
+
+    if (updateUserDto.gender) {
+      if (!updateUserDto.displayOnProfile) {
+        throw new BadRequestException('Display on profile is required');
+      }
+    }
+
+    let heightInCm: number;
+
+    if (updateUserDto.height_unit && updateUserDto.height) {
+      if (updateUserDto.height_unit?.toLowerCase() === 'ft') {
+        const heightValue = parseFloat(updateUserDto.height);
+        if (isNaN(heightValue)) {
+          throw new BadRequestException('Invalid height value.');
+        }
+
+        heightInCm = heightValue * 30.48;
+      } else if (updateUserDto.height_unit?.toLowerCase() === 'cm') {
+        heightInCm = parseFloat(updateUserDto.height);
+        if (isNaN(heightInCm)) {
+          throw new BadRequestException('Invalid height value.');
+        }
+      } else {
+        throw new BadRequestException(
+          'Invalid height unit. Supported units are "ft" and "cm".',
+        );
+      }
+    }
+
+    const data: Partial<User> = { id: authUser.id };
+
+    const userData = await this.findById(authUser.id);
+
+    if (updateUserDto.height) {
+      if (updateUserDto.displayOnProfile === 'true') {
+        if (
+          userData.showOnProfile?.includes('height') &&
+          updateUserDto.displayOnProfile === 'true'
+        ) {
+          data.showOnProfile = `${userData.showOnProfile}`;
+        } else {
+          data.showOnProfile = `${
+            userData.showOnProfile
+              ? userData.showOnProfile + ', height'
+              : 'height'
+          }`;
+        }
+      } else if (
+        updateUserDto.displayOnProfile === 'false' &&
+        userData.showOnProfile?.includes('height')
+      ) {
+        if (
+          userData.showOnProfile.includes('height') &&
+          updateUserDto.displayOnProfile === 'false'
+        ) {
+          let fields = userData.showOnProfile.split(', ');
+          fields = fields.filter((item) => item !== 'height');
+          data.showOnProfile = fields.join(', ');
+        }
+      }
+    }
+
+    if (updateUserDto.gender) {
+      if (updateUserDto.displayOnProfile === 'true') {
+        if (
+          userData.showOnProfile?.includes('gender') &&
+          updateUserDto.displayOnProfile === 'true'
+        ) {
+          data.showOnProfile = `${userData.showOnProfile}`;
+        } else {
+          data.showOnProfile = `${
+            userData.showOnProfile
+              ? userData.showOnProfile + ', gender'
+              : 'gender'
+          }`;
+        }
+      } else if (
+        updateUserDto.displayOnProfile === 'false' &&
+        userData.showOnProfile?.includes('gender')
+      ) {
+        if (
+          userData.showOnProfile.includes('gender') &&
+          updateUserDto.displayOnProfile === 'false'
+        ) {
+          let fields = userData.showOnProfile.split(', ');
+          fields = fields.filter((item) => item !== 'gender');
+          data.showOnProfile = fields.join(', ');
+        }
+      }
+    }
+
     // const ids = await this.ethnicityService.findByIds(updateUserDto.ethnicityIds);
     // authUser.ethnicity = ids;
     // await this.repository.save(authUser);
@@ -375,6 +482,8 @@ export class UsersService {
         ...updateUserDto,
         ...notifications,
         ...dateOfBirth,
+        ...data,
+        height: heightInCm?.toFixed(0).toString(),
       }),
     );
 
@@ -567,6 +676,35 @@ export class UsersService {
     return findUser;
   }
 
+  async removeUser(
+    deleteUserProfileDto: DeleteProfileDto,
+    authUser: User,
+  ): Promise<void> {
+    const findUser = await this.repository.findOne({
+      where: { id: authUser.id },
+    });
+
+    await this.deleteProfileService.addDeleteProfile(
+      deleteUserProfileDto.reason,
+      findUser,
+    );
+
+    await this.repository.remove(findUser);
+  }
+
+  async changePassword(
+    changePasswordDto: ChangePasswordDto,
+    authUser: User,
+  ): Promise<void> {
+    if (changePasswordDto.newpassword !== changePasswordDto.confirm_password) {
+      throw new BadRequestException('Passwords do not match');
+    }
+
+    await this.repository.update(authUser.id, {
+      password: await hash(changePasswordDto.newpassword, 12),
+    });
+  }
+
   constructor(
     @InjectRepository(User) private repository: Repository<User>,
     @InjectAwsService(S3)
@@ -583,5 +721,6 @@ export class UsersService {
     private profileVideoLikeService: ProfileVideoLikesService,
     private ethnicityService: EthnicityService,
     private httpService: HttpService,
+    private deleteProfileService: DeleteProfileService,
   ) {}
 }

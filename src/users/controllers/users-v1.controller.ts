@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -32,6 +33,9 @@ import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
 import { EthnicityService } from 'src/ethnicity/ethnicity.service';
 import { UpdateEthnicityDto } from 'src/ethnicity/dto/update-ethnicity.dto';
 import { NOTIFICATION } from 'src/common/constants';
+import { DeleteProfileDto } from 'src/delete-profile/delete-profile.dto';
+import { compare } from 'bcrypt';
+import { ChangePasswordDto } from '../dto/change-password.dto';
 @Controller({
   path: 'users',
   version: '1',
@@ -207,10 +211,48 @@ export class UsersControllerV1 {
 
   @Post('delete-profile')
   @ApiOperation({ summary: 'Delete user profile' })
-  public async deleteUserProfile(@AuthUser() authUser: User): Promise<User> {
-    console.log(authUser);
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth()
+  @UseInterceptors(AnyFilesInterceptor())
+  public async deleteUserProfile(
+    @AuthUser() authUser: User,
+    @Body() deleteUserProfileDto: DeleteProfileDto,
+  ): Promise<any> {
+    const passwordMatches = await compare(
+      deleteUserProfileDto.password,
+      authUser.password,
+    );
 
-    return authUser;
+    if (!passwordMatches) {
+      throw new BadRequestException('Incorrect Password');
+    }
+
+    await this.usersService.removeUser(deleteUserProfileDto, authUser);
+
+    return { message: 'Delete user successfully' };
+  }
+
+  @Post('change-password')
+  @ApiOperation({ summary: 'change password' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth()
+  @UseInterceptors(AnyFilesInterceptor())
+  public async changePassword(
+    @AuthUser() authUser: User,
+    @Body() changePassowrdDto: ChangePasswordDto,
+  ): Promise<any> {
+    const passwordMatches = await compare(
+      changePassowrdDto.password,
+      authUser.password,
+    );
+
+    if (!passwordMatches) {
+      throw new BadRequestException('Incorrect Password');
+    }
+
+    await this.usersService.changePassword(changePassowrdDto, authUser);
+
+    return { message: 'Your password has been changed.' };
   }
 
   constructor(

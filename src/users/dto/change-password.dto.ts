@@ -6,20 +6,29 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class DeleteProfileDto {
+export class ChangePasswordDto {
   @ApiProperty({
-    description: 'reason for delete profile',
-    example: 'I have a privacy concern',
+    description: 'Old password',
+    example: 'password',
   })
   @IsNotEmpty()
   @IsString()
-  reason: string;
+  password: string;
 
   @ApiProperty({
     description: 'password',
     example: 'password',
   })
+  @MinLength(8)
   @IsString()
   @IsNotEmpty()
-  password: string;
+  newpassword: string;
+
+  @ApiProperty({
+    description: 'confirm password',
+    example: 'password',
+  })
+  @IsString()
+  @IsNotEmpty()
+  confirm_password: string;
 }

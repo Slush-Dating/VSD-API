@@ -12,6 +12,9 @@ import { InterestsModule } from 'src/interests/interests.module';
 import { ProfileVideoLikesModule } from 'src/profile-video-likes/profile-video-likes.module';
 import { EthnicityModule } from 'src/ethnicity/ethnicity.module';
 import { ProfileVideosModule } from 'src/profile-videos/profile-videos.module';
+import { ParticipantsService } from 'src/participants/participants.service';
+import { ParticipantsModule } from 'src/participants/participants.module';
+import { DeleteProfileModule } from 'src/delete-profile/delete-profile.module';
 
 @Module({
   imports: [
@@ -25,6 +28,7 @@ import { ProfileVideosModule } from 'src/profile-videos/profile-videos.module';
     EthnicityModule,
     forwardRef(() => ProfileVideosModule),
     HttpModule,
+    DeleteProfileModule,
   ],
   providers: [UsersService],
   exports: [UsersService],
