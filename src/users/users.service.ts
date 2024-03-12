@@ -361,6 +361,130 @@ export class UsersService {
   /**
    * Update user profile
    */
+  // async updateUserProfile(
+  //   authUser: User,
+  //   updateUserDto: UpdateUserDto,
+  // ): Promise<User> {
+  //   const notifications = updateUserDto.notifications && {
+  //     notifications: updateUserDto.notifications === 'true',
+  //   };
+
+  //   const dateOfBirth = updateUserDto.dateOfBirth && {
+  //     dateOfBirth: moment(updateUserDto.dateOfBirth, 'YYYY-MM-DD').toDate(),
+  //   };
+
+  //   if (!updateUserDto.height_unit) {
+  //     throw new BadRequestException('Height unit is required');
+  //   }
+  //   if (!updateUserDto.display_height) {
+  //     throw new BadRequestException('display_height is required');
+  //   }
+
+  //   if (!updateUserDto.display_gender) {
+  //     throw new BadRequestException('display_gender is required');
+  //   }
+
+  //   let heightInCm: number;
+
+  //   if (updateUserDto.height_unit && updateUserDto.height) {
+  //     if (updateUserDto.height_unit?.toLowerCase() === 'ft') {
+  //       const heightValue = parseFloat(updateUserDto.height);
+  //       if (isNaN(heightValue)) {
+  //         throw new BadRequestException('Invalid height value.');
+  //       }
+
+  //       heightInCm = heightValue * 30.48;
+  //     } else if (updateUserDto.height_unit?.toLowerCase() === 'cm') {
+  //       heightInCm = parseFloat(updateUserDto.height);
+  //       if (isNaN(heightInCm)) {
+  //         throw new BadRequestException('Invalid height value.');
+  //       }
+  //     } else {
+  //       throw new BadRequestException(
+  //         'Invalid height unit. Supported units are "ft" and "cm".',
+  //       );
+  //     }
+  //   }
+
+  //   const data: Partial<User> = { id: authUser.id };
+
+  //   const userData = await this.findById(authUser.id);
+
+  //   if (updateUserDto.height) {
+  //     if (updateUserDto.display_height === 'true') {
+  //       if (
+  //         userData.showOnProfile?.includes('height') &&
+  //         updateUserDto.display_height === 'true'
+  //       ) {
+  //         data.showOnProfile = `${userData.showOnProfile}`;
+  //       } else {
+  //         data.showOnProfile = `${
+  //           userData.showOnProfile
+  //             ? userData.showOnProfile + ', height'
+  //             : 'height'
+  //         }`;
+  //       }
+  //     } else if (
+  //       updateUserDto.display_height === 'false' &&
+  //       userData.showOnProfile?.includes('height')
+  //     ) {
+  //       if (
+  //         userData.showOnProfile.includes('height') &&
+  //         updateUserDto.display_height === 'false'
+  //       ) {
+  //         console.log('here include ' + userData.showOnProfile);
+  //         let fields = userData.showOnProfile.split(', ');
+  //         fields = fields.filter((item) => item !== 'height');
+  //         data.showOnProfile = fields.join(', ');
+  //       }
+  //     }
+  //   }
+
+  //   if (updateUserDto.display_gender === 'true') {
+  //     if (
+  //       userData.showOnProfile?.includes('gender') &&
+  //       updateUserDto.display_gender === 'true'
+  //     ) {
+  //       data.showOnProfile = `${userData.showOnProfile}`;
+  //     } else {
+  //       data.showOnProfile = `${
+  //         userData.showOnProfile
+  //           ? userData.showOnProfile + ', gender'
+  //           : 'gender'
+  //       }`;
+  //     }
+  //   } else if (
+  //     updateUserDto.display_gender === 'false' &&
+  //     userData.showOnProfile?.includes('gender')
+  //   ) {
+  //     if (
+  //       userData.showOnProfile.includes('gender') &&
+  //       updateUserDto.display_gender === 'false'
+  //     ) {
+  //       let fields = userData.showOnProfile.split(', ');
+  //       fields = fields.filter((item) => item !== 'gender');
+  //       data.showOnProfile = fields.join(', ');
+  //     }
+  //   }
+
+  //   // const ids = await this.ethnicityService.findByIds(updateUserDto.ethnicityIds);
+  //   // authUser.ethnicity = ids;
+  //   // await this.repository.save(authUser);
+
+  //   await this.repository.save(
+  //     this.repository.create({
+  //       id: authUser.id,
+  //       ...updateUserDto,
+  //       ...notifications,
+  //       ...dateOfBirth,
+  //       ...data,
+  //       height: heightInCm?.toFixed(0).toString(),
+  //     }),
+  //   );
+
+  //   return this.findById(authUser.id);
+  // }
+
   async updateUserProfile(
     authUser: User,
     updateUserDto: UpdateUserDto,
@@ -368,126 +492,140 @@ export class UsersService {
     const notifications = updateUserDto.notifications && {
       notifications: updateUserDto.notifications === 'true',
     };
-
     const dateOfBirth = updateUserDto.dateOfBirth && {
       dateOfBirth: moment(updateUserDto.dateOfBirth, 'YYYY-MM-DD').toDate(),
     };
 
-    if (updateUserDto.height) {
+    if (updateUserDto.height !== undefined) {
       if (!updateUserDto.height_unit) {
         throw new BadRequestException('Height unit is required');
       }
-      if (!updateUserDto.displayOnProfile) {
-        throw new BadRequestException('Display on profile is required');
+      if (!('display_height' in updateUserDto)) {
+        throw new BadRequestException('display_height is required');
+      }
+    }
+    if (updateUserDto.gender !== undefined) {
+      if (!('display_gender' in updateUserDto)) {
+        throw new BadRequestException('display_gender is required');
       }
     }
 
-    if (updateUserDto.gender) {
-      if (!updateUserDto.displayOnProfile) {
-        throw new BadRequestException('Display on profile is required');
+    if (updateUserDto.sexuality !== undefined) {
+      if (!('display_orientation' in updateUserDto)) {
+        throw new BadRequestException('display_orientation is required');
       }
     }
 
-    let heightInCm: number;
+    let heightInCm: number | undefined;
+    if (updateUserDto.height && updateUserDto.height_unit) {
+      heightInCm = this.calculateHeightInCm(
+        updateUserDto.height,
+        updateUserDto.height_unit,
+      );
+    }
 
-    if (updateUserDto.height_unit && updateUserDto.height) {
-      if (updateUserDto.height_unit?.toLowerCase() === 'ft') {
-        const heightValue = parseFloat(updateUserDto.height);
-        if (isNaN(heightValue)) {
-          throw new BadRequestException('Invalid height value.');
-        }
+    const userData = await this.findById(authUser.id);
 
-        heightInCm = heightValue * 30.48;
-      } else if (updateUserDto.height_unit?.toLowerCase() === 'cm') {
-        heightInCm = parseFloat(updateUserDto.height);
-        if (isNaN(heightInCm)) {
-          throw new BadRequestException('Invalid height value.');
-        }
+    if (updateUserDto.display_height !== undefined) {
+      if (updateUserDto.display_height === 'true') {
+        userData.showOnProfile = this.updateShowOnProfile(
+          userData.showOnProfile,
+          'height',
+        );
       } else {
-        throw new BadRequestException(
-          'Invalid height unit. Supported units are "ft" and "cm".',
+        userData.showOnProfile = this.removeFieldFromShowOnProfile(
+          userData.showOnProfile,
+          'height',
         );
       }
     }
 
-    const data: Partial<User> = { id: authUser.id };
-
-    const userData = await this.findById(authUser.id);
-
-    if (updateUserDto.height) {
-      if (updateUserDto.displayOnProfile === 'true') {
-        if (
-          userData.showOnProfile?.includes('height') &&
-          updateUserDto.displayOnProfile === 'true'
-        ) {
-          data.showOnProfile = `${userData.showOnProfile}`;
-        } else {
-          data.showOnProfile = `${
-            userData.showOnProfile
-              ? userData.showOnProfile + ', height'
-              : 'height'
-          }`;
-        }
-      } else if (
-        updateUserDto.displayOnProfile === 'false' &&
-        userData.showOnProfile?.includes('height')
-      ) {
-        if (
-          userData.showOnProfile.includes('height') &&
-          updateUserDto.displayOnProfile === 'false'
-        ) {
-          let fields = userData.showOnProfile.split(', ');
-          fields = fields.filter((item) => item !== 'height');
-          data.showOnProfile = fields.join(', ');
-        }
+    if (updateUserDto.display_gender !== undefined) {
+      if (updateUserDto.display_gender === 'true') {
+        userData.showOnProfile = this.updateShowOnProfile(
+          userData.showOnProfile,
+          'gender',
+        );
+      } else {
+        userData.showOnProfile = this.removeFieldFromShowOnProfile(
+          userData.showOnProfile,
+          'gender',
+        );
       }
     }
 
-    if (updateUserDto.gender) {
-      if (updateUserDto.displayOnProfile === 'true') {
-        if (
-          userData.showOnProfile?.includes('gender') &&
-          updateUserDto.displayOnProfile === 'true'
-        ) {
-          data.showOnProfile = `${userData.showOnProfile}`;
-        } else {
-          data.showOnProfile = `${
-            userData.showOnProfile
-              ? userData.showOnProfile + ', gender'
-              : 'gender'
-          }`;
-        }
-      } else if (
-        updateUserDto.displayOnProfile === 'false' &&
-        userData.showOnProfile?.includes('gender')
-      ) {
-        if (
-          userData.showOnProfile.includes('gender') &&
-          updateUserDto.displayOnProfile === 'false'
-        ) {
-          let fields = userData.showOnProfile.split(', ');
-          fields = fields.filter((item) => item !== 'gender');
-          data.showOnProfile = fields.join(', ');
-        }
+    if (updateUserDto.display_orientation !== undefined) {
+      if (updateUserDto.display_orientation === 'true') {
+        userData.showOnProfile = this.updateShowOnProfile(
+          userData.showOnProfile,
+          'sexuality',
+        );
+      } else {
+        userData.showOnProfile = this.removeFieldFromShowOnProfile(
+          userData.showOnProfile,
+          'sexuality',
+        );
       }
     }
 
-    // const ids = await this.ethnicityService.findByIds(updateUserDto.ethnicityIds);
-    // authUser.ethnicity = ids;
-    // await this.repository.save(authUser);
-
-    await this.repository.save(
-      this.repository.create({
-        id: authUser.id,
-        ...updateUserDto,
-        ...notifications,
-        ...dateOfBirth,
-        ...data,
-        height: heightInCm?.toFixed(0).toString(),
-      }),
-    );
+    await this.repository.save({
+      id: authUser.id,
+      ...updateUserDto,
+      ...notifications,
+      ...dateOfBirth,
+      showOnProfile: userData.showOnProfile,
+      height: heightInCm?.toFixed(0).toString(),
+    });
 
     return this.findById(authUser.id);
+  }
+
+  calculateHeightInCm(height: string, unit: string): number {
+    const heightValue = parseFloat(height);
+    if (isNaN(heightValue)) {
+      throw new BadRequestException('Invalid height value.');
+    }
+
+    if (unit.toLowerCase() === 'ft') {
+      return heightValue * 30.48;
+    } else if (unit.toLowerCase() === 'cm') {
+      return heightValue;
+    } else {
+      throw new BadRequestException(
+        'Invalid height unit. Supported units are "ft" and "cm".',
+      );
+    }
+  }
+
+  updateShowOnProfile(
+    currentProfile: string | undefined,
+    field: string,
+  ): string {
+    if (currentProfile) {
+      const fields = currentProfile.split(', ');
+      if (!fields.includes(field)) {
+        fields.push(field);
+      }
+      return fields.join(', ');
+    } else {
+      return field;
+    }
+  }
+
+  removeFieldFromShowOnProfile(
+    currentProfile: string | undefined,
+    field: string,
+  ): string {
+    if (currentProfile) {
+      const fields = currentProfile.split(', ');
+      const index = fields.indexOf(field);
+      if (index !== -1) {
+        fields.splice(index, 1);
+      }
+      return fields.join(', ');
+    } else {
+      return '';
+    }
   }
 
   /**

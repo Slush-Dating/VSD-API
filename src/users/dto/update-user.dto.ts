@@ -47,11 +47,25 @@ export class UpdateUserDto extends PartialType(
    */
   @IsBooleanString()
   @IsOptional()
-  displayOnProfile?: string;
+  display_height?: string;
 
   /**
    * @example "cm"
    */
   @ValidateIf((o: UpdateUserDto) => o.height !== undefined)
   height_unit?: string;
+
+  /**
+   * @example true
+   */
+  @IsBooleanString()
+  @IsOptional()
+  display_gender?: string;
+
+  /**
+   * @example true
+   */
+  @IsBooleanString()
+  @IsOptional()
+  display_orientation?: string;
 }
