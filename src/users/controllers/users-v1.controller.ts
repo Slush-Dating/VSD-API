@@ -36,6 +36,7 @@ import { NOTIFICATION } from 'src/common/constants';
 import { DeleteProfileDto } from 'src/delete-profile/delete-profile.dto';
 import { compare } from 'bcrypt';
 import { ChangePasswordDto } from '../dto/change-password.dto';
+import { SubscriptionDto } from 'src/subscription/subscription.dto';
 @Controller({
   path: 'users',
   version: '1',
@@ -253,6 +254,26 @@ export class UsersControllerV1 {
     await this.usersService.changePassword(changePassowrdDto, authUser);
 
     return { message: 'Your password has been changed.' };
+  }
+
+  @Post('subscribe')
+  @ApiOperation({ summary: 'subscribe user' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth()
+  @UseInterceptors(AnyFilesInterceptor())
+  @UseGuards(JwtAuthGuard)
+  public async subscribe(
+    @AuthUser() authUser: User,
+    @Body() subscriptionDto: SubscriptionDto,
+  ): Promise<any> {
+    const packageId = parseInt(subscriptionDto.packageId as any);
+
+    if (isNaN(packageId)) {
+      throw new BadRequestException(`Invalid Package ID`);
+    }
+
+    await this.usersService.subscribeUser(authUser, packageId);
+    return { message: 'Subscription purchased  successfully' };
   }
 
   constructor(

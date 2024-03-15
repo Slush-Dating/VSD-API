@@ -15,6 +15,8 @@ import { ProfileVideosModule } from 'src/profile-videos/profile-videos.module';
 import { ParticipantsService } from 'src/participants/participants.service';
 import { ParticipantsModule } from 'src/participants/participants.module';
 import { DeleteProfileModule } from 'src/delete-profile/delete-profile.module';
+import { PackageDetailModule } from 'src/package-details/package-detail.module';
+import { SubscriptionModule } from 'src/subscription/subscription.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { DeleteProfileModule } from 'src/delete-profile/delete-profile.module';
     forwardRef(() => ProfileVideosModule),
     HttpModule,
     DeleteProfileModule,
+    PackageDetailModule,
+    SubscriptionModule,
   ],
   providers: [UsersService],
   exports: [UsersService],

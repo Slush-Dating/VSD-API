@@ -35,7 +35,6 @@ import {
   EventList,
   Participant as EventParticipant,
 } from './../dto/event-list.dto';
-import { EventHistoryDto } from '../dto/event-history.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { Participant } from 'src/participants/participant.entity';
 import { IsOptional } from 'class-validator';

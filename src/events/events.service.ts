@@ -242,10 +242,15 @@ export class EventsService {
         relations: ['participants', 'participants.user'],
       });
 
-      const eventStartsSoon = await this.checkEventStarts(eventId);
-      if (eventStartsSoon) {
+      if (event.hasStarted) {
         throw new BadRequestException(
-          'Event is starting within 15 minutes. Cannot cancel ticket.',
+          'Event is starting within 15 minutes or Event has been started. Cannot cancel ticket.',
+        );
+      }
+
+      if (event.hasCancelled) {
+        throw new BadRequestException(
+          'Event has been cancelled, You cannot cancel ticket.',
         );
       }
 
@@ -263,19 +268,6 @@ export class EventsService {
         throw new NotFoundException('Event not found');
       }
       throw error;
-    }
-  }
-
-  async checkEventStarts(event_id: number): Promise<boolean> {
-    const event = await this.eventRepo.findOne({ where: { id: event_id } });
-    if (!event) {
-      throw new NotFoundException(`Event with ID ${event_id} not found`);
-    }
-
-    if (event.status === EventStatusEnum.STARTED) {
-      return true;
-    } else {
-      return false;
     }
   }
 
@@ -318,7 +310,7 @@ export class EventsService {
       );
     }
 
-    if (event.hasStarted) {
+    if (event.hasStarted || event.hasCancelled) {
       throw new BadRequestException('Sorry! The booking time is over');
     }
 
@@ -620,8 +612,6 @@ export class EventsService {
 
     const event = await this.getEventById();
 
-    console.log('event', event.startsAt);
-
     try {
       const currentDate = moment.utc().format('YYYY-MM-DD H:mm:ss');
       console.log(currentDate);
@@ -690,7 +680,7 @@ export class EventsService {
    */
 
   async getEventById(): Promise<Event> {
-    const event = await this.eventRepo.findOne({ where: { id: 1001 } });
+    const event = await this.eventRepo.findOne({ where: { id: 1007 } });
     return event;
   }
 

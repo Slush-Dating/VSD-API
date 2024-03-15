@@ -50,11 +50,14 @@ export class GenerateFixturesService {
         level: 'info',
         message: `No Participants found for events ${eventIds}!`,
       });
+      const eventIdArr = eventIds.map((e) => parseInt(e));
+      await this.cancelEvent(eventIdArr);
       return;
     }
 
     // Group Participants By Event
     const participantsByEvent = groupBy(participants, 'event.id');
+
     console.log(`PARTICIPANTS BY EVENT`, participantsByEvent);
 
     for (const [eventId, participants] of Object.entries(participantsByEvent)) {

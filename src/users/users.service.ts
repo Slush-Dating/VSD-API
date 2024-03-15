@@ -58,6 +58,8 @@ import { DeleteProfileService } from 'src/delete-profile/delete-profile.service'
 import { DeleteProfileDto } from 'src/delete-profile/delete-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { hash } from 'bcrypt';
+import { PackagedetailService } from 'src/package-details/package-detail.service';
+import { SubscriptionService } from 'src/subscription/subscription.service';
 
 @Injectable()
 export class UsersService {
@@ -843,6 +845,22 @@ export class UsersService {
     });
   }
 
+  async subscribeUser(user: User, packageId: number): Promise<any> {
+    const findUser = await this.repository.findOne(user.id);
+
+    const findPackage = await this.packagedetailService.findPackageById(
+      packageId,
+    );
+
+    if (!findPackage) throw new BadRequestException('Package not found');
+
+    if (!findUser) {
+      throw new BadRequestException('User not found');
+    }
+
+    await this.subscriptionservice.addSubscribeUser(findUser, findPackage);
+  }
+
   constructor(
     @InjectRepository(User) private repository: Repository<User>,
     @InjectAwsService(S3)
@@ -860,5 +878,7 @@ export class UsersService {
     private ethnicityService: EthnicityService,
     private httpService: HttpService,
     private deleteProfileService: DeleteProfileService,
+    private packagedetailService: PackagedetailService,
+    private subscriptionservice: SubscriptionService,
   ) {}
 }
