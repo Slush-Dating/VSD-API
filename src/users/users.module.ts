@@ -17,6 +17,7 @@ import { ParticipantsModule } from 'src/participants/participants.module';
 import { DeleteProfileModule } from 'src/delete-profile/delete-profile.module';
 import { PackageDetailModule } from 'src/package-details/package-detail.module';
 import { SubscriptionModule } from 'src/subscription/subscription.module';
+import { SparkLikeModule } from 'src/spark/spark.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { SubscriptionModule } from 'src/subscription/subscription.module';
     DeleteProfileModule,
     PackageDetailModule,
     SubscriptionModule,
+    SparkLikeModule,
   ],
   providers: [UsersService],
   exports: [UsersService],

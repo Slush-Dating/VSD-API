@@ -60,6 +60,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { hash } from 'bcrypt';
 import { PackagedetailService } from 'src/package-details/package-detail.service';
 import { SubscriptionService } from 'src/subscription/subscription.service';
+import { SparkLikeService } from 'src/spark/spark.service';
 
 @Injectable()
 export class UsersService {
@@ -848,6 +849,10 @@ export class UsersService {
   async subscribeUser(user: User, packageId: number): Promise<any> {
     const findUser = await this.repository.findOne(user.id);
 
+    await this.repository.update(findUser.id, {
+      isSubscriptionPurchased: SubscriptionPurchased.Yes,
+    });
+
     const findPackage = await this.packagedetailService.findPackageById(
       packageId,
     );
@@ -859,6 +864,16 @@ export class UsersService {
     }
 
     await this.subscriptionservice.addSubscribeUser(findUser, findPackage);
+  }
+
+  async purchaseSpark(user: User, spark_value: number) {
+    const findUser = await this.repository.findOne(user.id);
+
+    if (!findUser) {
+      throw new BadRequestException('User not found');
+    }
+
+    await this.sparkLikeService.addSparkLike(user, spark_value);
   }
 
   constructor(
@@ -880,5 +895,6 @@ export class UsersService {
     private deleteProfileService: DeleteProfileService,
     private packagedetailService: PackagedetailService,
     private subscriptionservice: SubscriptionService,
+    private sparkLikeService: SparkLikeService,
   ) {}
 }

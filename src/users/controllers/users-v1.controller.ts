@@ -37,6 +37,7 @@ import { DeleteProfileDto } from 'src/delete-profile/delete-profile.dto';
 import { compare } from 'bcrypt';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { SubscriptionDto } from 'src/subscription/subscription.dto';
+import { SparkLikeDto } from 'src/spark/spark.dto';
 @Controller({
   path: 'users',
   version: '1',
@@ -274,6 +275,30 @@ export class UsersControllerV1 {
 
     await this.usersService.subscribeUser(authUser, packageId);
     return { message: 'Subscription purchased  successfully' };
+  }
+
+  @Post('spark-purchase')
+  @ApiOperation({ summary: 'spark like purchase' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth()
+  @UseInterceptors(AnyFilesInterceptor())
+  @UseGuards(JwtAuthGuard)
+  public async sparkPuchase(
+    @AuthUser() authUser: User,
+    @Body() sparkLikeDto: SparkLikeDto,
+  ): Promise<any> {
+    const spark_value = parseInt(sparkLikeDto.spark_value as any);
+    const allowedSparkValues = [1, 3, 5];
+
+    if (isNaN(spark_value) || !allowedSparkValues.includes(spark_value)) {
+      throw new BadRequestException(
+        `Invalid spark value. Allowed values are 1, 3, and 5.`,
+      );
+    }
+
+    await this.usersService.purchaseSpark(authUser, spark_value);
+
+    return { message: 'Spark like purchased successfully' };
   }
 
   constructor(

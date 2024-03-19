@@ -833,7 +833,7 @@ export class AuthService {
     const user = await this.usersService.findOneByAttribute({
       where: {
         email: username,
-        deactivatedAt: IsNull(),
+        // deactivatedAt: IsNull(),
       },
     });
 
