@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   DefaultValuePipe,
@@ -7,8 +8,14 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AuthUser } from 'src/common/decorators/auth-user.decorator';
@@ -18,6 +25,8 @@ import { InteractDto } from './dto/interact.dto';
 import { ListVideoVerseService } from './list-video-verse.service';
 import { ProfileVideoLikesService } from 'src/profile-video-likes/profile-video-likes.service';
 import { VideoVerseListDto } from './dto/video-verse-list.dto';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { ProfileVideoDto } from 'src/viewed_videos/profile-video.dto';
 
 type GetVideosType = Record<string, Pagination<VideoVerseListDto>>;
 
@@ -49,13 +58,39 @@ export class VideoVerseController {
     return { data: { items, meta } };
   }
 
+  @Post('swiped-video')
+  @ApiOperation({ summary: 'viewed-video' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth()
+  @UseInterceptors(AnyFilesInterceptor())
+  @UseGuards(JwtAuthGuard)
+  public async subscribe(
+    @AuthUser() authUser: User,
+    @Body() profileVideoDto: ProfileVideoDto,
+  ): Promise<any> {
+    const profileVideoId = parseInt(profileVideoDto.profile_video_id as any);
+
+    if (isNaN(profileVideoId)) {
+      throw new BadRequestException(`Invalid Profile Video ID`);
+    }
+
+    const count = await this.listVideoVerseService.viewedVideos(
+      authUser,
+      profileVideoId,
+    );
+    return { total_swipe_count: count };
+  }
+
   @ApiOperation({ summary: 'Like or Dislike users on Video Verse' })
   @Post('/interact')
   public async interactWithUser(
     @AuthUser() authUser: User,
     @Body() interactDto: InteractDto,
   ) {
-    let match = await this.profileVideoLikesService.interactWithUser(authUser, interactDto);
+    const match = await this.profileVideoLikesService.interactWithUser(
+      authUser,
+      interactDto,
+    );
     return { message: 'Success', isMatch: match };
   }
 

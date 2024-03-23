@@ -991,8 +991,6 @@ export class AuthService {
     const percentage = await this.getProfilePercentage(authUserId);
     const user = await this.usersService.findUserById(authUserId);
 
-    console.log('percentage', percentage);
-
     await this.sendProfilePercentageNotification(user, percentage);
   }
 

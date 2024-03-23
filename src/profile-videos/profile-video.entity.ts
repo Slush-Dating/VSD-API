@@ -2,10 +2,12 @@ import { Expose } from 'class-transformer';
 import { BaseEntity } from 'src/common/base.entity';
 import { CastToBucket } from 'src/common/decorators/cast-to-bucket.decorator';
 import { User } from 'src/users/user.entity';
+import { ViewedVideos } from 'src/viewed_videos/viewed-videos.entity';
 import {
   Column,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   RelationId,
 } from 'typeorm';
@@ -33,4 +35,7 @@ export class ProfileVideo extends BaseEntity {
 
   @Column({ type: 'boolean', default: false })
   isPrimary: boolean;
+
+  @OneToMany(() => ViewedVideos, (viwed_videos) => viwed_videos.profileVideo)
+  viwed_videos?: ViewedVideos[];
 }

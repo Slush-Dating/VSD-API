@@ -2,11 +2,13 @@ import {
   BadRequestException,
   Body,
   Controller,
+  DefaultValuePipe,
   Get,
   Param,
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -38,6 +40,7 @@ import { compare } from 'bcrypt';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { SubscriptionDto } from 'src/subscription/subscription.dto';
 import { SparkLikeDto } from 'src/spark/spark.dto';
+import { ViewedVideosListService } from 'src/viewed_videos/viewed-videos.service';
 @Controller({
   path: 'users',
   version: '1',
@@ -301,9 +304,48 @@ export class UsersControllerV1 {
     return { message: 'Spark like purchased successfully' };
   }
 
+  /**
+   * Get swipe count
+   */
+
+  @Post('swipe-count')
+  @ApiOperation({ summary: 'viewed vides' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  public async viewedVideosCount(@AuthUser() authUser: User): Promise<any> {
+    const swipeCount = await this.viewedVideosService.viewedVideosCount(
+      authUser,
+    );
+
+    return swipeCount;
+  }
+
+  /**
+   * Get user payment history
+   */
+  @Get('payment-history/:user')
+  @ApiOperation({ summary: 'Get user payment history' })
+  async getUserPaymentHistory(
+    @Param('user', ParseIntPipe) user: number,
+    @Query('page', new DefaultValuePipe(1)) page: number,
+    @Query('limit', new DefaultValuePipe(15)) limit: number,
+    @Query('filter') filter?: string,
+  ) {
+    const newUser = await this.usersService.getUserPaymentHistory(
+      user,
+      {
+        page,
+        limit,
+      },
+      filter,
+    );
+    return { data: newUser };
+  }
+
   constructor(
     private usersService: UsersService,
     private interestsService: InterestsService,
     private ethnicityService: EthnicityService,
+    private viewedVideosService: ViewedVideosListService,
   ) {}
 }

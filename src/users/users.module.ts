@@ -18,6 +18,8 @@ import { DeleteProfileModule } from 'src/delete-profile/delete-profile.module';
 import { PackageDetailModule } from 'src/package-details/package-detail.module';
 import { SubscriptionModule } from 'src/subscription/subscription.module';
 import { SparkLikeModule } from 'src/spark/spark.module';
+import { ViewedVideosModule } from 'src/viewed_videos/viewed-videos.module';
+import { PaymentHistoryModule } from 'src/payment_history/payment_history.module';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { SparkLikeModule } from 'src/spark/spark.module';
     PackageDetailModule,
     SubscriptionModule,
     SparkLikeModule,
+    ViewedVideosModule,
+    PaymentHistoryModule,
   ],
   providers: [UsersService],
   exports: [UsersService],

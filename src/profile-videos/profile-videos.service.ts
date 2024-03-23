@@ -1,4 +1,9 @@
-import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Rekognition, S3 } from 'aws-sdk';
 import { InjectAwsService } from 'nest-aws-sdk';
@@ -128,6 +133,17 @@ export class ProfileVideosService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async findProfileVideoById(profileVideoId: number) {
+    const findProfileVideo = await this.profileVideoRepo.findOne({
+      where: [{ id: profileVideoId }],
+    });
+
+    if (!findProfileVideo) {
+      throw new BadRequestException('Profile video not found');
+    }
+    return findProfileVideo;
   }
 
   constructor(

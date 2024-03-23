@@ -7,13 +7,6 @@ import { User } from 'src/users/user.entity';
 
 @Injectable()
 export class SubscriptionService {
-  /**
-   * Create entity
-   */
-  create(data: DeepPartial<SubScription>) {
-    return this.subscriptionRepo.create(data);
-  }
-
   async addSubscribeUser(user: User, package_detail: Pacakagedetail) {
     const findUser = await this.subscriptionRepo.findOne({
       where: { user: user },

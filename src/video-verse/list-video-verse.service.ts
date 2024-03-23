@@ -4,7 +4,7 @@ import { createPaginationObject } from 'nestjs-typeorm-paginate';
 import { PaginationOptions } from 'src/common/pagination-options';
 import { Fixture, FixtureStatus } from 'src/fixtures/fixture.entity';
 import { Participant } from 'src/participants/participant.entity';
-import { User } from 'src/users/user.entity';
+import { SubscriptionPurchased, User } from 'src/users/user.entity';
 import { getManager, Repository } from 'typeorm';
 import { VideoVerseDto } from '../profile-videos/dto/video-verse.dto';
 import { ProfileVideo } from '../profile-videos/profile-video.entity';
@@ -19,6 +19,8 @@ import {
   ProfileVideoLikeStatusEnum,
 } from 'src/profile-video-likes/profile-video-like.entity';
 import { ProfilePicture } from 'src/profile-pictures/profile-picture.entity';
+import { ViewedVideosListService } from 'src/viewed_videos/viewed-videos.service';
+import { ViewedVideos } from 'src/viewed_videos/viewed-videos.entity';
 
 @Injectable()
 export class ListVideoVerseService {
@@ -73,6 +75,16 @@ export class ListVideoVerseService {
 
     const likedUsers = [authUser.id, ...likedUsersResult.map((o) => o.user_id)];
 
+    const viewedVideoIds = await getManager()
+      .createQueryBuilder(ViewedVideos, 'vv')
+      .addSelect(['p.id'])
+      .where('vv.user_id = :userId', { userId: authUser.id })
+      .leftJoin('vv.profileVideo', 'p')
+      .getMany()
+      .then((viewedVideos) =>
+        viewedVideos.map((video) => video.profileVideo.id),
+      );
+
     this.queryBuilder = this.repository
       .createQueryBuilder('pv')
       .select([
@@ -85,6 +97,7 @@ export class ListVideoVerseService {
         'u.address',
         'u.height',
         'u.country',
+        'u.gender',
       ])
       .addSelect('CONCAT(u.first_name, " ", u.last_name) AS fullName')
       .addSelect('CONCAT(u.first_name, "") AS nickName')
@@ -111,6 +124,9 @@ export class ListVideoVerseService {
       }, 'avatar')
       .innerJoin(User, 'u', 'pv.user_id = u.id')
       .where('pv.is_primary = :isPrimary', { isPrimary: true })
+      .where('pv.id NOT IN (:viewedVideoIds)', {
+        viewedVideoIds: viewedVideoIds,
+      })
       .andWhere('u.deactivatedAt IS NULL')
       .setParameters({
         latitude: videoVerseDto.latitude,
@@ -145,7 +161,6 @@ export class ListVideoVerseService {
 
     return createPaginationObject({
       items: plainToInstance(VideoVerseListDto, items, {
-        // items: plainToClass(VideoVerseListDto, items, {
         excludeExtraneousValues: true,
       }),
       totalItems: Number(totalItems),
@@ -232,8 +247,16 @@ export class ListVideoVerseService {
     return this;
   }
 
+  async viewedVideos(authUser: User, profileVideoId: number) {
+    return await this.viewedVideoService.addToViewedVideoList(
+      authUser,
+      profileVideoId,
+    );
+  }
+
   constructor(
     @InjectRepository(ProfileVideo)
     private repository: Repository<ProfileVideo>,
+    private readonly viewedVideoService: ViewedVideosListService,
   ) {}
 }

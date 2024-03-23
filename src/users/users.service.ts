@@ -61,6 +61,7 @@ import { hash } from 'bcrypt';
 import { PackagedetailService } from 'src/package-details/package-detail.service';
 import { SubscriptionService } from 'src/subscription/subscription.service';
 import { SparkLikeService } from 'src/spark/spark.service';
+import { PaymentHistoryService } from 'src/payment_history/payment_history.service';
 
 @Injectable()
 export class UsersService {
@@ -864,6 +865,7 @@ export class UsersService {
     }
 
     await this.subscriptionservice.addSubscribeUser(findUser, findPackage);
+    await this.paymentHistoryService.addPaymentHistory(findUser, findPackage);
   }
 
   async purchaseSpark(user: User, spark_value: number) {
@@ -874,6 +876,18 @@ export class UsersService {
     }
 
     await this.sparkLikeService.addSparkLike(user, spark_value);
+    await this.paymentHistoryService.addSparkPaymentHistory(
+      findUser,
+      spark_value,
+    );
+  }
+
+  async getUserPaymentHistory(userId: number, option: any, status: string) {
+    return this.paymentHistoryService.getPaymentHistoriesByUser(
+      userId,
+      option,
+      status,
+    );
   }
 
   constructor(
@@ -896,5 +910,6 @@ export class UsersService {
     private packagedetailService: PackagedetailService,
     private subscriptionservice: SubscriptionService,
     private sparkLikeService: SparkLikeService,
+    private paymentHistoryService: PaymentHistoryService,
   ) {}
 }

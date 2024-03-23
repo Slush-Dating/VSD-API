@@ -399,6 +399,10 @@ export class User extends BaseEntity {
   @IsNotEmpty()
   deactiveProfileReason: string;
 
+  @Expose()
+  @Column({ type: 'datetime', nullable: true })
+  suspend_ends_at?: Date;
+
   @OneToMany(() => FcmToken, (fcmToken) => fcmToken.user, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
