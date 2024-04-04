@@ -226,7 +226,7 @@ export class Event extends BaseEntity {
    */
   @IsBoolean()
   @Expose()
-  @Column({ type: 'boolean', default: false, nullable: true })
+  @Column({ type: 'boolean', default: false })
   hasPassword: boolean;
 
   /**
@@ -234,7 +234,7 @@ export class Event extends BaseEntity {
    */
   @IsString()
   @Expose()
-  @Column()
+  @Column({ nullable: true })
   password: string;
 
   @OneToMany(() => Participant, (participant) => participant.event)
