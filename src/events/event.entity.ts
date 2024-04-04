@@ -226,7 +226,7 @@ export class Event extends BaseEntity {
    */
   @IsBoolean()
   @Expose()
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false, nullable: true })
   hasPassword: boolean;
 
   /**
