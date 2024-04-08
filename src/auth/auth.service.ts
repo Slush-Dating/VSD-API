@@ -166,11 +166,11 @@ export class AuthService {
   ): Promise<User> {
     const { action } = completeRegistrationDto;
 
-    if (authUser.nextAction !== action) {
-      throw new BadRequestException(
-        `Wrong action attempted, Your next action should be '${authUser.nextAction}'`,
-      );
-    }
+    // if (authUser.nextAction !== action) {
+    //   throw new BadRequestException(
+    //     `Wrong action attempted, Your next action should be '${authUser.nextAction}'`,
+    //   );
+    // }
 
     switch (action) {
       // case NextActionEnum.VERIFY_PHONE:
