@@ -12,7 +12,7 @@ import {
   IPaginationOptions,
   Pagination,
 } from 'nestjs-typeorm-paginate';
-import { GenderEnum, User } from 'src/users/user.entity';
+import { GenderEnum, SubscriptionPurchased, User } from 'src/users/user.entity';
 import {
   Brackets,
   DeepPartial,
@@ -158,15 +158,23 @@ export class EventsService {
       }
     }
 
-    if (query.type === EventResultTypeEnum.MATCHES) {
-      return await this.fixturesService.getUserMatches(
+    if (query.type === EventResultTypeEnum.LIKED) {
+      if (
+        authUser.isSubscriptionPurchased === SubscriptionPurchased.No ||
+        authUser.isSubscriptionPurchased === null
+      ) {
+        throw new BadRequestException(
+          'Update to Slush Silver to see who has liked you!',
+        );
+      }
+      return await this.fixturesService.getUsersWhoLikedMe(
         authUser.id,
         options,
         query.event,
       );
     }
 
-    return await this.fixturesService.getUsersWhoLikedMe(
+    return await this.fixturesService.getUserMatches(
       authUser.id,
       options,
       query.event,
@@ -324,27 +332,15 @@ export class EventsService {
       }
     }
 
-    const userexist = await this.participantsService.checkUser(
+    const isAlreadyBooked = await this.isUserAlreadyBooked(
       authUser.id,
       data.eventId,
     );
 
-    if (userexist) {
-      throw new ConflictException({
-        title: 'Check your tickets!',
-        message: 'You have already booked a ticket for this event',
-      });
-    } else {
-      const isAlreadyBooked = await this.isUserAlreadyBooked(
-        authUser.id,
-        data.eventId,
+    if (isAlreadyBooked) {
+      throw new ConflictException(
+        'User is already booked for an event at the same time',
       );
-
-      if (isAlreadyBooked) {
-        throw new ConflictException(
-          'User is already booked for an event at the same time',
-        );
-      }
     }
     await this.participantsService.bookEventTicket(authUser, event);
   }
@@ -356,6 +352,7 @@ export class EventsService {
       await this.participantsService.checkEventParticipantBeforeBooking(
         userId,
         startsAt,
+        eventId,
       );
 
     return !!existingParticipant;
@@ -680,7 +677,7 @@ export class EventsService {
    */
 
   async getEventById(): Promise<Event> {
-    const event = await this.eventRepo.findOne({ where: { id: 1007 } });
+    const event = await this.eventRepo.findOne({ where: { id: 1001 } });
     return event;
   }
 

@@ -9,13 +9,14 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event, EventGenderEnum } from 'src/events/event.entity';
 import { User } from 'src/users/user.entity';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, Not, Repository } from 'typeorm';
 import { Participant } from './participant.entity';
 import { UsersService } from 'src/users/users.service';
 import { PaginationOptions } from 'src/common/pagination-options';
 import { Pagination, createPaginationObject } from 'nestjs-typeorm-paginate';
 import { plainToClass } from 'class-transformer';
 import { WaitListService } from 'src/waitlist/waitlist.service';
+import { EventsService } from 'src/events/events.service';
 
 @Injectable()
 export class ParticipantsService {
@@ -82,21 +83,23 @@ export class ParticipantsService {
 
   // if user exist than only check
 
-  async checkUser(user_id: number, event_id: number): Promise<boolean> {
-    const participant = await this.participantRepo.findOne({
-      where: { user: { id: user_id }, event: { id: event_id } },
-    });
-    if (participant) {
-      return true;
-    } else {
-      return false;
-    }
+  async checkUser(user_id: number, event_id: number): Promise<Participant> {
+    const query = await this.participantRepo
+      .createQueryBuilder('p')
+      .where('u.id = :user_id', { user_id })
+      .andWhere('e.id = :event_id', { event_id })
+      .addSelect(['u'])
+      .leftJoin('p.user', 'u')
+      .leftJoin('p.event', 'e')
+      .getOne();
+
+    return query;
   }
 
   /**
    * Book Event Ticket
    */
-  async bookEventTicket(user: User, event: Event): Promise<Participant> {
+  async bookEventTicket(user: User, event: Event): Promise<any> {
     const participants = await this.participantRepo
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.user', 'pu')
@@ -104,15 +107,21 @@ export class ParticipantsService {
       .andWhere('pu.deactivatedAt IS NULL')
       .getMany();
 
-    const participant = participants.some(
-      (p: Participant) => p.user.id === user.id,
-    );
+    const participant = await this.participantRepo
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.user', 'pu')
+      .where('p.event = :event', { event: event.id })
+      .andWhere('pu.id = :userId', { userId: user.id })
+      .andWhere('pu.deactivatedAt IS NULL')
+      .getOne();
 
     if (participant) {
-      throw new ConflictException({
-        title: 'Check your tickets!',
-        message: 'You have already booked a ticket for this event',
-      });
+      if (participant.status === 'booked') {
+        throw new ConflictException({
+          title: 'Check your tickets!',
+          message: 'You have already booked a ticket for this event',
+        });
+      }
     }
 
     if (
@@ -172,17 +181,18 @@ export class ParticipantsService {
         user.user,
       );
 
-    const participant = await this.participantRepo.save(
-      this.participantRepo.create({
-        event,
-        user: waitlistEntries.user,
-        status: 'booked',
-      }),
-    );
+    if (waitlistEntries) {
+      const participant = await this.participantRepo.save(
+        this.participantRepo.create({
+          event,
+          user: waitlistEntries.user,
+          status: 'booked',
+        }),
+      );
 
-    await this.waitlistService.removeWaitlistEntry(waitlistEntries.user.id);
-
-    return participant;
+      await this.waitlistService.removeWaitlistEntry(waitlistEntries.user.id);
+      return participant;
+    }
   }
 
   /**
@@ -334,17 +344,21 @@ export class ParticipantsService {
    * - Check for same time event booking
    */
 
-  async checkEventParticipantBeforeBooking(user_id: number, startTime: Date) {
-    const query = this.participantRepo
+  async checkEventParticipantBeforeBooking(
+    user_id: number,
+    startTime: Date,
+    event_id: number,
+  ) {
+    const query = await this.participantRepo
       .createQueryBuilder('p')
       .where('u.id = :user_id', { user_id })
-      .where('e.startsAt = :startTime', { startTime })
-      .addSelect(['e.id', 'e.startsAt', 'u.id'])
+      .addSelect(['u'])
+      .andWhere('e.id != :event_id', { event_id })
+      .andWhere('e.startsAt = :startTime', { startTime })
+      .andWhere('p.status != :status', { status: 'cancelled' })
       .leftJoin('p.user', 'u')
       .leftJoin('p.event', 'e')
       .getOne();
-
-    console.log(query);
 
     return query;
   }
