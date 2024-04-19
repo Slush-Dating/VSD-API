@@ -40,6 +40,11 @@ import { EventResultDto, EventResultTypeEnum } from './dto/event-result.dto';
 import * as moment from 'moment';
 import { date } from 'joi';
 
+export enum EventTypeDatesEnum {
+  FIVE_DATES = 'FIVE_DATES',
+  TEN_DATES = 'TEN_DATES',
+}
+
 @Injectable()
 export class EventsService {
   /**
@@ -100,6 +105,9 @@ export class EventsService {
         await this.participantsService.getParticipantsForEvent([
           eventId.toString(),
         ]);
+
+      event.type =
+        event.type === EventTypeDatesEnum.FIVE_DATES ? '5 Dates' : '10 Dates';
 
       event.participants = participants ?? [];
 
@@ -465,7 +473,8 @@ export class EventsService {
         const array = participants.filter(
           (p: Participant) => p.event.id === item.id,
         );
-
+        item.type =
+          item.type === EventTypeDatesEnum.FIVE_DATES ? '5 Dates' : '10 Dates';
         item.participants = array || [];
       });
 

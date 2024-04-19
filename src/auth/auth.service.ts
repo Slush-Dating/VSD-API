@@ -227,29 +227,12 @@ export class AuthService {
         await this.fillEthnicity(authUser, completeRegistrationDto.ethnicity);
         break;
 
-      // case NextActionEnum.FILL_LOCATION:
-      //   await this.fillLocation(
-      //     authUser,
-      //     completeRegistrationDto.address,
-      //     completeRegistrationDto.latitude,
-      //     completeRegistrationDto.longitude,
-      //   );
-      //   break;
-
       case NextActionEnum.UPLOAD_AVATAR:
         await this.uploadAvatar(authUser, avatar);
         break;
 
-      case NextActionEnum.UPLOAD_VIDEO:
-        await this.uploadVideo(authUser, video);
-        break;
-
       default:
-        await this.fillPassword(
-          authUser,
-          completeRegistrationDto.password,
-          completeRegistrationDto.confirm_password,
-        );
+        await this.uploadVideo(authUser, video);
         break;
     }
 

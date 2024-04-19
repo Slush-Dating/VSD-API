@@ -332,7 +332,7 @@ export class UsersService {
     await Promise.all([
       this.profileVideosService.storeMany(authUser, videos),
       this.update(authUser.id, {
-        nextAction: NextActionEnum.FILL_PASSWORD,
+        nextAction: NextActionEnum.NONE,
       }),
     ]);
   }
@@ -646,6 +646,13 @@ export class UsersService {
     select?: string[];
   }) {
     try {
+      const ids = data.ids || [1];
+
+      const idMap = new Map<number | string, number>();
+      ids.forEach((id, index) => {
+        idMap.set(id, index);
+      });
+
       const queryBuilder = this.repository
         .createQueryBuilder(data.alias || 'u')
         .leftJoinAndSelect('u.profilePictures', 'pp')
@@ -653,7 +660,7 @@ export class UsersService {
         .leftJoinAndSelect('u.interests', 'ui')
         .leftJoinAndSelect('u.ethnicity', 'ue')
         .where('u.deactivatedAt IS NULL')
-        .andWhere('u.id IN (:ids)', { ids: data.ids ?? [1] });
+        .andWhere('u.id IN (:...ids)', { ids });
 
       if (data.select) {
         queryBuilder.select(data.select);
@@ -661,7 +668,7 @@ export class UsersService {
 
       const totalItems = await queryBuilder.getCount();
 
-      return await paginate<User>(queryBuilder, {
+      const users = await paginate<User>(queryBuilder, {
         ...data.options,
         paginationType: PaginationTypeEnum.TAKE_AND_SKIP,
         // https://github.com/nestjsx/nestjs-typeorm-paginate/issues/627
@@ -676,6 +683,9 @@ export class UsersService {
           };
         },
       });
+
+      users.items.sort((a, b) => idMap.get(a.id) - idMap.get(b.id));
+      return users;
     } catch (error) {
       throw error;
     }

@@ -17,6 +17,8 @@ import {
   ApiBearerAuth,
   ApiConsumes,
   ApiOperation,
+  ApiParam,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { getMessaging } from 'firebase-admin/messaging';
@@ -151,7 +153,7 @@ export class UsersControllerV1 {
       user,
       matchUnmatchDto.action,
     );
-    console.log('USER ACTION' + matchUnmatchDto.action);
+    console.log('USER ACTION ====' + matchUnmatchDto.action);
     if (matchUnmatchDto.action == 'LIKED') {
       const receiver = await this.usersService.findOneByAttribute({
         select: ['id', 'fcmTokens', 'notifications'],
@@ -325,6 +327,12 @@ export class UsersControllerV1 {
    */
   @Get('payment-history/:user')
   @ApiOperation({ summary: 'Get user payment history' })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    example: 'Completed',
+  })
+  @ApiParam({ name: 'user', example: 1 })
   async getUserPaymentHistory(
     @Param('user', ParseIntPipe) user: number,
     @Query('page', new DefaultValuePipe(1)) page: number,

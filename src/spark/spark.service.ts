@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SparkLike } from './spark.entity';
@@ -24,6 +24,22 @@ export class SparkLikeService {
       });
       await this.sparkLikeRepo.save(newSparkLike);
     }
+  }
+
+  async removeSparkLike(userId: number) {
+    const findSpark = await this.sparkLikeRepo.findOne({
+      where: {
+        user: { id: userId },
+      },
+    });
+
+    if (!findSpark) {
+      throw new BadRequestException('User not found');
+    }
+
+    await this.sparkLikeRepo.update(findSpark.id, {
+      total_sparks: findSpark.total_sparks - 1,
+    });
   }
 
   constructor(

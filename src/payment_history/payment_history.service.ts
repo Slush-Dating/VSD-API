@@ -4,7 +4,6 @@ import { User } from 'src/users/user.entity';
 import { Repository } from 'typeorm';
 import { PaymentHistory, PaymentStatusEnum } from './payment_history.entity';
 import { Pacakagedetail } from 'src/package-details/package-detail.entity';
-import { stat } from 'fs';
 import { Pagination, createPaginationObject } from 'nestjs-typeorm-paginate';
 
 @Injectable()
@@ -65,16 +64,25 @@ export class PaymentHistoryService {
         .leftJoin('p.user', 'u')
         .orderBy('p.createdAt', 'ASC');
 
-      // Apply filtering if the filter parameter is provided
-      if (filter && (filter === 'Completed' || filter === 'Cancelled')) {
-        query = query.andWhere('p.payment_status = :status', {
-          status: filter,
-        });
+      if (filter) {
+        const consistentFilter = filter.toLowerCase();
+        if (
+          consistentFilter === 'completed' ||
+          consistentFilter === 'cancelled'
+        ) {
+          query = query.andWhere('LOWER(p.payment_status) = :status', {
+            status: consistentFilter,
+          });
+        } else {
+          const allowedValues = ['completed', 'cancelled'];
+          throw new BadRequestException(
+            `Invalid filter value. Allowed values: ${allowedValues.join(', ')}`,
+          );
+        }
       }
 
-      console.log('query', filter);
+      console.log('query filter===', filter);
 
-      // count records
       const { value: totalItems } = await query.connection
         .createQueryBuilder()
         .select('COUNT(*)', 'value')

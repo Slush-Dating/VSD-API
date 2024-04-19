@@ -6,6 +6,7 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 export enum ProfileVideoLikeStatusEnum {
   LIKED = 'LIKED',
   DISLIKED = 'DISLIKED',
+  SPARKLIKE = 'SPARK LIKE',
 }
 
 @Entity({ name: 'profile_video_likes' })

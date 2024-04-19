@@ -317,18 +317,21 @@ export class FixturesService {
   public async getMatchedUsersIds(
     authUserId: number,
     eventId?: string | number,
-  ): Promise<number[]> {
+  ): Promise<any> {
     try {
       const fixtureMatchesQuery = this.fixtureRepo
         .createQueryBuilder('f')
-        .select(['p1.user_id AS user_id', 'p1.updated_at'])
+        .select(['p1.user_id AS user_id', 'f.updated_at', 'f.status'])
         .addSelect((qb) => {
           qb.select('COUNT(*)')
             .from(Fixture, 'f1')
             .innerJoin(Participant, 'p3', 'p3.id = f1.first_participant_id')
             .innerJoin(Participant, 'p4', 'p4.id = f1.second_participant_id')
-            .where('f1.status = :liked', {
-              liked: ProfileVideoLikeStatusEnum.LIKED,
+            .where('f1.status IN (:...val)', {
+              val: [
+                ProfileVideoLikeStatusEnum.LIKED,
+                ProfileVideoLikeStatusEnum.SPARKLIKE,
+              ],
             })
             .andWhere('p3.user_id = p2.user_id')
             .andWhere('p4.user_id = p1.user_id');
@@ -347,7 +350,9 @@ export class FixturesService {
         }, 'mutual_like')
         .innerJoin(Participant, 'p1', 'p1.id = f.first_participant_id')
         .innerJoin(Participant, 'p2', 'p2.id = f.second_participant_id')
-        .where('f.status = :liked', { liked: FixtureStatus.LIKED })
+        .where('f.status IN (:...val)', {
+          val: [FixtureStatus.LIKED, FixtureStatus.SPARKLIKE],
+        })
         .andWhere('p2.user_id = :authUserId', { authUserId })
         .having('mutual_like > 0');
 
@@ -364,9 +369,15 @@ export class FixturesService {
           fixtureMatchesQuery.getQueryAndParameters();
 
         const users: { user_id: string }[] = await getManager().query(
-          `SELECT user_id FROM (${queryOne}) AS temp
-          GROUP BY user_id, updated_at
-          ORDER BY updated_at DESC;`,
+          `SELECT user_id, f_status FROM (${queryOne}) AS temp
+          GROUP BY user_id, f_status, updated_at
+          ORDER BY
+          CASE f_status
+            WHEN '${FixtureStatus.SPARKLIKE}' THEN 1
+            WHEN '${FixtureStatus.LIKED}' THEN 2
+            ELSE 3
+          END,
+          updated_at DESC;`,
           paramOne,
         );
 
@@ -375,19 +386,25 @@ export class FixturesService {
 
       const profileVideoMatchesQuery = getManager()
         .createQueryBuilder(ProfileVideoLike, 'p1')
-        .select(['p1.from_id AS user_id', 'p1.updated_at'])
+        .select(['p1.from_id AS user_id', 'p1.updated_at', 'p1.status'])
         .addSelect((qb) => {
           return qb
             .select('COUNT(*)')
             .from(ProfileVideoLike, 'p2')
-            .where('p2.status = :liked', {
-              liked: ProfileVideoLikeStatusEnum.LIKED,
+            .where('p2.status IN (:...val)', {
+              val: [
+                ProfileVideoLikeStatusEnum.LIKED,
+                ProfileVideoLikeStatusEnum.SPARKLIKE,
+              ],
             })
             .andWhere('p2.from_id = p1.to_id')
             .andWhere('p2.to_id = p1.from_id');
         }, 'mutual_like')
-        .where('p1.status = :liked', {
-          liked: ProfileVideoLikeStatusEnum.LIKED,
+        .where('p1.status IN (:...val)', {
+          val: [
+            ProfileVideoLikeStatusEnum.LIKED,
+            ProfileVideoLikeStatusEnum.SPARKLIKE,
+          ],
         })
         .andWhere('p1.to_id = :authUserId', { authUserId })
         .having('mutual_like > 0');
@@ -396,16 +413,46 @@ export class FixturesService {
       const [queryTwo, paramTwo] =
         profileVideoMatchesQuery.getQueryAndParameters();
 
+      console.log('query1========= ', queryOne);
+      console.log('query2============  ', queryTwo);
+
+      // const users: { user_id: string }[] = await getManager().query(
+      //   `SELECT user_id, f_status FROM (
+      //     (${queryOne})
+      //     UNION
+      //     (${queryTwo})
+      // ) AS temp
+      // GROUP BY user_id, f_status, updated_at
+      // ORDER BY
+      //   CASE f_status
+      //     WHEN '${FixtureStatus.SPARKLIKE}' THEN 1
+      //     WHEN '${FixtureStatus.LIKED}' THEN 2
+      //     ELSE 3
+      //   END,
+      //   updated_at DESC;`,
+      //   [...paramOne, ...paramTwo],
+      // );
+
       const users: { user_id: string }[] = await getManager().query(
         `SELECT user_id FROM (
-          (${queryOne})
-          UNION
-          (${queryTwo})
-      ) AS temp
-      GROUP BY user_id, updated_at
-      ORDER BY updated_at DESC;`,
+            SELECT user_id, updated_at, f_status, NULL AS p1_status
+            FROM (${queryOne}) AS temp1
+            UNION ALL
+            SELECT user_id, updated_at, p1_status, p1_status
+            FROM (${queryTwo}) AS temp2
+        ) AS temp
+        GROUP BY user_id, updated_at
+        ORDER BY 
+            CASE
+                WHEN p1_status = '${FixtureStatus.SPARKLIKE}' THEN 1
+                WHEN p1_status = '${FixtureStatus.LIKED}' THEN 2
+                ELSE 3
+            END, 
+            updated_at DESC`,
         [...paramOne, ...paramTwo],
       );
+
+      console.log('users id======', users);
 
       return users.map((u) => Number(u.user_id));
     } catch (error) {

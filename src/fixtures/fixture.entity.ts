@@ -10,6 +10,7 @@ export enum FixtureStatus {
   JOINED = 'JOINED',
   LIKED = 'LIKED',
   DISLIKED = 'DISLIKED',
+  SPARKLIKE = 'SPARK LIKE',
 }
 
 @Entity('fixtures')
