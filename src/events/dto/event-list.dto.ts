@@ -66,6 +66,9 @@ class User {
   @Expose({ name: 'id' })
   userId: number;
 
+  @Expose({ name: 'gender' })
+  gender: string;
+
   @Type(() => UserProfilePicture)
   @Expose()
   profilePictures: UserProfilePicture[];
