@@ -103,14 +103,17 @@ export class ParticipantsService {
     const participants = await this.participantRepo
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.user', 'pu')
-      .where('p.event = :event', { event: event.id })
+      .leftJoinAndSelect('p.event', 'pe')
+      .where('p.status = :status', { status: 'booked' })
+      .andWhere('pe.id = :event', { event: event.id })
       .andWhere('pu.deactivatedAt IS NULL')
       .getMany();
 
     const participant = await this.participantRepo
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.user', 'pu')
-      .where('p.event = :event', { event: event.id })
+      .leftJoinAndSelect('p.event', 'pe')
+      .where('pe.id = :event', { event: event.id })
       .andWhere('pu.id = :userId', { userId: user.id })
       .andWhere('pu.deactivatedAt IS NULL')
       .getOne();
