@@ -106,10 +106,17 @@ export class EventsService {
           eventId.toString(),
         ]);
 
+      // get waitlist
+      const waitListParticipants =
+        await this.participantsService.getWaitlistParticipants([
+          eventId.toString(),
+        ]);
+
       event.type =
         event.type === EventTypeDatesEnum.FIVE_DATES ? '5 Dates' : '10 Dates';
 
       event.participants = participants ?? [];
+      event.waitlist = waitListParticipants ?? [];
 
       // return plainToClass(EventList, event, {
       return plainToInstance(EventList, event, {

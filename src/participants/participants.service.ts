@@ -17,6 +17,7 @@ import { Pagination, createPaginationObject } from 'nestjs-typeorm-paginate';
 import { plainToClass } from 'class-transformer';
 import { WaitListService } from 'src/waitlist/waitlist.service';
 import { EventsService } from 'src/events/events.service';
+import { WaitList } from 'src/waitlist/waitlist.entity';
 
 @Injectable()
 export class ParticipantsService {
@@ -79,6 +80,13 @@ export class ParticipantsService {
       console.error(error);
       throw error;
     }
+  }
+
+  // get waitlist participants
+  async getWaitlistParticipants(
+    eventIds: string | string[],
+  ): Promise<WaitList[]> {
+    return await this.waitlistService.getWaitListForEvent(eventIds);
   }
 
   // if user exist than only check

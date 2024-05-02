@@ -7,6 +7,35 @@ import { WaitList } from './waitlist.entity';
 
 @Injectable()
 export class WaitListService {
+  async getWaitListForEvent(eventIds: string | string[]): Promise<WaitList[]> {
+    try {
+      const ids = Array.isArray(eventIds) ? eventIds : [eventIds];
+
+      return await this.waitListRepo
+        .createQueryBuilder('w')
+        .select('w.id')
+        .addSelect([
+          'u.id',
+          'u.gender',
+          'u.firstName',
+          'u.lastName',
+          'e.id',
+          'e.gender',
+          'e.type',
+        ])
+        .leftJoin('w.user', 'u')
+        .leftJoinAndSelect('u.profilePictures', 'pp')
+        .leftJoinAndSelect('u.fcmTokens', 'uft')
+        .leftJoin('w.event', 'e')
+        .where('w.event IN (:...ids)', { ids })
+        .andWhere('u.deactivatedAt IS NULL')
+        .orderBy('w.createdAt', 'ASC')
+        .getMany();
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
   /**
    * get waitlist waitlist
    */
