@@ -39,6 +39,7 @@ import { ReportFixtureUserDto } from './dto/report-fixture-user.dto';
 import { EventResultDto, EventResultTypeEnum } from './dto/event-result.dto';
 import * as moment from 'moment';
 import { date } from 'joi';
+import { SavedEventsService } from 'src/saved-events/saved-events.service';
 
 export enum EventTypeDatesEnum {
   FIVE_DATES = 'FIVE_DATES',
@@ -371,6 +372,26 @@ export class EventsService {
       );
 
     return !!existingParticipant;
+  }
+
+  async saveEvent(user: User, eventId: number) {
+    const event = await this.eventRepo.findOne(eventId);
+    if (!event) {
+      throw new Error(`Event with ID ${eventId} not found`);
+    }
+    return await this.savedEventService.saveEvent(user, event);
+  }
+
+  async unSaveEvent(user: User, eventId: number) {
+    const event = await this.eventRepo.findOne(eventId);
+    if (!event) {
+      throw new Error(`Event with ID ${eventId} not found`);
+    }
+    return await this.savedEventService.unSaveEvent(user, event);
+  }
+
+  async saveEvents(user: User) {
+    return await this.savedEventService.saveEvents(user);
   }
 
   async getEventStartAndEndTime(
@@ -848,5 +869,6 @@ export class EventsService {
     @InjectRepository(Event) private eventRepo: Repository<Event>,
     private participantsService: ParticipantsService,
     private fixturesService: FixturesService,
+    private savedEventService: SavedEventsService,
   ) {}
 }

@@ -38,6 +38,7 @@ import {
 import { AuthService } from 'src/auth/auth.service';
 import { Participant } from 'src/participants/participant.entity';
 import { IsOptional } from 'class-validator';
+import { SavedEventsService } from 'src/saved-events/saved-events.service';
 
 @Controller({
   path: 'events',
@@ -152,6 +153,30 @@ export class EventsControllerV1 {
   ) {
     await this.eventsService.cancelTicket(eventId, authUser);
     return { message: 'Event ticket cancelled successfully' };
+  }
+
+  @Post('save-event/:event')
+  @ApiOperation({ summary: 'save event' })
+  async saveEvent(
+    @AuthUser() authUser: User,
+    @Param('event', ParseIntPipe) eventId: number,
+  ) {
+    return await this.eventsService.saveEvent(authUser, eventId);
+  }
+
+  @Post('unsave-event/:event')
+  @ApiOperation({ summary: 'unsave event' })
+  async unSaveEvent(
+    @AuthUser() authUser: User,
+    @Param('event', ParseIntPipe) eventId: number,
+  ) {
+    return await this.eventsService.unSaveEvent(authUser, eventId);
+  }
+
+  @Post('saved_events')
+  @ApiOperation({ summary: 'Get saved events' })
+  async savedEvents(@AuthUser() authUser: User) {
+    return await this.eventsService.saveEvents(authUser);
   }
 
   /**
