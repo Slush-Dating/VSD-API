@@ -192,13 +192,14 @@ export class UsersService {
    */
   async getUserProfile(userId: number): Promise<User> {
     try {
-      return await this.repository.findOneOrFail({
+      const user = await this.repository.findOneOrFail({
         where: {
           id: userId,
           role: RoleType.USER,
         },
         relations: ['profilePictures', 'interests', 'ethnicity'],
       });
+      return user;
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('User not found');
@@ -319,6 +320,17 @@ export class UsersService {
         nextAction: NextActionEnum.UPLOAD_VIDEO,
       }),
     ]);
+  }
+
+  // deactivate user update when login
+
+  async updateDeactivateUser(user: User): Promise<any> {
+    await this.repository.update(user.id, {
+      deactivatedAt: null,
+      deactiveProfileReason: null,
+    });
+
+    return await this.repository.findOne({ where: { id: user.id } });
   }
 
   /**

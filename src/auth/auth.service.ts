@@ -811,8 +811,6 @@ export class AuthService {
    * Validate user
    */
   async validateUser(username: string, password: string): Promise<User | null> {
-    console.log(username);
-    console.log(password);
     const user = await this.usersService.findOneByAttribute({
       where: {
         email: username,
@@ -825,8 +823,13 @@ export class AuthService {
       user.role !== RoleType.ADMIN &&
       !user.socialProvider &&
       (await compare(password, user.password))
-    )
-      return user;
+    ) {
+      if (user.isDeactivated) {
+        return await this.usersService.updateDeactivateUser(user);
+      } else {
+        return user;
+      }
+    }
     return null;
   }
 

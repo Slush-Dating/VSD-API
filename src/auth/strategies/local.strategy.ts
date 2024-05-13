@@ -17,7 +17,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 
   async validate(username: string, password: string): Promise<any> {
     const user = await this.authService.validateUser(username, password);
-
     if (!user)
       throw new UnauthorizedException({
         title: 'Please try again...',
@@ -25,8 +24,8 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
           'The email or password you entered did not match our records, please double-check and try again.',
       });
 
-    if (user.isDeactivated)
-      throw new ForbiddenException('This account is deactivated');
+    // if (user.isDeactivated)
+    //   throw new ForbiddenException('This account is deactivated');
 
     return user;
   }
