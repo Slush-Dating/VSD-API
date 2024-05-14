@@ -406,6 +406,10 @@ export class User extends BaseEntity {
   @Column({ type: 'datetime', nullable: true })
   deactivatedAt?: Date;
 
+  @Expose()
+  @Column({ type: 'boolean', default: false })
+  isVerified: boolean;
+
   /**
    * deactivate profile reason
    * @example Too busy

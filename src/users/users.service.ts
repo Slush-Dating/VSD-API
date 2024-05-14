@@ -62,6 +62,7 @@ import { PackagedetailService } from 'src/package-details/package-detail.service
 import { SubscriptionService } from 'src/subscription/subscription.service';
 import { SparkLikeService } from 'src/spark/spark.service';
 import { PaymentHistoryService } from 'src/payment_history/payment_history.service';
+import { VerificationImageService } from 'src/verification-image/verification-image.service';
 
 @Injectable()
 export class UsersService {
@@ -319,6 +320,29 @@ export class UsersService {
       this.update(authUser.id, {
         nextAction: NextActionEnum.UPLOAD_VIDEO,
       }),
+    ]);
+  }
+
+  /**
+   * #### verification user account
+   * ##### Upload verification image
+   */
+
+  async verifyUser(authUser: User, file: Express.Multer.File): Promise<any> {
+    const findVerifiedUser = await this.repository.findOne({
+      where: {
+        id: authUser.id,
+        isVerified: true,
+      },
+    });
+
+    if (findVerifiedUser) {
+      return {
+        message: 'User already verified',
+      };
+    }
+    return await Promise.all([
+      this.verifyVideoSevice.uploadVerificationImage(authUser, file),
     ]);
   }
 
@@ -950,5 +974,6 @@ export class UsersService {
     private subscriptionservice: SubscriptionService,
     private sparkLikeService: SparkLikeService,
     private paymentHistoryService: PaymentHistoryService,
+    private verifyVideoSevice: VerificationImageService,
   ) {}
 }

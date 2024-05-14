@@ -20,12 +20,14 @@ import { SubscriptionModule } from 'src/subscription/subscription.module';
 import { SparkLikeModule } from 'src/spark/spark.module';
 import { ViewedVideosModule } from 'src/viewed_videos/viewed-videos.module';
 import { PaymentHistoryModule } from 'src/payment_history/payment_history.module';
+import { VerificationImageModule } from 'src/verification-image/verification-image.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     forwardRef(() => AuthModule),
     forwardRef(() => ProfilePicturesModule),
+    forwardRef(() => VerificationImageModule),
     forwardRef(() => ProfileVideoLikesModule),
     UserReportModule,
     FcmTokenModule,

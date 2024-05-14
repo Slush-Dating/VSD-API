@@ -9,10 +9,14 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import {
+  AnyFilesInterceptor,
+  FileFieldsInterceptor,
+} from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiConsumes,
@@ -43,6 +47,8 @@ import { ChangePasswordDto } from '../dto/change-password.dto';
 import { SubscriptionDto } from 'src/subscription/subscription.dto';
 import { SparkLikeDto } from 'src/spark/spark.dto';
 import { ViewedVideosListService } from 'src/viewed_videos/viewed-videos.service';
+import { IsNotEmpty } from 'class-validator';
+import { VerifyUserDto } from 'src/verification-image/VerifyUserDto.dto';
 @Controller({
   path: 'users',
   version: '1',
@@ -350,6 +356,31 @@ export class UsersControllerV1 {
     return { data: newUser };
   }
 
+  /**
+   * verification-image-upload
+   */
+  @Post('verification-image-upload')
+  @ApiOperation({ summary: 'verification-image-upload' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'verification_image', maxCount: 1 }]),
+  )
+  @ApiConsumes('multipart/form-data')
+  public async verifyUser(
+    @AuthUser() authUser: User,
+    @Body() body: VerifyUserDto,
+    @UploadedFiles()
+    files: { verification_image?: Express.Multer.File[] },
+  ): Promise<any> {
+    if (!files.verification_image || files.verification_image.length === 0) {
+      throw new BadRequestException(`The verification image is required`);
+    }
+
+    const verificationFile = files.verification_image[0];
+
+    return await this.usersService.verifyUser(authUser, verificationFile);
+  }
   constructor(
     private usersService: UsersService,
     private interestsService: InterestsService,
