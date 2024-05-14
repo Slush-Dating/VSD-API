@@ -365,11 +365,28 @@ export class UsersService {
 
     const locationData = response.data?.results[0]?.formatted_address;
 
+    const addressComponents = response.data.results[0]?.address_components;
+
+    let city: string, state: string, country: string;
+
+    for (const component of addressComponents) {
+      if (component.types.includes('locality')) {
+        city = component.long_name;
+      } else if (component.types.includes('administrative_area_level_1')) {
+        state = component.long_name;
+      } else if (component.types.includes('country')) {
+        country = component.long_name;
+      }
+    }
+
     await Promise.all([
       this.update(authUser.id, {
         latitude: latitude,
         longitude: longitude,
         address: locationData,
+        city: city,
+        state: state,
+        country: country,
       }),
     ]);
   }

@@ -250,6 +250,22 @@ export class User extends BaseEntity {
   country?: string;
 
   /**
+   * @example
+   */
+  @IsString()
+  @IsNotEmpty()
+  @Column({ nullable: true })
+  city?: string;
+
+  /**
+   * @example
+   */
+  @IsString()
+  @IsNotEmpty()
+  @Column({ nullable: true })
+  state?: string;
+
+  /**
    * @example London
    */
   @IsString()
