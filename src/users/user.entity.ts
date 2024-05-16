@@ -407,7 +407,7 @@ export class User extends BaseEntity {
   deactivatedAt?: Date;
 
   @Expose()
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: null })
   isVerified: boolean;
 
   /**
