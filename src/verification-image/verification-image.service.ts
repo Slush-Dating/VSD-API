@@ -23,6 +23,14 @@ export class VerificationImageService {
       });
 
       if (findUser) {
+        const key = await this.appService.storeToS3({
+          file,
+          options: { checkForNudity: true, directory: 'users' },
+        });
+        await this.repository.update(findUser.id, {
+          key,
+          user: authUser,
+        });
         return {
           message:
             'We are currently reviewing your picture and will get back to you soon.',

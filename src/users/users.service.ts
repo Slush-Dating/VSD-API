@@ -329,17 +329,26 @@ export class UsersService {
    */
 
   async verifyUser(authUser: User, file: Express.Multer.File): Promise<any> {
-    const findVerifiedUser = await this.repository.findOne({
+    const findNotVerifiedUser = await this.repository.findOne({
       where: {
         id: authUser.id,
-        isVerified: true,
+        isVerified: false,
       },
     });
 
-    if (findVerifiedUser) {
+    if (authUser.isVerified) {
       return {
         message: 'User already verified',
       };
+    }
+    if (findNotVerifiedUser) {
+      await this.repository.update(findNotVerifiedUser.id, {
+        isVerified: null,
+      });
+
+      return await Promise.all([
+        this.verifyVideoSevice.uploadVerificationImage(authUser, file),
+      ]);
     }
     return await Promise.all([
       this.verifyVideoSevice.uploadVerificationImage(authUser, file),
