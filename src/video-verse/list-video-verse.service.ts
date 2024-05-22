@@ -47,6 +47,7 @@ export class ListVideoVerseService {
         status: [
           ProfileVideoLikeStatusEnum.LIKED,
           ProfileVideoLikeStatusEnum.DISLIKED,
+          ProfileVideoLikeStatusEnum.SPARKLIKE,
         ],
       });
 
@@ -57,7 +58,11 @@ export class ListVideoVerseService {
       .innerJoin(Participant, 'p2', 'p2.id = f.second_participant_id')
       .where('p1.user_id = :authUserId', { authUserId: authUser.id })
       .andWhere('f.status IN (:status)', {
-        status: [FixtureStatus.LIKED, FixtureStatus.DISLIKED],
+        status: [
+          FixtureStatus.LIKED,
+          FixtureStatus.DISLIKED,
+          FixtureStatus.SPARKLIKE,
+        ],
       });
 
     const [queryOne, parametersOne] = queryBuilderOne.getQueryAndParameters();
@@ -74,7 +79,6 @@ export class ListVideoVerseService {
     );
 
     const likedUsers = [authUser.id, ...likedUsersResult.map((o) => o.user_id)];
-
     const viewedVideoIds = await getManager()
       .createQueryBuilder(ViewedVideos, 'vv')
       .addSelect(['p.id'])
@@ -124,8 +128,8 @@ export class ListVideoVerseService {
       }, 'avatar')
       .innerJoin(User, 'u', 'pv.user_id = u.id')
       .where('pv.is_primary = :isPrimary', { isPrimary: true })
-      .where('pv.id NOT IN (:viewedVideoIds)', {
-        viewedVideoIds: viewedVideoIds,
+      .where('pv.id NOT IN (:...viewedVideoIds)', {
+        viewedVideoIds: viewedVideoIds.length > 0 ? viewedVideoIds : [-1],
       })
       .andWhere('u.deactivatedAt IS NULL')
       .setParameters({
