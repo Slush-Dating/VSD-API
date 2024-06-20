@@ -200,6 +200,8 @@ export class UsersService {
         },
         relations: ['profilePictures', 'interests', 'ethnicity'],
       });
+      // const remainSparks = await this.sparkLikeService.remainSparks(user);
+      // console.log(remainSparks);
       return user;
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
@@ -960,6 +962,11 @@ export class UsersService {
       option,
       status,
     );
+  }
+
+  async remainSpark(user: User) {
+    console.log('here');
+    return await this.sparkLikeService.remainSparks(user);
   }
 
   constructor(

@@ -34,6 +34,7 @@ import { Interests } from 'src/interests/interests.entity';
 import { Ethnicity } from 'src/ethnicity/ethnicity.entity';
 import { bucketUrl, calculateAge } from 'src/common/helper';
 import { string } from 'joi';
+import { SparkLike } from 'src/spark/spark.entity';
 
 export enum RoleType {
   USER = 'USER',

@@ -35,6 +35,8 @@ import { EthnicityModule } from './ethnicity/ethnicity.module';
 import { ProfileVideoLikesModule } from './profile-video-likes/profile-video-likes.module';
 import { VideoVerseModule } from './video-verse/video-verse.module';
 import { SavedEventsModule } from './saved-events/saved-events.module';
+import { VerificationImageModule } from './verification-image/verification-image.module';
+import { EventCategoryModule } from './event-category/event-category.module';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mailchimp = require('@mailchimp/mailchimp_marketing');
@@ -134,6 +136,8 @@ const mailchimp = require('@mailchimp/mailchimp_marketing');
     VideoVerseModule,
     EthnicityModule,
     SavedEventsModule,
+    VerificationImageModule,
+    EventCategoryModule,
   ],
   controllers: [AppController],
   providers: [

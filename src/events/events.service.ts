@@ -420,11 +420,18 @@ export class EventsService {
 
       const queryBuilder = this.eventRepo
         .createQueryBuilder('e')
+        .leftJoinAndSelect('e.category', 'c')
         .leftJoin('e.participants', 'p')
         .orderBy('e.startsAt', 'ASC')
         .groupBy('e.id');
 
       this.filterByEventTimeline(getEventDto, queryBuilder, authUser);
+
+      if (getEventDto.category_id) {
+        queryBuilder.andWhere('c.id = :categoryId', {
+          categoryId: getEventDto.category_id,
+        });
+      }
 
       // count records
       const { value: totalItems } = await queryBuilder.connection
@@ -864,6 +871,10 @@ export class EventsService {
       }
     }
   }
+
+  // public getEventCategory() {
+  //   return this.eventCategoryService.getEventCategories();
+  // }
 
   constructor(
     @InjectRepository(Event) private eventRepo: Repository<Event>,

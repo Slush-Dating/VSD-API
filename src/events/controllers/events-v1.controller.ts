@@ -59,6 +59,7 @@ export class EventsControllerV1 {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(15), ParseIntPipe) limit?: number,
   ): Promise<Record<string, Pagination<Event>>> {
+    console.log(queryDto);
     const { meta, items } = await this.eventsService.getEvents(
       authUser,
       queryDto,

@@ -75,6 +75,21 @@ export class UsersControllerV1 {
     return { message: 'User Reported successfully!' };
   }
 
+  @ApiOperation({ summary: 'Get remaining spark' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('remain-spark')
+  public async sparkCount(@AuthUser() authUser: User) {
+    try {
+      const sparkCount = await this.usersService.remainSpark(authUser);
+      console.log(sparkCount);
+      return sparkCount;
+    } catch (error) {
+      console.error('Error fetching spark count:', error);
+      throw error; // Ensure error is properly propagated if needed
+    }
+  }
+
   /**
    * Get user profile
    */
@@ -381,6 +396,7 @@ export class UsersControllerV1 {
 
     return await this.usersService.verifyUser(authUser, verificationFile);
   }
+
   constructor(
     private usersService: UsersService,
     private interestsService: InterestsService,

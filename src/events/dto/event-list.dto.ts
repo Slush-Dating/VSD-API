@@ -4,6 +4,7 @@ import { UserProfilePicture } from 'src/chats/dto/chat.dto';
 import { CastToBucket } from 'src/common/decorators/cast-to-bucket.decorator';
 import { CastToUnixTimestamp } from 'src/common/decorators/cast-to-unix-timestamp.decorator';
 import { Event } from '../event.entity';
+import { Categories } from 'src/event-category/categories.entity';
 
 export class EventList extends PickType(Event, [
   'title',
@@ -21,6 +22,7 @@ export class EventList extends PickType(Event, [
   'type',
   'hasPassword',
   'password',
+  'category',
 ]) {
   @Expose({ name: 'id' })
   eventId: number;
@@ -48,6 +50,10 @@ export class EventList extends PickType(Event, [
   @CastToUnixTimestamp()
   @Expose()
   endsAt: number;
+
+  @Type(() => Categories)
+  @Expose()
+  categoryId: Categories;
 
   @Type(() => Participant)
   @Expose()

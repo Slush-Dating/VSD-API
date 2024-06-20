@@ -51,4 +51,15 @@ export class GetEventDto {
   @IsOptional()
   @IsString()
   longitude?: string;
+
+  /**
+   * - Specify distance in miles
+   * - Default is 50
+   * @example 50
+   */
+  @IsNumber()
+  @IsNotEmpty()
+  @IsOptional()
+  @Type(() => Number)
+  readonly category_id?: number;
 }

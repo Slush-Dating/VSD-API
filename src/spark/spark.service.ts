@@ -42,6 +42,20 @@ export class SparkLikeService {
     });
   }
 
+  async remainSparks(user: User) {
+    console.log(user);
+    const findUser = await this.sparkLikeRepo.find({
+      where: { user: { id: user.id } },
+    });
+    if (findUser[0].total_sparks) {
+      return { remain_sparks: findUser[0].total_sparks };
+    } else {
+      return 'No spark purchased';
+    }
+
+    return findUser;
+  }
+
   constructor(
     @InjectRepository(SparkLike)
     private sparkLikeRepo: Repository<SparkLike>,

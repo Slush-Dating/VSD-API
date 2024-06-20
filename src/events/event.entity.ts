@@ -13,6 +13,7 @@ import {
 } from 'class-validator';
 import { BaseEntity } from 'src/common/base.entity';
 import { CastToUnixTimestamp } from 'src/common/decorators/cast-to-unix-timestamp.decorator';
+import { Categories } from 'src/event-category/categories.entity';
 import { Fixture } from 'src/fixtures/fixture.entity';
 import { Participant } from 'src/participants/participant.entity';
 import { SexualityEnum, User } from 'src/users/user.entity';
@@ -21,6 +22,7 @@ import {
   Column,
   Entity,
   Index,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -236,6 +238,13 @@ export class Event extends BaseEntity {
   @Expose()
   @Column({ nullable: true })
   password: string;
+
+  @ManyToOne(() => Categories, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @Expose()
+  category: Categories;
 
   @OneToMany(() => Participant, (participant) => participant.event)
   participants?: Participant[];
