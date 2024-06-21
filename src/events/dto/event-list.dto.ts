@@ -1,5 +1,5 @@
 import { PickType } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { UserProfilePicture } from 'src/chats/dto/chat.dto';
 import { CastToBucket } from 'src/common/decorators/cast-to-bucket.decorator';
 import { CastToUnixTimestamp } from 'src/common/decorators/cast-to-unix-timestamp.decorator';
@@ -22,7 +22,6 @@ export class EventList extends PickType(Event, [
   'type',
   'hasPassword',
   'password',
-  'category',
 ]) {
   @Expose({ name: 'id' })
   eventId: number;
@@ -54,6 +53,14 @@ export class EventList extends PickType(Event, [
   @Type(() => Categories)
   @Expose()
   categoryId: Categories;
+
+  @Type(() => Categories)
+  @Expose()
+  categoryName: Categories;
+
+  @Type(() => Categories)
+  @Expose()
+  categoryImage: Categories;
 
   @Type(() => Participant)
   @Expose()

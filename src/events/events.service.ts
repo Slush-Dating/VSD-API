@@ -420,7 +420,7 @@ export class EventsService {
 
       const queryBuilder = this.eventRepo
         .createQueryBuilder('e')
-        .leftJoinAndSelect('e.category', 'c')
+        .leftJoinAndSelect('e.category', 'category')
         .leftJoin('e.participants', 'p')
         .orderBy('e.startsAt', 'ASC')
         .groupBy('e.id');
@@ -428,7 +428,7 @@ export class EventsService {
       this.filterByEventTimeline(getEventDto, queryBuilder, authUser);
 
       if (getEventDto.category_id) {
-        queryBuilder.andWhere('c.id = :categoryId', {
+        queryBuilder.andWhere('category.id = :categoryId', {
           categoryId: getEventDto.category_id,
         });
       }
