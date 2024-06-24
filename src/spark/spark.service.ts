@@ -47,13 +47,11 @@ export class SparkLikeService {
     const findUser = await this.sparkLikeRepo.find({
       where: { user: { id: user.id } },
     });
-    if (findUser[0].total_sparks) {
+    if (findUser[0]) {
       return { remain_sparks: findUser[0].total_sparks };
     } else {
-      return 'No spark purchased';
+      return { message: 'No spark purchased' };
     }
-
-    return findUser;
   }
 
   constructor(
