@@ -20,11 +20,12 @@ export class ProfileVideoLikesService {
   public async interactWithUser(
     authUser: User,
     interactDto: InteractDto,
-  ): Promise<Boolean> {
+  ): Promise<any> {
     if (authUser.id === interactDto.user) {
       throw new BadRequestException('You cannot like yourself!');
     }
 
+    await this.usersService.addReminderForLikedtab(authUser);
     // spark count -1
     if (interactDto.status === ProfileVideoLikeStatusEnum.SPARKLIKE) {
       await this.sparkLikeService.removeSparkLike(authUser.id);

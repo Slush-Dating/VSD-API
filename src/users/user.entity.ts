@@ -411,6 +411,10 @@ export class User extends BaseEntity {
   @Column({ type: 'boolean', default: null })
   isVerified: boolean;
 
+  @Expose()
+  @Column({ type: 'boolean', default: false })
+  isLikedTabUpdate: boolean;
+
   /**
    * deactivate profile reason
    * @example Too busy

@@ -9,6 +9,7 @@ import { FixtureModule } from 'src/fixtures/fixture.module';
 import { EventNotificationsService } from './event-notifications.service';
 import { NotificationLogsModule } from 'src/notification-logs/notification-logs.module';
 import { SavedEventsModule } from 'src/saved-events/saved-events.module';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { SavedEventsModule } from 'src/saved-events/saved-events.module';
     FixtureModule,
     NotificationLogsModule,
     SavedEventsModule,
+    UsersModule,
   ],
   controllers: [EventsControllerV1],
   providers: [

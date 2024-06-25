@@ -90,6 +90,17 @@ export class UsersService {
     }
   }
 
+  public async addReminderForLikedtab(user: User): Promise<any> {
+    await this.repository.update(user.id, {
+      isLikedTabUpdate: true,
+    });
+  }
+  public async removeReminderForLikedtab(user: User): Promise<any> {
+    await this.repository.update(user.id, {
+      isLikedTabUpdate: false,
+    });
+  }
+
   public async updateEthnicity(
     authUser: User,
     ethnicityIds: number[],

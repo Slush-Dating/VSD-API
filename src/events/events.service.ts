@@ -40,6 +40,7 @@ import { EventResultDto, EventResultTypeEnum } from './dto/event-result.dto';
 import * as moment from 'moment';
 import { date } from 'joi';
 import { SavedEventsService } from 'src/saved-events/saved-events.service';
+import { UsersService } from 'src/users/users.service';
 
 export enum EventTypeDatesEnum {
   FIVE_DATES = 'FIVE_DATES',
@@ -159,6 +160,7 @@ export class EventsService {
     query: EventResultDto,
     options: IPaginationOptions,
   ) {
+    await this.userService.removeReminderForLikedtab(authUser);
     if (query.event) {
       const event = await this.findOneOrFail({ id: Number(query.event) });
 
@@ -881,5 +883,6 @@ export class EventsService {
     private participantsService: ParticipantsService,
     private fixturesService: FixturesService,
     private savedEventService: SavedEventsService,
+    private userService: UsersService,
   ) {}
 }
