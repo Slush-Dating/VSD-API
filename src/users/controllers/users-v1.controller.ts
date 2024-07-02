@@ -49,6 +49,7 @@ import { SparkLikeDto } from 'src/spark/spark.dto';
 import { ViewedVideosListService } from 'src/viewed_videos/viewed-videos.service';
 import { IsNotEmpty } from 'class-validator';
 import { VerifyUserDto } from 'src/verification-image/VerifyUserDto.dto';
+import { NotificationsService } from 'src/notifications/notifications.service';
 @Controller({
   path: 'users',
   version: '1',
@@ -115,7 +116,58 @@ export class UsersControllerV1 {
       authUser,
       updateUserDto,
     );
+    const profileCompletionPercentage = this.calculateProfileCompletion(user);
+    await this.notificationsService.createProfileNotification(
+      profileCompletionPercentage,
+      user,
+    );
+    console.log(profileCompletionPercentage);
+
     return { data: user };
+  }
+
+  private calculateProfileCompletion(user: User): number {
+    const fields = [
+      'firstName',
+      'lastName',
+      'email',
+      'phoneNumber',
+      'bio',
+      'gender',
+      'lookingFor',
+      'sexuality',
+      'jobTitle',
+      'country',
+      'city',
+      'state',
+      'address',
+      'latitude',
+      'longitude',
+      'dateOfBirth',
+      'height',
+      'ideal_vacation',
+      'distance',
+      'cooking_skill',
+      'smoking_opinion',
+      'profilePictures',
+      'profileVideos',
+      'avatar',
+    ];
+
+    let completedFields = 0;
+    const totalFields = fields.length;
+
+    fields.forEach((field) => {
+      if (
+        user[field] !== null &&
+        user[field] !== undefined &&
+        user[field] !== ''
+      ) {
+        completedFields++;
+      }
+    });
+
+    return (completedFields / totalFields) * 100;
   }
 
   /**
@@ -402,5 +454,6 @@ export class UsersControllerV1 {
     private interestsService: InterestsService,
     private ethnicityService: EthnicityService,
     private viewedVideosService: ViewedVideosListService,
+    private notificationsService: NotificationsService,
   ) {}
 }

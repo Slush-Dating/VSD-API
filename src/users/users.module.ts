@@ -21,6 +21,7 @@ import { SparkLikeModule } from 'src/spark/spark.module';
 import { ViewedVideosModule } from 'src/viewed_videos/viewed-videos.module';
 import { PaymentHistoryModule } from 'src/payment_history/payment_history.module';
 import { VerificationImageModule } from 'src/verification-image/verification-image.module';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { VerificationImageModule } from 'src/verification-image/verification-ima
     SparkLikeModule,
     ViewedVideosModule,
     PaymentHistoryModule,
+    NotificationsModule,
   ],
   providers: [UsersService],
   exports: [UsersService],

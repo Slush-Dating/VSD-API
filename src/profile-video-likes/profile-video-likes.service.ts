@@ -15,6 +15,7 @@ import {
 } from './profile-video-like.entity';
 import { getMessaging } from 'firebase-admin/messaging';
 import { SparkLikeService } from 'src/spark/spark.service';
+import { NotificationsService } from 'src/notifications/notifications.service';
 @Injectable()
 export class ProfileVideoLikesService {
   public async interactWithUser(
@@ -53,24 +54,35 @@ export class ProfileVideoLikesService {
           status: interactDto.status,
         }),
       );
-
-      // this.sendNotification("video-liked", newEntity.status, authUser, user.id)
-      if (newEntity && oppositeEntity) {
-        if (newEntity.status == 'LIKED' && oppositeEntity.status == 'LIKED') {
-          this.sendNotification('match', newEntity.status, authUser, user.id);
-          return true;
-        }
+      if (
+        newEntity &&
+        oppositeEntity &&
+        newEntity.status === 'LIKED' &&
+        oppositeEntity.status === 'LIKED'
+      ) {
+        await this.notificationService.createMatchNotification(authUser, user);
+        this.sendNotification('match', newEntity.status, authUser, user.id);
+        return true;
+      } else {
+        await this.notificationService.createLikesNotification(authUser, user);
+        // this.sendNotification("video-liked", newEntity.status, authUser, user.id);
       }
+
       return false;
     } else {
       entity.status = interactDto.status;
       await this.repository.save(entity);
-      // this.sendNotification("video-liked", entity.status, authUser, user.id)
-      if (entity && oppositeEntity) {
-        if (entity.status == 'LIKED' && oppositeEntity.status == 'LIKED') {
-          this.sendNotification('match', entity.status, authUser, user.id);
-          return true;
-        }
+      if (
+        entity &&
+        oppositeEntity &&
+        entity.status === 'LIKED' &&
+        oppositeEntity.status === 'LIKED'
+      ) {
+        await this.notificationService.createMatchNotification(authUser, user);
+        this.sendNotification('match', entity.status, authUser, user.id);
+        return true;
+      } else {
+        // this.sendNotification("video-liked", entity.status, authUser, user.id);
       }
 
       return false;
@@ -125,5 +137,6 @@ export class ProfileVideoLikesService {
     @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
     private sparkLikeService: SparkLikeService,
+    public notificationService: NotificationsService,
   ) {}
 }
