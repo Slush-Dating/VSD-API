@@ -50,6 +50,7 @@ import { ViewedVideosListService } from 'src/viewed_videos/viewed-videos.service
 import { IsNotEmpty } from 'class-validator';
 import { VerifyUserDto } from 'src/verification-image/VerifyUserDto.dto';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { SubscriptionService } from 'src/subscription/subscription.service';
 @Controller({
   path: 'users',
   version: '1',
@@ -74,6 +75,20 @@ export class UsersControllerV1 {
       reportUserProfileDto,
     );
     return { message: 'User Reported successfully!' };
+  }
+
+  /**
+   * Get subscription detail
+   */
+  @ApiOperation({ summary: 'Get current subscription detail' })
+  @Get('subscription-detail')
+  public async getSubscriptionDetail(@AuthUser() authUser: User): Promise<any> {
+    const item = await this.subscriptionService.getSubscriptionDetail(authUser);
+    if (!item) {
+      return { message: 'No subscription found!' };
+    }
+
+    return { data: item };
   }
 
   @ApiOperation({ summary: 'Get remaining spark' })
@@ -455,5 +470,6 @@ export class UsersControllerV1 {
     private ethnicityService: EthnicityService,
     private viewedVideosService: ViewedVideosListService,
     private notificationsService: NotificationsService,
+    private subscriptionService: SubscriptionService,
   ) {}
 }

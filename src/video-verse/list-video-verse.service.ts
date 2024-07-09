@@ -102,6 +102,7 @@ export class ListVideoVerseService {
         'u.height',
         'u.country',
         'u.gender',
+        'u.isVerified',
       ])
       .addSelect('CONCAT(u.first_name, " ", u.last_name) AS fullName')
       .addSelect('CONCAT(u.first_name, "") AS nickName')

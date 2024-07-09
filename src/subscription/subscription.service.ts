@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { SubScription } from './subscription.entity';
 import { Pacakagedetail } from 'src/package-details/package-detail.entity';
 import { User } from 'src/users/user.entity';
@@ -30,6 +30,19 @@ export class SubscriptionService {
     });
 
     await this.subscriptionRepo.save(subscriber);
+  }
+
+  async getSubscriptionDetail(user: User) {
+    const queryBuilder = this.subscriptionRepo
+      .createQueryBuilder('subscription')
+      .where('subscription.user = :authUserId', { authUserId: user.id })
+      .andWhere('subscription.endsAt > :now', { now: new Date() })
+      .leftJoinAndSelect('subscription.package', 'package')
+      .orderBy('subscription.startsAt', 'DESC');
+
+    const items = await queryBuilder.getOne();
+
+    return items;
   }
 
   constructor(

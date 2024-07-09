@@ -413,6 +413,10 @@ export class User extends BaseEntity {
 
   @Expose()
   @Column({ type: 'boolean', default: false })
+  isSparkLike: boolean;
+
+  @Expose()
+  @Column({ type: 'boolean', default: false })
   isLikedTabUpdate: boolean;
 
   /**

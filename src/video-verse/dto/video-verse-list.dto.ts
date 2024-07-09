@@ -43,6 +43,9 @@ export class User {
 
   @Expose()
   readonly country: string;
+
+  @Expose()
+  readonly isVerified: boolean;
 }
 
 export class VideoVerseListDto {

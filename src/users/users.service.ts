@@ -721,12 +721,21 @@ export class UsersService {
     select?: string[];
   }) {
     try {
-      const ids = data.ids || [1];
+      const newId = data.ids.map((id) => id.userId);
+      const ids = newId || [1];
+      console.log(data);
 
       const idMap = new Map<number | string, number>();
       ids.forEach((id, index) => {
         idMap.set(id, index);
       });
+
+      const isSparkLikeMap = new Map<number, boolean>();
+      data.ids.forEach((item) => {
+        isSparkLikeMap.set(item.userId, item.isSparkLike);
+      });
+
+      console.log(isSparkLikeMap);
 
       const queryBuilder = this.repository
         .createQueryBuilder(data.alias || 'u')
@@ -759,7 +768,12 @@ export class UsersService {
         },
       });
 
+      users.items.forEach((user) => {
+        user.isSparkLike = isSparkLikeMap.get(user.id);
+      });
+
       users.items.sort((a, b) => idMap.get(a.id) - idMap.get(b.id));
+      // console.log('users.items', users);
       return users;
     } catch (error) {
       throw error;
