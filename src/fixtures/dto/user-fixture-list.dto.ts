@@ -26,6 +26,9 @@ export class UserFixtureListDto extends PickType(User, [
   @Expose()
   readonly reportReason: string;
 
+  @Expose()
+  readonly date_of_birth: string;
+
   @CastToBucket()
   @Expose()
   readonly avatar: string;

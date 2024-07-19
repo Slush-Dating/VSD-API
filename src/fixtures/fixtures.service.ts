@@ -186,6 +186,7 @@ export class FixturesService {
         'f.reportReason AS reportReason',
         'spu.firstName AS firstName',
         'spu.lastName AS lastName',
+        'spu.date_of_birth AS date_of_birth',
       ])
       .leftJoin('f.firstParticipant', 'fp')
       .leftJoin('f.secondParticipant', 'sp')
