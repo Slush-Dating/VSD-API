@@ -714,6 +714,72 @@ export class UsersService {
     return this.repository.find(options);
   }
 
+  // public async getManyUser(data: {
+  //   ids: string[] | number[];
+  //   options?: IPaginationOptions;
+  //   alias?: string;
+  //   select?: string[];
+  // }) {
+  //   try {
+  //     const newId = data.ids.map((id) => id.userId);
+  //     const ids = newId || [1];
+  //     console.log(data);
+
+  //     const idMap = new Map<number | string, number>();
+  //     ids.forEach((id, index) => {
+  //       idMap.set(id, index);
+  //     });
+
+  //     const isSparkLikeMap = new Map<number, boolean>();
+  //     data.ids.forEach((item) => {
+  //       isSparkLikeMap.set(item.userId, item.isSparkLike);
+  //     });
+
+  //     console.log(isSparkLikeMap);
+
+  //     const queryBuilder = this.repository
+  //       .createQueryBuilder(data.alias || 'u')
+  //       .leftJoinAndSelect('u.profilePictures', 'pp')
+  //       .leftJoinAndSelect('u.profileVideos', 'pv')
+  //       .leftJoinAndSelect('u.interests', 'ui')
+  //       .leftJoinAndSelect('u.ethnicity', 'ue')
+  //       .where('u.deactivatedAt IS NULL')
+  //       .andWhere('u.id IN (:...ids)', { ids });
+
+  //     if (data.select) {
+  //       queryBuilder.select(data.select);
+  //     }
+
+  //     const totalItems = await queryBuilder.getCount();
+
+  //     const users = await paginate<User>(queryBuilder, {
+  //       ...data.options,
+  //       paginationType: PaginationTypeEnum.TAKE_AND_SKIP,
+  //       // https://github.com/nestjsx/nestjs-typeorm-paginate/issues/627
+  //       metaTransformer: ({ currentPage, itemCount, itemsPerPage }) => {
+  //         const totalPages = Math.round(totalItems / itemsPerPage);
+  //         return {
+  //           currentPage,
+  //           itemCount,
+  //           itemsPerPage,
+  //           totalItems,
+  //           totalPages: totalPages === 0 ? 1 : totalPages,
+  //         };
+  //       },
+  //     });
+
+  //     users.items.forEach((user) => {
+  //       user.isSparkLike = isSparkLikeMap.get(user.id);
+  //     });
+
+  //     users.items.sort((a, b) => idMap.get(a.id) - idMap.get(b.id));
+  //     // console.log('users.items', users);
+  //     return users;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
+
   public async getManyUser(data: {
     ids: string[] | number[];
     options?: IPaginationOptions;
@@ -721,21 +787,12 @@ export class UsersService {
     select?: string[];
   }) {
     try {
-      const newId = data.ids.map((id) => id.userId);
-      const ids = newId || [1];
-      console.log(data);
+      const ids = data.ids || [1];
 
       const idMap = new Map<number | string, number>();
       ids.forEach((id, index) => {
         idMap.set(id, index);
       });
-
-      const isSparkLikeMap = new Map<number, boolean>();
-      data.ids.forEach((item) => {
-        isSparkLikeMap.set(item.userId, item.isSparkLike);
-      });
-
-      console.log(isSparkLikeMap);
 
       const queryBuilder = this.repository
         .createQueryBuilder(data.alias || 'u')
@@ -768,12 +825,7 @@ export class UsersService {
         },
       });
 
-      users.items.forEach((user) => {
-        user.isSparkLike = isSparkLikeMap.get(user.id);
-      });
-
       users.items.sort((a, b) => idMap.get(a.id) - idMap.get(b.id));
-      // console.log('users.items', users);
       return users;
     } catch (error) {
       throw error;
