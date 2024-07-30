@@ -72,7 +72,6 @@ export class ProfilePicturesService {
       const key = await this.appService.storeToS3({
         file,
         options: { checkForNudity: true, directory: 'users' },
-
       });
       await this.profilePictureRepo.save(
         this.profilePictureRepo.create({
@@ -141,8 +140,66 @@ export class ProfilePicturesService {
       });
 
       await this.profilePictureRepo.save(data);
-
       return await this.usersService.findById(authUser.id);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Upload many profile pictures
+   */
+  public async storeManyLink(
+    authUser: User,
+    files: Express.Multer.File[],
+  ): Promise<string[]> {
+    // Change return type to an array of strings
+    try {
+      const slotsRemaining =
+        ProfilePicture.MAX_PICTURES - authUser.profilePictures.length;
+
+      const noOfPicturesCanUpload = ProfilePicture.MAX_PICTURES - 1;
+
+      if (!files.length) {
+        throw new BadRequestException('No photos are uploaded');
+      }
+
+      if (authUser.profilePictures.length >= ProfilePicture.MAX_PICTURES) {
+        throw new BadRequestException(
+          `You've already added ${ProfilePicture.MAX_PICTURES} photos. You cannot add more unless you delete some photos`,
+        );
+      }
+
+      if (files.length > noOfPicturesCanUpload) {
+        throw new BadRequestException(
+          `You cannot upload more than ${ProfilePicture.MAX_PICTURES} photos`,
+        );
+      }
+
+      if (files.length > slotsRemaining) {
+        throw new BadRequestException(
+          `You can only add ${slotsRemaining} more photos. Whereas, your request contains ${files.length} photos`,
+        );
+      }
+
+      await Promise.all(
+        files.map((file) => this.appService.detectInAppropriateImage(file)),
+      );
+
+      const filenames = await Promise.all(
+        files.map((file) => {
+          return this.appService.storeToS3({
+            file,
+            options: { checkForNudity: false, directory: 'users' },
+          });
+        }),
+      );
+
+      // Return the file links instead of creating records in profilePictureRepo
+      return filenames.map(
+        (filename) =>
+          `https://virtual-speed-date.s3.eu-west-2.amazonaws.com/${filename}`,
+      );
     } catch (error) {
       throw error;
     }

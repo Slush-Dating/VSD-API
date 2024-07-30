@@ -306,6 +306,9 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   socialProviderId?: string;
 
+  @Column({ nullable: true })
+  contactId?: string;
+
   /**
    * @example "174 cm"
    */

@@ -3,6 +3,7 @@ import {
   IsBooleanString,
   IsDateString,
   IsOptional,
+  IsPhoneNumber,
   ValidateIf,
 } from 'class-validator';
 import { User } from '../user.entity';
@@ -26,6 +27,7 @@ export class UpdateUserDto extends PartialType(
     'smoking_opinion',
     'avatar',
     'video',
+    'phoneNumber',
   ] as const),
 ) {
   /**
@@ -68,4 +70,11 @@ export class UpdateUserDto extends PartialType(
   @IsBooleanString()
   @IsOptional()
   display_orientation?: string;
+
+  /**
+   * @example "+1 8052703003"
+   */
+  @IsPhoneNumber()
+  @IsOptional()
+  phoneNumber?: string;
 }

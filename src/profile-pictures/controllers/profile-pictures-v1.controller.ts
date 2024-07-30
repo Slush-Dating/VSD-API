@@ -45,6 +45,23 @@ export class ProfilePicturesControllerV1 {
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
     const user = await this.profilePicturesService.storeMany(authUser, files);
+    console.log(user);
+    return { data: user };
+  }
+
+  @ApiOperation({ summary: 'Upload multiple profile picture link' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('files'))
+  @Post('/batch/storeLink')
+  public async storeManyLink(
+    @AuthUser() authUser: User,
+    @Body() batchUploadDto: BatchUploadDto,
+    @UploadedFiles() files?: Express.Multer.File[],
+  ) {
+    const user = await this.profilePicturesService.storeManyLink(
+      authUser,
+      files,
+    );
     return { data: user };
   }
 

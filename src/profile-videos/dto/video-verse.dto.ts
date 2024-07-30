@@ -1,10 +1,12 @@
 import { Expose, Transform, Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsDecimal,
   IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsString,
 } from 'class-validator';
 import { GenderEnum } from 'src/users/user.entity';
 
@@ -69,4 +71,16 @@ export class VideoVerseDto {
   @IsNotEmpty()
   @IsOptional()
   readonly gender?: GenderEnum;
+
+  /**
+   * @example true
+   */
+  @Transform(({ value }: { value: any }) => {
+    return value === 'true' || value === '1' || value === 1 || value === true
+      ? true
+      : false;
+  })
+  @IsBoolean()
+  @IsOptional()
+  readonly isVerified?: boolean;
 }

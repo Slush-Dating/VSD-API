@@ -1046,6 +1046,18 @@ export class UsersService {
     return await this.sparkLikeService.remainSparks(user);
   }
 
+  async updateUserSubcsription(userIds: any[]) {
+    await this.repository.update(userIds, {
+      isSubscriptionPurchased: SubscriptionPurchased.No,
+    });
+  }
+
+  async addUserContactId(user: User, data: any) {
+    await this.repository.update(user.id, {
+      contactId: data.id,
+    });
+  }
+
   constructor(
     @InjectRepository(User) private repository: Repository<User>,
     @InjectAwsService(S3)

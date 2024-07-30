@@ -1,12 +1,57 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { createQueryBuilder, LessThanOrEqual, Repository } from 'typeorm';
 import { SubScription } from './subscription.entity';
 import { Pacakagedetail } from 'src/package-details/package-detail.entity';
 import { User } from 'src/users/user.entity';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class SubscriptionService {
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async checkSubscriptionDetail() {
+    const currentDate = new Date();
+    try {
+      const subscriptions = await createQueryBuilder(SubScription, 's')
+        .leftJoinAndSelect('s.user', 'u')
+        .addSelect(['u.id'])
+        .where('s.endsAt <= :date OR s.endsAt > :date', { date: currentDate })
+        .getMany();
+
+      // Group subscriptions by user
+      const userSubscriptions = subscriptions.reduce((acc, subscription) => {
+        const userId = subscription.user.id;
+        if (!acc[userId]) {
+          acc[userId] = [];
+        }
+        acc[userId].push(subscription);
+        return acc;
+      }, {});
+
+      const expiredUserIds = [];
+      for (const userId in userSubscriptions) {
+        const userSubs = userSubscriptions[userId];
+        const allExpired = userSubs.every((sub) => sub.endsAt <= currentDate);
+        if (allExpired) {
+          expiredUserIds.push(userId);
+        }
+      }
+
+      if (expiredUserIds.length > 0) {
+        await this.usersService.updateUserSubcsription(expiredUserIds);
+        console.log('Users with expired subscriptions:', expiredUserIds);
+      }
+    } catch (error) {
+      console.error('Error finding users with expired subscriptions:', error);
+    }
+  }
+
   async addSubscribeUser(user: User, package_detail: Pacakagedetail) {
     const findUser = await this.subscriptionRepo.findOne({
       where: { user: user },
@@ -48,5 +93,7 @@ export class SubscriptionService {
   constructor(
     @InjectRepository(SubScription)
     private subscriptionRepo: Repository<SubScription>,
+    @Inject(forwardRef(() => UsersService)) // Use forwardRef here
+    private readonly usersService: UsersService,
   ) {}
 }

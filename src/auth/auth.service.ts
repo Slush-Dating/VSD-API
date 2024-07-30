@@ -46,6 +46,7 @@ import { check } from 'prettier';
 import { validate } from 'class-validator';
 import { CompleteDetailDto } from './dto/complete-detail.dto';
 import { getMessaging } from 'firebase-admin/messaging';
+import { lastValueFrom } from 'rxjs';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mailchimp = require('@mailchimp/mailchimp_marketing');
@@ -334,6 +335,63 @@ export class AuthService {
    */
 
   public async fillFirstName(authUser: User, firstName: string) {
+    try {
+      const response = await lastValueFrom(
+        this.httpService.post(
+          'https://api.hubapi.com/crm/v3/objects/contacts',
+
+          {
+            associations: [],
+            properties: {
+              email: authUser.email,
+              firstname: firstName,
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer pat-na1-87736912-0583-4d74-bbb5-fca8b0e1126d`,
+            },
+          },
+        ),
+      );
+
+      console.log('API response:', response.data);
+      this.usersService.addUserContactId(authUser, response.data);
+    } catch (error) {
+      console.error(
+        'Error calling the external API:',
+        error.response.data.message,
+      );
+      try {
+        const response = await lastValueFrom(
+          this.httpService.patch(
+            `https://api.hubapi.com/crm/v3/objects/contacts/${authUser.contactId}`,
+
+            {
+              properties: {
+                email: authUser.email,
+                firstname: authUser.firstName,
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer pat-na1-87736912-0583-4d74-bbb5-fca8b0e1126d`,
+              },
+            },
+          ),
+        );
+
+        console.log('update API Response:', response.data);
+      } catch (error) {
+        console.error(
+          'Error calling the external API:',
+          error.response.data.message,
+        );
+      }
+
+      // throw new BadRequestException('Failed to call the external API.');
+    }
+
     await this.usersService.save({
       id: authUser.id,
       firstName: firstName,
@@ -347,6 +405,32 @@ export class AuthService {
       dateOfBirth: dateOfBirth,
       nextAction: NextActionEnum.FILL_HEIGHT,
     });
+
+    try {
+      const response = await lastValueFrom(
+        this.httpService.patch(
+          `https://api.hubapi.com/crm/v3/objects/contacts/${authUser.contactId}`,
+
+          {
+            properties: {
+              date_of_birth: dateOfBirth,
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer pat-na1-87736912-0583-4d74-bbb5-fca8b0e1126d`,
+            },
+          },
+        ),
+      );
+
+      console.log('update API Response:', response.data);
+    } catch (error) {
+      console.error(
+        'Error calling the external update API:',
+        error.response.data.message,
+      );
+    }
   }
 
   public async fillHeight(
@@ -406,7 +490,6 @@ export class AuthService {
         data.showOnProfile = fields.join(', ');
       }
     }
-
     await this.usersService.save({
       height: heightInCm?.toFixed(0).toString(),
       ...data,
@@ -463,6 +546,32 @@ export class AuthService {
       // requiresAction: false,
       nextAction: NextActionEnum.FILL_LOOKINGFOR,
     });
+
+    try {
+      const response = await lastValueFrom(
+        this.httpService.patch(
+          `https://api.hubapi.com/crm/v3/objects/contacts/${authUser.contactId}`,
+
+          {
+            properties: {
+              gender,
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer pat-na1-87736912-0583-4d74-bbb5-fca8b0e1126d`,
+            },
+          },
+        ),
+      );
+
+      console.log('update API Response:', response.data);
+    } catch (error) {
+      console.error(
+        'Error calling the external update API:',
+        error.response.data.message,
+      );
+    }
   }
 
   /**

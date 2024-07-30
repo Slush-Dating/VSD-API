@@ -51,6 +51,8 @@ import { IsNotEmpty } from 'class-validator';
 import { VerifyUserDto } from 'src/verification-image/VerifyUserDto.dto';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { SubscriptionService } from 'src/subscription/subscription.service';
+import { lastValueFrom } from 'rxjs';
+import { HttpService } from '@nestjs/axios';
 @Controller({
   path: 'users',
   version: '1',
@@ -119,6 +121,136 @@ export class UsersControllerV1 {
   /**
    * Update user profile
    */
+  // @Patch('me')
+  // @ApiConsumes('multipart/form-data')
+  // @ApiOperation({ summary: 'Update user profile' })
+  // @UseInterceptors(AnyFilesInterceptor())
+  // async updateUserProfile(
+  //   @AuthUser() authUser: User,
+  //   @Body() updateUserDto: UpdateUserDto,
+  // ) {
+  //   const user = await this.usersService.updateUserProfile(
+  //     authUser,
+  //     updateUserDto,
+  //   );
+  //   const profileCompletionPercentage = this.calculateProfileCompletion(user);
+  //   await this.notificationsService.createProfileNotification(
+  //     profileCompletionPercentage,
+  //     user,
+  //   );
+  //   if (authUser.contactId) {
+  //     try {
+  //       const response = await lastValueFrom(
+  //         this.httpService.patch(
+  //           `https://api.hubapi.com/crm/v3/objects/contacts/${authUser.contactId}`,
+
+  //           {
+  //             properties: {
+  //               firstname: updateUserDto.firstName
+  //                 ? updateUserDto.firstName
+  //                 : '',
+  //               email: authUser.email,
+  //               phone: updateUserDto.phoneNumber
+  //                 ? updateUserDto.phoneNumber
+  //                 : '',
+  //               lastname: updateUserDto.lastName ? updateUserDto.lastName : '',
+  //               jobtitle: updateUserDto.jobTitle ? updateUserDto.jobTitle : '',
+  //               date_of_birth: updateUserDto.dateOfBirth
+  //                 ? updateUserDto.dateOfBirth
+  //                 : '',
+  //             },
+  //           },
+  //           {
+  //             headers: {
+  //               Authorization: `Bearer pat-na1-87736912-0583-4d74-bbb5-fca8b0e1126d`,
+  //             },
+  //           },
+  //         ),
+  //       );
+
+  //       console.log(
+  //         'update API Response if contact id is avilable :',
+  //         response.data,
+  //       );
+  //     } catch (error) {
+  //       console.log('update user api', error.response.data.message);
+  //     }
+  //   } else {
+  //     try {
+  //       const response = await lastValueFrom(
+  //         this.httpService.post(
+  //           'https://api.hubapi.com/crm/v3/objects/contacts/search',
+
+  //           {
+  //             filterGroups: [
+  //               {
+  //                 filters: [
+  //                   {
+  //                     highValue: 'string',
+  //                     propertyName: 'email',
+  //                     value: authUser.email,
+  //                     operator: 'EQ',
+  //                   },
+  //                 ],
+  //               },
+  //             ],
+  //           },
+  //           {
+  //             headers: {
+  //               Authorization: `Bearer pat-na1-87736912-0583-4d74-bbb5-fca8b0e1126d`,
+  //             },
+  //           },
+  //         ),
+  //       );
+  //       console.log('API email filter response:', response.data.results[0]);
+  //       // console.log(authUser);
+  //       this.usersService.addUserContactId(authUser, response.data.results[0]);
+  //       try {
+  //         const updateContact = await lastValueFrom(
+  //           this.httpService.patch(
+  //             `https://api.hubapi.com/crm/v3/objects/contacts/${response.data.results[0].id}`,
+
+  //             {
+  //               properties: {
+  //                 firstname: updateUserDto.firstName
+  //                   ? updateUserDto.firstName
+  //                   : '',
+  //                 email: authUser.email,
+  //                 phone: updateUserDto.phoneNumber
+  //                   ? updateUserDto.phoneNumber
+  //                   : '',
+  //                 lastname: updateUserDto.lastName
+  //                   ? updateUserDto.lastName
+  //                   : '',
+  //                 jobtitle: updateUserDto.jobTitle
+  //                   ? updateUserDto.jobTitle
+  //                   : '',
+  //                 date_of_birth: updateUserDto.dateOfBirth
+  //                   ? updateUserDto.dateOfBirth
+  //                   : '',
+  //               },
+  //             },
+  //             {
+  //               headers: {
+  //                 Authorization: `Bearer pat-na1-87736912-0583-4d74-bbb5-fca8b0e1126d`,
+  //               },
+  //             },
+  //           ),
+  //         );
+  //         console.log(
+  //           'update contact after add contact id',
+  //           updateContact.data,
+  //         );
+  //       } catch (err) {
+  //         console.log('error update contact after add contact id', err);
+  //       }
+  //     } catch (error) {
+  //       console.log('filter user api error', error.response.data.message);
+  //     }
+  //   }
+  //   return { data: user };
+  // }
+
   @Patch('me')
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Update user profile' })
@@ -126,7 +258,7 @@ export class UsersControllerV1 {
   async updateUserProfile(
     @AuthUser() authUser: User,
     @Body() updateUserDto: UpdateUserDto,
-  ) {
+  ): Promise<{ data: User }> {
     const user = await this.usersService.updateUserProfile(
       authUser,
       updateUserDto,
@@ -136,9 +268,94 @@ export class UsersControllerV1 {
       profileCompletionPercentage,
       user,
     );
-    console.log(profileCompletionPercentage);
+
+    if (authUser.contactId) {
+      await this.updateHubspotContact(
+        authUser.contactId,
+        updateUserDto,
+        authUser,
+      );
+    } else {
+      await this.createOrUpdateHubspotContact(authUser, updateUserDto);
+    }
 
     return { data: user };
+  }
+
+  private async updateHubspotContact(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    authUser: User,
+  ) {
+    try {
+      const response = await lastValueFrom(
+        this.httpService.patch(
+          `https://api.hubapi.com/crm/v3/objects/contacts/${id}`,
+          {
+            properties: this.getContactProperties(authUser, updateUserDto),
+          },
+          {
+            headers: {
+              Authorization: `Bearer pat-na1-87736912-0583-4d74-bbb5-fca8b0e1126d`,
+            },
+          },
+        ),
+      );
+      console.log('Update API Response:', response.data);
+    } catch (error) {
+      console.log('Error updating user:', error.response?.data?.message);
+    }
+  }
+
+  private async createOrUpdateHubspotContact(
+    authUser: User,
+    updateUserDto: UpdateUserDto,
+  ) {
+    try {
+      const searchResponse = await lastValueFrom(
+        this.httpService.post(
+          'https://api.hubapi.com/crm/v3/objects/contacts/search',
+          {
+            filterGroups: [
+              {
+                filters: [
+                  {
+                    propertyName: 'email',
+                    value: authUser.email,
+                    operator: 'EQ',
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            headers: {
+              Authorization: `Bearer pat-na1-87736912-0583-4d74-bbb5-fca8b0e1126d`,
+            },
+          },
+        ),
+      );
+
+      const contactId = searchResponse.data.results[0];
+      if (contactId) {
+        await this.usersService.addUserContactId(authUser, contactId);
+        await this.updateHubspotContact(contactId.id, updateUserDto, authUser);
+      }
+    } catch (error) {
+      console.log('Error filtering user:', error.response?.data?.message);
+    }
+  }
+
+  private getContactProperties(authUser: User, updateUserDto: UpdateUserDto) {
+    return {
+      firstname: updateUserDto.firstName ?? '',
+      email: authUser.email,
+      phone: updateUserDto.phoneNumber ?? '',
+      lastname: updateUserDto.lastName ?? '',
+      jobtitle: updateUserDto.jobTitle ?? '',
+      date_of_birth: updateUserDto.dateOfBirth ?? '',
+      gender: updateUserDto.gender ?? '',
+    };
   }
 
   private calculateProfileCompletion(user: User): number {
@@ -471,5 +688,6 @@ export class UsersControllerV1 {
     private viewedVideosService: ViewedVideosListService,
     private notificationsService: NotificationsService,
     private subscriptionService: SubscriptionService,
+    private httpService: HttpService,
   ) {}
 }

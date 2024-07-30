@@ -10,6 +10,7 @@ import { EventNotificationsService } from './event-notifications.service';
 import { NotificationLogsModule } from 'src/notification-logs/notification-logs.module';
 import { SavedEventsModule } from 'src/saved-events/saved-events.module';
 import { UsersModule } from 'src/users/users.module';
+import { SubscriptionModule } from 'src/subscription/subscription.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UsersModule } from 'src/users/users.module';
     NotificationLogsModule,
     SavedEventsModule,
     UsersModule,
+    SubscriptionModule,
   ],
   controllers: [EventsControllerV1],
   providers: [

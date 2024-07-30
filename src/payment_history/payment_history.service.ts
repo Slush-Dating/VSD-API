@@ -56,59 +56,49 @@ export class PaymentHistoryService {
     filter: string,
   ): Promise<Pagination<any[]>> {
     const offset = options.page * options.limit - options.limit;
-    if (userId) {
-      let query = this.paymentHistoryRepo
-        .createQueryBuilder('p')
-        .where('u.id = :userId', { userId })
-        .addSelect(['u.id'])
-        .leftJoin('p.user', 'u')
-        .orderBy('p.createdAt', 'ASC');
 
-      if (filter) {
-        const consistentFilter = filter.toLowerCase();
-        if (
-          consistentFilter === 'completed' ||
-          consistentFilter === 'cancelled'
-        ) {
-          query = query.andWhere('LOWER(p.payment_status) = :status', {
-            status: consistentFilter,
-          });
-        } else {
-          const allowedValues = ['completed', 'cancelled'];
-          throw new BadRequestException(
-            `Invalid filter value. Allowed values: ${allowedValues.join(', ')}`,
-          );
-        }
-      }
+    let query = this.paymentHistoryRepo
+      .createQueryBuilder('p')
+      .leftJoin('p.user', 'u')
+      .where('u.id = :userId', { userId })
+      .addSelect(['u.id'])
+      .orderBy('p.createdAt', 'ASC');
 
-      console.log('query filter===', filter);
-
-      const { value: totalItems } = await query.connection
-        .createQueryBuilder()
-        .select('COUNT(*)', 'value')
-        .from(`(${query.getQuery()})`, 'uniqueTableAlias')
-        .setParameters(query.getParameters())
-        .getRawOne();
-
-      const items = await query
-        .offset(offset)
-        .limit(options.limit)
-        .getRawMany();
-
-      if (items) {
-        return createPaginationObject({
-          items,
-          totalItems: Number(totalItems),
-          limit: options.limit,
-          currentPage: options.page,
+    if (filter) {
+      const consistentFilter = filter.toLowerCase();
+      if (
+        consistentFilter === 'completed' ||
+        consistentFilter === 'cancelled'
+      ) {
+        query = query.andWhere('LOWER(p.payment_status) = :status', {
+          status: consistentFilter,
         });
       } else {
+        const allowedValues = ['completed', 'cancelled'];
         throw new BadRequestException(
-          'No participant record found for User ID:',
+          `Invalid filter value. Allowed values: ${allowedValues.join(', ')}`,
         );
       }
+    }
+
+    const { value: totalItems } = await query.connection
+      .createQueryBuilder()
+      .select('COUNT(*)', 'value')
+      .from(`(${query.getQuery()})`, 'uniqueTableAlias')
+      .setParameters(query.getParameters())
+      .getRawOne();
+
+    const items = await query.offset(offset).limit(options.limit).getRawMany();
+
+    if (items) {
+      return createPaginationObject({
+        items,
+        totalItems: Number(totalItems),
+        limit: options.limit,
+        currentPage: options.page,
+      });
     } else {
-      throw new BadRequestException('User not found with this email');
+      throw new BadRequestException('No participant record found for User ID:');
     }
   }
 

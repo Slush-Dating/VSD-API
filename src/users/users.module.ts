@@ -38,7 +38,7 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
     HttpModule,
     DeleteProfileModule,
     PackageDetailModule,
-    SubscriptionModule,
+    forwardRef(() => SubscriptionModule),
     SparkLikeModule,
     ViewedVideosModule,
     PaymentHistoryModule,

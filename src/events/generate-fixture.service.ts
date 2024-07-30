@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, UseGuards } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Fixture, FixtureStatus } from 'src/fixtures/fixture.entity';
 import { EventsService } from './events.service';
@@ -8,6 +8,7 @@ import { EventGenderEnum, EventStatusEnum } from './event.entity';
 import { Participant } from 'src/participants/participant.entity';
 import { groupBy, slice, some } from 'lodash';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { SubscriptionService } from 'src/subscription/subscription.service';
 
 @Injectable()
 export class GenerateFixturesService {
@@ -367,6 +368,7 @@ export class GenerateFixturesService {
   constructor(
     private eventsService: EventsService,
     private participantsService: ParticipantsService,
+    private subScriptionService: SubscriptionService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 }
