@@ -49,10 +49,10 @@ export class ProfilePicturesControllerV1 {
     return { data: user };
   }
 
-  @ApiOperation({ summary: 'Upload multiple profile picture link' })
+  @ApiOperation({ summary: 'Upload file' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FilesInterceptor('files'))
-  @Post('/batch/storeLink')
+  @Post('/batch/file-upload')
   public async storeManyLink(
     @AuthUser() authUser: User,
     @Body() batchUploadDto: BatchUploadDto,

@@ -161,7 +161,7 @@ export class ProfilePicturesService {
       const noOfPicturesCanUpload = ProfilePicture.MAX_PICTURES - 1;
 
       if (!files.length) {
-        throw new BadRequestException('No photos are uploaded');
+        throw new BadRequestException('No photos or videos are uploaded');
       }
 
       if (authUser.profilePictures.length >= ProfilePicture.MAX_PICTURES) {
@@ -183,7 +183,7 @@ export class ProfilePicturesService {
       }
 
       await Promise.all(
-        files.map((file) => this.appService.detectInAppropriateImage(file)),
+        files.map((file) => this.appService.detectInAppropriateFile(file)),
       );
 
       const filenames = await Promise.all(

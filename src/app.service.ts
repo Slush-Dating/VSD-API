@@ -5,7 +5,7 @@ import {
   Inject,
   Injectable,
   UnprocessableEntityException,
-  Logger
+  Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GenerateRtcTokenDto } from './dto/generate-rtc-token.dto';
@@ -47,11 +47,11 @@ export class AppService {
     // );
 
     return RtmTokenBuilder.buildToken(
-      appId, 
+      appId,
       appCertificate,
       data.account,
-      1440
-      );
+      1440,
+    );
   }
 
   /**
@@ -79,8 +79,8 @@ export class AppService {
       data.uid,
       RtcRole.PUBLISHER,
       moment().add(24, 'hours').unix(),
-      1440
-    )
+      1440,
+    );
     // return RtcTokenBuilder.buildTokenWithUserAccount(
     //   appId,
     //   appCertificate,
@@ -106,20 +106,22 @@ export class AppService {
             Bytes: file.buffer,
           },
           MinConfidence: 70,
-          
         })
         .promise();
 
-        this.logger.log({
-          level: 'info',
-          message: response,
-        });
+      this.logger.log({
+        level: 'info',
+        message: response,
+      });
 
       if (response.$response.httpResponse.statusCode !== HttpStatus.OK) {
         throw new BadRequestException('Failed to upload file.');
       }
 
-      if (response.ModerationLabels?.[0]?.Name === 'Explicit Nudity' || response.ModerationLabels?.[0]?.Name === 'Nudity') {
+      if (
+        response.ModerationLabels?.[0]?.Name === 'Explicit Nudity' ||
+        response.ModerationLabels?.[0]?.Name === 'Nudity'
+      ) {
         throw new BadRequestException(
           'File contains explicit content. Please provide a different one',
         );
@@ -146,26 +148,61 @@ export class AppService {
             Bytes: file.buffer,
           },
           MinConfidence: 70,
-          
         })
         .promise();
-        
 
-        this.logger.log({
-          level: 'info',
-          message: response,
-        });
+      this.logger.log({
+        level: 'info',
+        message: response,
+      });
 
       if (response.$response.httpResponse.statusCode !== HttpStatus.OK) {
         throw new BadRequestException('Failed to upload file.');
       }
 
-      if (response.ModerationLabels?.[0]?.Name === 'Explicit Nudity' || response.ModerationLabels?.[0]?.Name === 'Nudity') {
+      if (
+        response.ModerationLabels?.[0]?.Name === 'Explicit Nudity' ||
+        response.ModerationLabels?.[0]?.Name === 'Nudity'
+      ) {
         throw new BadRequestException(
           'File contains explicit content. Please provide a different one',
         );
       }
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new BadRequestException('Oops! Something went wrong');
+    }
+  }
+
+  public async detectInAppropriateFile(
+    file: Express.Multer.File,
+  ): Promise<void> {
+    this.logger.log({
+      level: 'info',
+      message: 'Detecting Inappropriate Content!',
+    });
+
+    try {
+      // Determine the file type
+      const fileType = file.mimetype.split('/')[0];
+
+      if (fileType === 'image') {
+        await this.detectInAppropriateImage(file);
+      } else if (fileType === 'video') {
+        // For video files, extract frames and moderate them
+        // await this.detectInAppropriateVideo(file);
+      } else {
+        throw new BadRequestException('Unsupported file type');
+      }
+    } catch (error) {
+      this.logger.error({
+        level: 'error',
+        message: `Error detecting inappropriate content: ${error.message}`,
+      });
+
+      // Throw a more specific error
       if (error instanceof HttpException) {
         throw error;
       }
