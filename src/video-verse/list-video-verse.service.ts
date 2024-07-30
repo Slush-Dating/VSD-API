@@ -26,6 +26,154 @@ import { ViewedVideos } from 'src/viewed_videos/viewed-videos.entity';
 export class ListVideoVerseService {
   private queryBuilder: SelectQueryBuilder<ProfileVideo>;
 
+  // public async getVideos(
+  //   authUser: User,
+  //   videoVerseDto: VideoVerseDto,
+  //   options: PaginationOptions,
+  // ) {
+  //   const offset = options.page * options.limit - options.limit;
+
+  //   if (authUser.hasUploadAtleastOneProfileVideo) {
+  //     throw new BadRequestException(
+  //       'Please upload at-least one profile video to access video-verse',
+  //     );
+  //   }
+
+  //   const queryBuilderOne = getManager()
+  //     .createQueryBuilder(ProfileVideoLike, 'pvl')
+  //     .select('pvl.to_id AS user_id')
+  //     .where('pvl.from_id = :authUserId', { authUserId: authUser.id })
+  //     .andWhere('pvl.status IN (:status)', {
+  //       status: [
+  //         ProfileVideoLikeStatusEnum.LIKED,
+  //         ProfileVideoLikeStatusEnum.DISLIKED,
+  //         ProfileVideoLikeStatusEnum.SPARKLIKE,
+  //       ],
+  //     });
+
+  //   const queryBuilderTwo = getManager()
+  //     .createQueryBuilder(Fixture, 'f')
+  //     .select('p2.user_id')
+  //     .innerJoin(Participant, 'p1', 'p1.id = f.first_participant_id')
+  //     .innerJoin(Participant, 'p2', 'p2.id = f.second_participant_id')
+  //     .where('p1.user_id = :authUserId', { authUserId: authUser.id })
+  //     .andWhere('f.status IN (:status)', {
+  //       status: [
+  //         FixtureStatus.LIKED,
+  //         FixtureStatus.DISLIKED,
+  //         FixtureStatus.SPARKLIKE,
+  //       ],
+  //     });
+
+  //   const [queryOne, parametersOne] = queryBuilderOne.getQueryAndParameters();
+  //   const [queryTwo, parametersTwo] = queryBuilderTwo.getQueryAndParameters();
+
+  //   const likedUsersResult: { user_id: number }[] = await getManager().query(
+  //     `
+  //   SELECT * FROM (
+  //       ( ${queryOne} ) UNION ( ${queryTwo} )
+  //   ) temp
+  //   GROUP BY user_id
+  //   `,
+  //     [...parametersOne, ...parametersTwo],
+  //   );
+
+  //   const likedUsers = [authUser.id, ...likedUsersResult.map((o) => o.user_id)];
+  //   const viewedVideoIds = await getManager()
+  //     .createQueryBuilder(ViewedVideos, 'vv')
+  //     .addSelect(['p.id'])
+  //     .where('vv.user_id = :userId', { userId: authUser.id })
+  //     .leftJoin('vv.profileVideo', 'p')
+  //     .getMany()
+  //     .then((viewedVideos) =>
+  //       viewedVideos.map((video) => video.profileVideo.id),
+  //     );
+
+  //   this.queryBuilder = this.repository
+  //     .createQueryBuilder('pv')
+  //     .select([
+  //       'pv.id',
+  //       'pv.key AS video',
+  //       'pv.user_id',
+  //       'u.date_of_birth',
+  //       'u.jobTitle',
+  //       'u.bio',
+  //       'u.address',
+  //       'u.height',
+  //       'u.country',
+  //       'u.gender',
+  //       'u.isVerified',
+  //     ])
+  //     .addSelect('CONCAT(u.first_name, " ", u.last_name) AS fullName')
+  //     .addSelect('CONCAT(u.first_name, "") AS nickName')
+  //     .addSelect(
+  //       `( 3959 * acos( cos( radians(:latitude) ) * cos( radians( u.latitude ) ) * cos( radians( u.longitude ) - radians(:longitude) ) + sin( radians(:latitude) ) * sin(radians(u.latitude)) ) )`,
+  //       'distance',
+  //     )
+  //     .addSelect((qb) => {
+  //       return qb
+  //         .select('COUNT(*)', 'aggregate')
+  //         .from(ProfileVideoLike, 'pvl')
+  //         .where('pvl.from = pv.user_id')
+  //         .andWhere('pvl.status = :status', {
+  //           status: ProfileVideoLikeStatusEnum.LIKED,
+  //         });
+  //     }, 'hasLiked')
+  //     .addSelect((qb) => {
+  //       return qb
+  //         .select('pp.key')
+  //         .from(ProfilePicture, 'pp')
+  //         .where('pp.user_id = pv.user_id')
+  //         .orderBy('id', 'ASC')
+  //         .limit(1);
+  //     }, 'avatar')
+  //     .innerJoin(User, 'u', 'pv.user_id = u.id')
+  //     .where('pv.is_primary = :isPrimary', { isPrimary: true })
+  //     .where('pv.id NOT IN (:...viewedVideoIds)', {
+  //       viewedVideoIds: viewedVideoIds.length > 0 ? viewedVideoIds : [-1],
+  //     })
+  //     .andWhere('u.deactivatedAt IS NULL')
+  //     .setParameters({
+  //       latitude: videoVerseDto.latitude,
+  //       longitude: videoVerseDto.longitude,
+  //     });
+
+  //   this.age(videoVerseDto.minAge, videoVerseDto.maxAge)
+  //     .gender(videoVerseDto.gender)
+  //     .sexuality(authUser.allowedGenders)
+  //     .excludeUsers(likedUsers)
+  //     .distance(
+  //       videoVerseDto.distance,
+  //       videoVerseDto.latitude,
+  //       videoVerseDto.longitude,
+  //     );
+
+  //   // count records
+  //   const { value: totalItems } = await this.queryBuilder.connection
+  //     .createQueryBuilder()
+  //     .select('COUNT(*)', 'value')
+  //     .from(`(${this.queryBuilder.getQuery()})`, 'uniqueTableAlias')
+  //     .setParameters(this.queryBuilder.getParameters())
+  //     .getRawOne();
+
+  //   // fetch records
+  //   let items = await this.queryBuilder
+  //     .offset(offset)
+  //     .limit(options.limit)
+  //     .getRawMany();
+
+  //   items = removeAliasFromList(items, ['pv_', 'u_']);
+
+  //   return createPaginationObject({
+  //     items: plainToInstance(VideoVerseListDto, items, {
+  //       excludeExtraneousValues: true,
+  //     }),
+  //     totalItems: Number(totalItems),
+  //     limit: options.limit,
+  //     currentPage: options.page,
+  //   });
+  // }
+
   public async getVideos(
     authUser: User,
     videoVerseDto: VideoVerseDto,
@@ -70,11 +218,11 @@ export class ListVideoVerseService {
 
     const likedUsersResult: { user_id: number }[] = await getManager().query(
       `
-    SELECT * FROM (
-        ( ${queryOne} ) UNION ( ${queryTwo} )
-    ) temp
-    GROUP BY user_id
-    `,
+      SELECT * FROM (
+          ( ${queryOne} ) UNION ( ${queryTwo} )
+      ) temp
+      GROUP BY user_id
+      `,
       [...parametersOne, ...parametersTwo],
     );
 
@@ -129,7 +277,7 @@ export class ListVideoVerseService {
       }, 'avatar')
       .innerJoin(User, 'u', 'pv.user_id = u.id')
       .where('pv.is_primary = :isPrimary', { isPrimary: true })
-      .where('pv.id NOT IN (:...viewedVideoIds)', {
+      .andWhere('pv.id NOT IN (:...viewedVideoIds)', {
         viewedVideoIds: viewedVideoIds.length > 0 ? viewedVideoIds : [-1],
       })
       .andWhere('u.deactivatedAt IS NULL')
@@ -137,6 +285,13 @@ export class ListVideoVerseService {
         latitude: videoVerseDto.latitude,
         longitude: videoVerseDto.longitude,
       });
+
+    // Add isVerified filter
+    if (videoVerseDto.isVerified) {
+      this.queryBuilder.andWhere('u.isVerified = :isVerified', {
+        isVerified: true,
+      });
+    }
 
     this.age(videoVerseDto.minAge, videoVerseDto.maxAge)
       .gender(videoVerseDto.gender)

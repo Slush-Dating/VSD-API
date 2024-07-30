@@ -155,32 +155,32 @@ export class ProfilePicturesService {
   ): Promise<string[]> {
     // Change return type to an array of strings
     try {
-      const slotsRemaining =
-        ProfilePicture.MAX_PICTURES - authUser.profilePictures.length;
+      // const slotsRemaining =
+      //   ProfilePicture.MAX_PICTURES - authUser.profilePictures.length;
 
-      const noOfPicturesCanUpload = ProfilePicture.MAX_PICTURES - 1;
+      // const noOfPicturesCanUpload = ProfilePicture.MAX_PICTURES - 1;
 
       if (!files.length) {
         throw new BadRequestException('No photos or videos are uploaded');
       }
 
-      if (authUser.profilePictures.length >= ProfilePicture.MAX_PICTURES) {
-        throw new BadRequestException(
-          `You've already added ${ProfilePicture.MAX_PICTURES} photos. You cannot add more unless you delete some photos`,
-        );
-      }
+      // if (authUser.profilePictures.length >= ProfilePicture.MAX_PICTURES) {
+      //   throw new BadRequestException(
+      //     `You've already added ${ProfilePicture.MAX_PICTURES} photos. You cannot add more unless you delete some photos`,
+      //   );
+      // }
 
-      if (files.length > noOfPicturesCanUpload) {
-        throw new BadRequestException(
-          `You cannot upload more than ${ProfilePicture.MAX_PICTURES} photos`,
-        );
-      }
+      // if (files.length > noOfPicturesCanUpload) {
+      //   throw new BadRequestException(
+      //     `You cannot upload more than ${ProfilePicture.MAX_PICTURES} photos`,
+      //   );
+      // }
 
-      if (files.length > slotsRemaining) {
-        throw new BadRequestException(
-          `You can only add ${slotsRemaining} more photos. Whereas, your request contains ${files.length} photos`,
-        );
-      }
+      // if (files.length > slotsRemaining) {
+      //   throw new BadRequestException(
+      //     `You can only add ${slotsRemaining} more photos. Whereas, your request contains ${files.length} photos`,
+      //   );
+      // }
 
       await Promise.all(
         files.map((file) => this.appService.detectInAppropriateFile(file)),
