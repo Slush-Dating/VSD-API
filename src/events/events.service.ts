@@ -654,14 +654,13 @@ export class EventsService {
     console.log('Checking if events are ready');
 
     const event = await this.getEventById();
-
     try {
-      const currentDate = moment.utc().format('YYYY-MM-DD H:mm:ss');
+      const currentDate = moment.utc();
       console.log(currentDate);
       return await this.eventRepo.query(
         `SELECT e.*
         FROM events e
-        WHERE TIMESTAMPADD(MINUTE, 15, CURRENT_TIMESTAMP) > e.starts_at
+        WHERE TIMESTAMPADD(MINUTE, 1, CURRENT_TIMESTAMP) > e.starts_at
         AND e.status = ?`,
         [EventStatusEnum.NOT_YET_STARTED],
       );
@@ -723,7 +722,7 @@ export class EventsService {
    */
 
   async getEventById(): Promise<Event> {
-    const event = await this.eventRepo.findOne({ where: { id: 1001 } });
+    const event = await this.eventRepo.findOne({ where: { id: 1013 } });
     return event;
   }
 
