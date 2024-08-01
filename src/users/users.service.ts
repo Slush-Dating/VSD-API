@@ -832,6 +832,52 @@ export class UsersService {
     }
   }
 
+  public async getManyUserNoSubscription(data: {
+    ids: string[] | number[];
+    options?: IPaginationOptions;
+    alias?: string;
+    select?: string[];
+  }) {
+    try {
+      const ids = data.ids || [1];
+
+      const idMap = new Map<number | string, number>();
+      ids.forEach((id, index) => {
+        idMap.set(id, index);
+      });
+
+      const queryBuilder = this.repository
+        .createQueryBuilder(data.alias || 'u')
+        .leftJoinAndSelect('u.profilePictures', 'pp')
+        .where('u.deactivatedAt IS NULL')
+        .andWhere('u.id IN (:...ids)', { ids });
+
+      queryBuilder.select(['u.id', 'pp.key']);
+
+      const totalItems = await queryBuilder.getCount();
+
+      const users = await paginate<User>(queryBuilder, {
+        ...data.options,
+        paginationType: PaginationTypeEnum.TAKE_AND_SKIP,
+        metaTransformer: ({ currentPage, itemCount, itemsPerPage }) => {
+          const totalPages = Math.round(totalItems / itemsPerPage);
+          return {
+            currentPage,
+            itemCount,
+            itemsPerPage,
+            totalItems,
+            totalPages: totalPages === 0 ? 1 : totalPages,
+          };
+        },
+      });
+
+      users.items.sort((a, b) => idMap.get(a.id) - idMap.get(b.id));
+      return users;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   /**
    * Delete user
    */

@@ -149,6 +149,128 @@ export class FixturesService {
     }
   }
 
+  public async getUsersWhoLikedMeNoSubscription(
+    authUserId: number,
+    options: IPaginationOptions,
+    eventId?: number | string,
+  ): Promise<Pagination<User, IPaginationMeta>> {
+    let matchedUsersIds = await this.getMatchedUsersIds(authUserId, eventId);
+    matchedUsersIds = matchedUsersIds.length ? matchedUsersIds : [0];
+
+    const fixtureUserHasDislikeSubQuery = getManager()
+      .createQueryBuilder(Fixture, 'f2')
+      .select('COUNT(*)')
+      .innerJoin(Participant, 'fp2', 'fp2.id = f2.first_participant_id')
+      .innerJoin(Participant, 'sp2', 'sp2.id = f2.second_participant_id')
+      .where('f2.status = :dislike', {
+        dislike: FixtureStatus.DISLIKED,
+      })
+      .andWhere('f2.first_participant_id = f.second_participant_id')
+      .andWhere('f2.second_participant_id = f.first_participant_id');
+
+    const fixtureUserLikesQuery = this.fixtureRepo
+      .createQueryBuilder('f')
+      .select(['fp.user_id', 'f.updated_at'])
+      .innerJoin(Participant, 'fp', 'fp.id = f.first_participant_id')
+      .innerJoin(Participant, 'sp', 'sp.id = f.second_participant_id')
+      .where('f.status = :liked', { liked: FixtureStatus.LIKED })
+      .andWhere('sp.user_id = :authUserId', { authUserId })
+      .andWhere(
+        `(${fixtureUserHasDislikeSubQuery.getQuery()}) = 0`,
+        fixtureUserHasDislikeSubQuery.getParameters(),
+      );
+
+    if (eventId) {
+      fixtureUserHasDislikeSubQuery.andWhere(
+        new Brackets((qb) => {
+          return qb
+            .where('fp2.event_id = :eventId', { eventId })
+            .orWhere('sp2.event_id = :eventId', { eventId });
+        }),
+      );
+      fixtureUserLikesQuery.andWhere(
+        new Brackets((qb) => {
+          return qb
+            .where('fp.event_id = :eventId', { eventId })
+            .orWhere('sp.event_id = :eventId', { eventId });
+        }),
+      );
+
+      const [queryOne, parametersOne] =
+        fixtureUserLikesQuery.getQueryAndParameters();
+
+      const users: { user_id: number }[] = await getManager().query(
+        `SELECT user_id FROM (
+            ( ${queryOne} )
+        ) d3
+        WHERE user_id NOT IN (?)
+        GROUP BY user_id, updated_at
+        ORDER BY updated_at DESC`,
+        [...parametersOne, matchedUsersIds],
+      );
+
+      if (!users.length) {
+        return defaultPaginationPayload(options);
+      }
+
+      return this.usersService.getManyUser({
+        ids: users.map((u) => String(u.user_id)),
+        options,
+      });
+    }
+
+    const profileVideoHasDislikeSubQuery = getManager()
+      .createQueryBuilder(ProfileVideoLike, 'pvl_1')
+      .select('COUNT(*)')
+      .where('pvl_1.status = :disliked', {
+        disliked: ProfileVideoLikeStatusEnum.DISLIKED,
+      })
+      .andWhere('pvl_1.from_id = pvl.to_id')
+      .andWhere('pvl_1.to_id = pvl.from_id');
+
+    const profileVideoUserLikesQuery = getManager()
+      .createQueryBuilder(ProfileVideoLike, 'pvl')
+      .select(['pvl.from_id AS user_id', 'pvl.updated_at'])
+      .where('pvl.to_id = :authUserId', { authUserId })
+      .andWhere('pvl.status = :liked', {
+        liked: ProfileVideoLikeStatusEnum.LIKED,
+      })
+      .andWhere(
+        `(${profileVideoHasDislikeSubQuery.getQuery()}) = 0`,
+        profileVideoHasDislikeSubQuery.getParameters(),
+      );
+
+    const [queryOne, parametersOne] =
+      fixtureUserLikesQuery.getQueryAndParameters();
+
+    const [queryTwo, parametersTwo] =
+      profileVideoUserLikesQuery.getQueryAndParameters();
+
+    const users: { user_id: number }[] = await getManager().query(
+      `SELECT user_id FROM (
+            ( ${queryOne} )
+            UNION
+            ( ${queryTwo} )
+        ) d3
+        WHERE user_id NOT IN (?)
+        GROUP BY user_id, updated_at
+        ORDER BY updated_at DESC`,
+      [...parametersOne, ...parametersTwo, matchedUsersIds],
+    );
+
+    if (!users.length) {
+      return defaultPaginationPayload(options);
+    }
+
+    try {
+      return await this.usersService.getManyUserNoSubscription({
+        ids: users.map((u) => String(u.user_id)),
+        options,
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
   /**
    * Get users who liked me and I liked him/her as well
    */
