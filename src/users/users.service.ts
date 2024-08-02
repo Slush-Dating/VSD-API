@@ -1065,6 +1065,35 @@ export class UsersService {
     await this.paymentHistoryService.addPaymentHistory(findUser, findPackage);
   }
 
+  async updateSubscription(
+    user: User,
+    packageId: number,
+    findSubscription: any,
+  ): Promise<any> {
+    const findUser = await this.repository.findOne(user.id);
+
+    await this.repository.update(findUser.id, {
+      isSubscriptionPurchased: SubscriptionPurchased.Yes,
+    });
+
+    const findPackage = await this.packagedetailService.findPackageById(
+      packageId,
+    );
+
+    if (!findPackage) throw new BadRequestException('Package not found');
+
+    if (!findUser) {
+      throw new BadRequestException('User not found');
+    }
+
+    await this.subscriptionservice.updateSubscription(
+      findUser,
+      findPackage,
+      findSubscription,
+    );
+    await this.paymentHistoryService.addPaymentHistory(findUser, findPackage);
+  }
+
   async purchaseSpark(user: User, spark_value: number) {
     const findUser = await this.repository.findOne(user.id);
 

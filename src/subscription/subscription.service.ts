@@ -11,6 +11,7 @@ import { Pacakagedetail } from 'src/package-details/package-detail.entity';
 import { User } from 'src/users/user.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { UsersService } from 'src/users/users.service';
+import { CancelSubscriptionDto } from './cancelsubscription.dto';
 
 @Injectable()
 export class SubscriptionService {
@@ -75,6 +76,44 @@ export class SubscriptionService {
     });
 
     await this.subscriptionRepo.save(subscriber);
+  }
+
+  async updateSubscription(
+    user: User,
+    package_detail: Pacakagedetail,
+    findSubscription: any,
+  ) {
+    const currentDate = new Date();
+    await this.subscriptionRepo.update(findSubscription.id, {
+      endsAt: currentDate,
+    });
+    const startTime = new Date();
+    const endTime = new Date(
+      startTime.getTime() +
+        package_detail.duration_of_plan * 24 * 60 * 60 * 1000,
+    );
+
+    const subscriber = this.subscriptionRepo.create({
+      user: user,
+      package: package_detail,
+      startsAt: startTime,
+      endsAt: endTime,
+    });
+
+    await this.subscriptionRepo.save(subscriber);
+  }
+
+  async cancelSubscripton(
+    user: User,
+    subscriptionDetail: any,
+    cancelSunscriptionDto: CancelSubscriptionDto,
+  ) {
+    const currentDate = new Date();
+    // console.log(subscriptionDetail);
+    await this.subscriptionRepo.update(subscriptionDetail.id, {
+      endsAt: currentDate,
+      remark: cancelSunscriptionDto.remark,
+    });
   }
 
   async getSubscriptionDetail(user: User) {

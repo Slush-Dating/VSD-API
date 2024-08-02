@@ -48,4 +48,12 @@ export class SubScription extends BaseEntity {
   @IsNotEmpty()
   @Column({ type: 'datetime' })
   endsAt: Date;
+
+  /**
+   * @example reason for cancel
+   */
+  @Expose()
+  @IsNotEmpty()
+  @Column({ nullable: true })
+  remark: string;
 }

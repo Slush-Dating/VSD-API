@@ -53,6 +53,7 @@ import { NotificationsService } from 'src/notifications/notifications.service';
 import { SubscriptionService } from 'src/subscription/subscription.service';
 import { lastValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
+import { CancelSubscriptionDto } from 'src/subscription/cancelsubscription.dto';
 @Controller({
   path: 'users',
   version: '1',
@@ -585,6 +586,56 @@ export class UsersControllerV1 {
 
     await this.usersService.subscribeUser(authUser, packageId);
     return { message: 'Subscription purchased  successfully' };
+  }
+
+  @Post('cancel-subscription')
+  @ApiOperation({ summary: 'Cancel Subscription' })
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(AnyFilesInterceptor())
+  public async cancelSubsciption(
+    @AuthUser() authUser: User,
+    @Body() cancelSunscriptionDto: CancelSubscriptionDto,
+  ): Promise<any> {
+    const findSubscription =
+      await this.subscriptionService.getSubscriptionDetail(authUser);
+    if (!findSubscription) {
+      return { message: 'No subscription found with this id' };
+    }
+    await this.subscriptionService.cancelSubscripton(
+      authUser,
+      findSubscription,
+      cancelSunscriptionDto,
+    );
+    return { message: 'Cancel subscription successfully' };
+  }
+
+  @Post('update-subscription')
+  @ApiOperation({ summary: 'Update Subscription' })
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(AnyFilesInterceptor())
+  public async updateSubsciption(
+    @AuthUser() authUser: User,
+    @Body() subscriptionDto: SubscriptionDto,
+  ): Promise<any> {
+    const packageId = parseInt(subscriptionDto.packageId as any);
+
+    if (isNaN(packageId)) {
+      throw new BadRequestException(`Invalid Package ID`);
+    }
+
+    const findSubscription =
+      await this.subscriptionService.getSubscriptionDetail(authUser);
+    // if (!findSubscription) {
+    //   return { message: 'No subscription found with this id' };
+    // }
+    await this.usersService.updateSubscription(
+      authUser,
+      packageId,
+      findSubscription,
+    );
+    return { message: 'Subscription updated successfully' };
   }
 
   @Post('spark-purchase')
