@@ -55,16 +55,28 @@ export class ProfileVideoLikesService {
         }),
       );
       if (
-        newEntity &&
-        oppositeEntity &&
-        newEntity.status === 'LIKED' &&
-        oppositeEntity.status === 'LIKED'
+        (newEntity &&
+          oppositeEntity &&
+          newEntity.status === 'LIKED' &&
+          oppositeEntity.status === 'LIKED') ||
+        (newEntity &&
+          oppositeEntity &&
+          newEntity.status === 'SPARK LIKE' &&
+          oppositeEntity.status === 'SPARK LIKE')
       ) {
-        await this.notificationService.createMatchNotification(authUser, user);
+        await this.notificationService.createMatchNotification(
+          authUser,
+          user,
+          interactDto.status,
+        );
         this.sendNotification('match', newEntity.status, authUser, user.id);
         return true;
       } else {
-        await this.notificationService.createLikesNotification(authUser, user);
+        await this.notificationService.createLikesNotification(
+          authUser,
+          user,
+          interactDto.status,
+        );
         // this.sendNotification("video-liked", newEntity.status, authUser, user.id);
       }
 
@@ -73,12 +85,20 @@ export class ProfileVideoLikesService {
       entity.status = interactDto.status;
       await this.repository.save(entity);
       if (
-        entity &&
-        oppositeEntity &&
-        entity.status === 'LIKED' &&
-        oppositeEntity.status === 'LIKED'
+        (entity &&
+          oppositeEntity &&
+          entity.status === 'LIKED' &&
+          oppositeEntity.status === 'LIKED') ||
+        (entity &&
+          oppositeEntity &&
+          entity.status === 'SPARK LIKE' &&
+          oppositeEntity.status === 'SPARK LIKE')
       ) {
-        await this.notificationService.createMatchNotification(authUser, user);
+        await this.notificationService.createMatchNotification(
+          authUser,
+          user,
+          interactDto.status,
+        );
         this.sendNotification('match', entity.status, authUser, user.id);
         return true;
       } else {

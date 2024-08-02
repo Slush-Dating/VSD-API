@@ -36,7 +36,7 @@ export class NotificationsService {
     return !!existingNotification;
   }
 
-  async createLikesNotification(fromUser: User, toUser: User) {
+  async createLikesNotification(fromUser: User, toUser: User, status: string) {
     const exists = await this.notificationExists(
       fromUser,
       toUser,
@@ -44,6 +44,18 @@ export class NotificationsService {
     );
     if (exists) {
       return; // Do not create a new notification if it already exists
+    }
+    if (status === 'SPARK LIKE') {
+      return await this.notificationsRepo.save(
+        this.notificationsRepo.create({
+          notification_type: NotificationType.LIKES,
+          notification_title: `${fromUser.firstName} has spark liked you`,
+          notification_description: `Would you match now ?`,
+          actions: 'Like, Dislike, Spark Like',
+          fromUser: fromUser,
+          toUser,
+        }),
+      );
     }
     return await this.notificationsRepo.save(
       this.notificationsRepo.create({
@@ -57,7 +69,7 @@ export class NotificationsService {
     );
   }
 
-  async createMatchNotification(fromUser: User, toUser: User) {
+  async createMatchNotification(fromUser: User, toUser: User, status: string) {
     const exists = await this.notificationExists(
       fromUser,
       toUser,
