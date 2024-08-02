@@ -93,7 +93,6 @@ export class ChatsControllerV1 {
     required: true,
     description: 'The id of the user',
   })
-  @ApiPaginationQuery()
   @Get(':user/deleteconversation')
   async deleteUserConversation(
     @AuthUser() authUser: User,
