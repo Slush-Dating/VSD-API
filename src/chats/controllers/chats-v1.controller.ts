@@ -86,5 +86,22 @@ export class ChatsControllerV1 {
     };
   }
 
+  @ApiOperation({ summary: 'Delete user conversation' })
+  @ApiParam({
+    name: 'user',
+    type: 'string',
+    required: true,
+    description: 'The id of the user',
+  })
+  @ApiPaginationQuery()
+  @Get(':user/deleteconversation')
+  async deleteUserConversation(
+    @AuthUser() authUser: User,
+    @Param('user', ValidatePathUserPipe) user: any,
+  ) {
+    await this.chatsService.deleteConversation(authUser, user);
+    return { message: 'deleted successfully' };
+  }
+
   constructor(private chatsService: ChatsService) {}
 }

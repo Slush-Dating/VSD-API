@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToClass } from 'class-transformer';
 import { getMessaging } from 'firebase-admin/messaging';
@@ -78,10 +78,10 @@ export class ChatsService {
           data: {
             senderId: data.from.toString(),
             type: NOTIFICATION.PRIVATE_MESSAGE,
-            category:'chat',
+            category: 'chat',
             title: sender.fullName,
             message: data.content,
-            notificationCount:"1",
+            notificationCount: '1',
           },
           apns: {
             payload: {
@@ -90,15 +90,15 @@ export class ChatsService {
                   title: sender.fullName,
                   body: data.content,
                 },
-                category:'chat',
-                badge:1,
-                sound:"default",
-                contentAvailable:true
-               },
+                category: 'chat',
+                badge: 1,
+                sound: 'default',
+                contentAvailable: true,
               },
             },
-            tokens:receiver.rawFcmTokens,
-          });
+          },
+          tokens: receiver.rawFcmTokens,
+        });
       }
 
       return {
@@ -189,7 +189,7 @@ export class ChatsService {
    */
   async getConversations(
     authUser: User,
-    options: IPaginationOptions,
+    options?: IPaginationOptions,
     search?: string,
   ): Promise<Pagination<ChatConversationListDto>> {
     try {
@@ -311,6 +311,27 @@ export class ChatsService {
     } catch (error) {
       throw error;
     }
+  }
+
+  // delete chat
+
+  async deleteConversation(authUser: User, user: any) {
+    console.log(user);
+
+    const queryBuilder = this.chatRepository
+      .createQueryBuilder('c')
+      .leftJoin('c.receiver', 'cr')
+      .leftJoin('c.sender', 'cs')
+      .where('cr.id = :userid', { userid: user.id })
+      .orWhere('cs.id = :userid', { userid: user.id });
+
+    const chats = await queryBuilder.getMany();
+    // const chatsId = chats.map((i) => i.id);
+
+    console.log(chats);
+
+    // console.log(await queryBuilder.getMany());
+    await this.chatRepository.remove(chats);
   }
 
   /**
