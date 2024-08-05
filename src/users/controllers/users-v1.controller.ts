@@ -454,11 +454,13 @@ export class UsersControllerV1 {
     @Param('user', ParseIntPipe) user: number,
     @Body() matchUnmatchDto: MatchUnmatchDto,
   ) {
-    await this.usersService.matchUnmatchUser(
+    const match = await this.usersService.matchUnmatchUser(
       authUser,
       user,
       matchUnmatchDto.action,
     );
+
+    console.log(match);
     console.log('USER ACTION ====' + matchUnmatchDto.action);
     if (matchUnmatchDto.action == 'LIKED') {
       const receiver = await this.usersService.findOneByAttribute({
@@ -493,7 +495,7 @@ export class UsersControllerV1 {
         });
       }
     }
-    return { message: 'Success!' };
+    return { message: 'Success!', isMatch: match };
   }
 
   @Patch('interests')

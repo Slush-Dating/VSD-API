@@ -147,14 +147,24 @@ export class UsersService {
           action,
           authUser.id,
           userId,
-          [FixtureStatus.JOINED, FixtureStatus.LIKED, FixtureStatus.DISLIKED],
+          [
+            FixtureStatus.JOINED,
+            FixtureStatus.LIKED,
+            FixtureStatus.DISLIKED,
+            FixtureStatus.SPARKLIKE,
+          ],
         ],
       );
 
-      await this.profileVideoLikeService.interactWithUser(authUser, {
-        status: action as unknown as ProfileVideoLikeStatusEnum,
-        user: userId,
-      } as InteractDto);
+      const match = await this.profileVideoLikeService.interactWithUser(
+        authUser,
+        {
+          status: action as unknown as ProfileVideoLikeStatusEnum,
+          user: userId,
+        } as InteractDto,
+      );
+
+      return match;
     } catch (error) {
       throw error;
     }

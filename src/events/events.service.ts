@@ -432,6 +432,8 @@ export class EventsService {
         .orderBy('e.startsAt', 'ASC')
         .groupBy('e.id');
 
+      console.log('filter event', getEventDto);
+
       this.filterByEventTimeline(getEventDto, queryBuilder, authUser);
 
       if (getEventDto.category_id) {
@@ -777,12 +779,7 @@ export class EventsService {
           currentDate: moment.utc().format('YYYY-MM-DD H:mm:ss'),
         });
     } else {
-      this.filterByAge(authUser.age, queryBuilder);
-
-      this.filterByGender(authUser, queryBuilder);
-
-      this.filterByDate(getEventDto.date, queryBuilder);
-
+      console.log('here', authUser.age);
       this.filterByDistance(
         queryBuilder,
         authUser,
@@ -790,6 +787,11 @@ export class EventsService {
         getEventDto.latitude,
         getEventDto.longitude,
       );
+      this.filterByAge(authUser.age, queryBuilder);
+
+      this.filterByGender(authUser, queryBuilder);
+
+      this.filterByDate(getEventDto.date, queryBuilder);
 
       queryBuilder.andWhere('e.startsAt > :currentDate', {
         currentDate: moment.utc().format('YYYY-MM-DD H:mm:ss'),
@@ -831,13 +833,14 @@ export class EventsService {
     }
   }
 
-  private filterByDistance(
+  private async filterByDistance(
     queryBuilder: SelectQueryBuilder<Event>,
     authUser: User,
     distance = 500,
     latitude: string,
     longitude: string,
-  ): void {
+  ): Promise<void> {
+    console.log(await queryBuilder.getMany());
     console.log(latitude);
     console.log(longitude);
 
