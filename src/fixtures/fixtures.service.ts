@@ -310,6 +310,7 @@ export class FixturesService {
         'f.reportReason AS reportReason',
         'spu.firstName AS firstName',
         'spu.lastName AS lastName',
+        'spu.bio AS bio',
         'spu.date_of_birth AS date_of_birth',
       ])
       .leftJoin('f.firstParticipant', 'fp')
@@ -329,8 +330,6 @@ export class FixturesService {
       })
       .getRawMany();
 
-    console.log(data);
-
     // return plainToClass(UserFixtureListDto, data, {
     return plainToInstance(UserFixtureListDto, data, {
       excludeExtraneousValues: true,
@@ -346,7 +345,7 @@ export class FixturesService {
     eventId: number,
     data: UpdateFixtureStatusDto,
   ) {
-    await this.usersService.addReminderForLikedtab(authUser);
+    await this.usersService.addReminderForLikedtabForLike(authUser);
     try {
       const fixture = await this.findFixtureOrFail(
         eventId,

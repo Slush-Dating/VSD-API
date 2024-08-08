@@ -263,8 +263,12 @@ export class ListVideoVerseService {
           .select('COUNT(*)', 'aggregate')
           .from(ProfileVideoLike, 'pvl')
           .where('pvl.from = pv.user_id')
-          .andWhere('pvl.status = :status', {
-            status: ProfileVideoLikeStatusEnum.LIKED,
+          .andWhere('pvl.from = :userId', { userId: authUser.id })
+          .andWhere('pvl.status IN (:statuses)', {
+            statuses: [
+              ProfileVideoLikeStatusEnum.LIKED,
+              ProfileVideoLikeStatusEnum.SPARKLIKE,
+            ],
           });
       }, 'hasLiked')
       .addSelect((qb) => {

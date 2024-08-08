@@ -90,7 +90,19 @@ export class UsersService {
     }
   }
 
-  public async addReminderForLikedtab(user: User): Promise<any> {
+  public async addReminderForLikedtabForMatch(
+    user: User,
+    anotheruser: User,
+  ): Promise<any> {
+    await this.repository.update(user.id, {
+      isLikedTabUpdate: true,
+    });
+    await this.repository.update(anotheruser.id, {
+      isLikedTabUpdate: true,
+    });
+  }
+
+  public async addReminderForLikedtabForLike(user: User): Promise<any> {
     await this.repository.update(user.id, {
       isLikedTabUpdate: true,
     });

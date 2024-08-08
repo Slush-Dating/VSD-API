@@ -34,7 +34,7 @@ export class SparkLikeService {
     });
 
     if (!findSpark) {
-      throw new BadRequestException('User not found');
+      throw new BadRequestException('Please purchase spark like');
     }
 
     await this.sparkLikeRepo.update(findSpark.id, {

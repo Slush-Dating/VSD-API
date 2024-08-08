@@ -26,7 +26,6 @@ export class ProfileVideoLikesService {
       throw new BadRequestException('You cannot like yourself!');
     }
 
-    await this.usersService.addReminderForLikedtab(authUser);
     // spark count -1
     if (interactDto.status === ProfileVideoLikeStatusEnum.SPARKLIKE) {
       await this.sparkLikeService.removeSparkLike(authUser.id);
@@ -70,6 +69,7 @@ export class ProfileVideoLikesService {
           interactDto.status,
         );
         this.sendNotification('match', newEntity.status, authUser, user.id);
+        await this.usersService.addReminderForLikedtabForMatch(authUser, user);
         return true;
       } else {
         await this.notificationService.createLikesNotification(
@@ -77,6 +77,7 @@ export class ProfileVideoLikesService {
           user,
           interactDto.status,
         );
+        await this.usersService.addReminderForLikedtabForLike(user);
         // this.sendNotification("video-liked", newEntity.status, authUser, user.id);
       }
 
@@ -100,6 +101,7 @@ export class ProfileVideoLikesService {
           interactDto.status,
         );
         this.sendNotification('match', entity.status, authUser, user.id);
+        await this.usersService.addReminderForLikedtabForMatch(authUser, user);
         return true;
       } else {
         // this.sendNotification("video-liked", entity.status, authUser, user.id);
