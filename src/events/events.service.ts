@@ -432,8 +432,6 @@ export class EventsService {
         .orderBy('e.startsAt', 'ASC')
         .groupBy('e.id');
 
-      console.log('filter event', getEventDto);
-
       this.filterByEventTimeline(getEventDto, queryBuilder, authUser);
 
       if (getEventDto.category_id) {
@@ -759,7 +757,7 @@ export class EventsService {
   ): void {
     const isMyEvent = getEventDto.events === EventTypeEnum.MY_EVENTS;
     const isPopularEvent = getEventDto.events === EventTypeEnum.POPULAR_EVENTS;
-    console.log('GET EVENT DTO', getEventDto);
+
     if (isMyEvent) {
       queryBuilder
         .where('p.user = :user', {
@@ -779,15 +777,16 @@ export class EventsService {
           currentDate: moment.utc().format('YYYY-MM-DD H:mm:ss'),
         });
     } else {
-      console.log('here', authUser.age);
-      this.filterByDistance(
-        queryBuilder,
-        authUser,
-        getEventDto.distance,
-        getEventDto.latitude,
-        getEventDto.longitude,
-      );
-      this.filterByAge(authUser.age, queryBuilder);
+      if (getEventDto.latitude && getEventDto.longitude) {
+        this.filterByDistance(
+          queryBuilder,
+          authUser,
+          getEventDto.distance,
+          getEventDto.latitude,
+          getEventDto.longitude,
+        );
+      }
+      this.filterByAge(authUser.age, queryBuilder, getEventDto);
 
       this.filterByGender(authUser, queryBuilder);
 
@@ -802,14 +801,25 @@ export class EventsService {
   private filterByAge(
     age: number,
     queryBuilder: SelectQueryBuilder<Event>,
+    getEventDto: GetEventDto,
   ): void {
-    queryBuilder.where(
-      new Brackets((qb) => {
-        return qb
-          .where('e.minAge <= :minAge', { minAge: age })
-          .andWhere('e.maxAge >= :maxAge', { maxAge: age });
-      }),
-    );
+    if (getEventDto.minAge && getEventDto.maxAge) {
+      queryBuilder
+        .where('e.minAge = :minAge', { minAge: getEventDto.minAge })
+        .andWhere('e.maxAge = :maxAge', { maxAge: getEventDto.maxAge });
+    } else if (getEventDto.minAge) {
+      queryBuilder
+        .where('e.minAge = :minAge', { minAge: getEventDto.minAge })
+        .andWhere('e.maxAge >= :age', { age });
+    } else if (getEventDto.maxAge) {
+      queryBuilder
+        .where('e.minAge <= :age', { age })
+        .andWhere('e.maxAge = :maxAge', { maxAge: getEventDto.maxAge });
+    } else {
+      queryBuilder
+        .where('e.minAge <= :age', { age })
+        .andWhere('e.maxAge >= :age', { age });
+    }
   }
 
   private filterByGender(
@@ -840,10 +850,6 @@ export class EventsService {
     latitude: string,
     longitude: string,
   ): Promise<void> {
-    console.log(await queryBuilder.getMany());
-    console.log(latitude);
-    console.log(longitude);
-
     if (latitude !== undefined && longitude !== undefined) {
       if (latitude && longitude) {
         queryBuilder

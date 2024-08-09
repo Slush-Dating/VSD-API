@@ -26,6 +26,24 @@ export class SparkLikeService {
     }
   }
 
+  updateSparkEveryDay(userId: any[], spark_value: number) {
+    userId.forEach(async (id) => {
+      const findUser = await this.sparkLikeRepo.findOne({
+        where: { user: id },
+      });
+      if (findUser) {
+        findUser.total_sparks += spark_value;
+        await this.sparkLikeRepo.save(findUser);
+      } else {
+        const newSparkLike = this.sparkLikeRepo.create({
+          user: id,
+          total_sparks: spark_value,
+        });
+        await this.sparkLikeRepo.save(newSparkLike);
+      }
+    });
+  }
+
   async removeSparkLike(userId: number) {
     const findSpark = await this.sparkLikeRepo.findOne({
       where: {

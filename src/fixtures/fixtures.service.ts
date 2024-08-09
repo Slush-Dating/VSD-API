@@ -50,7 +50,10 @@ export class FixturesService {
       .select(['fp.user_id', 'f.updated_at'])
       .innerJoin(Participant, 'fp', 'fp.id = f.first_participant_id')
       .innerJoin(Participant, 'sp', 'sp.id = f.second_participant_id')
-      .where('f.status = :liked', { liked: FixtureStatus.LIKED })
+      // .where('f.status = :liked', { liked: FixtureStatus.LIKED })
+      .where('f.status IN (:likedStatuses)', {
+        likedStatuses: [FixtureStatus.LIKED, FixtureStatus.SPARKLIKE],
+      })
       .andWhere('sp.user_id = :authUserId', { authUserId })
       .andWhere(
         `(${fixtureUserHasDislikeSubQuery.getQuery()}) = 0`,
@@ -109,8 +112,14 @@ export class FixturesService {
       .createQueryBuilder(ProfileVideoLike, 'pvl')
       .select(['pvl.from_id AS user_id', 'pvl.updated_at'])
       .where('pvl.to_id = :authUserId', { authUserId })
-      .andWhere('pvl.status = :liked', {
-        liked: ProfileVideoLikeStatusEnum.LIKED,
+      // .andWhere('pvl.status = :liked', {
+      //   liked: ProfileVideoLikeStatusEnum.LIKED,
+      // })
+      .andWhere('pvl.status IN (:likedStatuses)', {
+        likedStatuses: [
+          ProfileVideoLikeStatusEnum.LIKED,
+          ProfileVideoLikeStatusEnum.SPARKLIKE,
+        ],
       })
       .andWhere(
         `(${profileVideoHasDislikeSubQuery.getQuery()}) = 0`,

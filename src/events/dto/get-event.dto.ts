@@ -36,6 +36,16 @@ export class GetEventDto {
   @Type(() => Number)
   readonly distance?: number;
 
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  minAge?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  maxAge?: string;
+
   /**
    * The type of the event: ['me' = My Events, 'upcoming' = Upcoming events, 'popular' = Popular Events]
    */

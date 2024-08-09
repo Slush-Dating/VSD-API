@@ -4,11 +4,13 @@ import { SubScription } from './subscription.entity';
 import { SubscriptionService } from './subscription.service';
 import { UsersModule } from 'src/users/users.module';
 import { UsersService } from 'src/users/users.service';
+import { SparkLikeModule } from 'src/spark/spark.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([SubScription]),
     forwardRef(() => UsersModule),
+    SparkLikeModule,
   ],
   providers: [SubscriptionService],
   exports: [SubscriptionService],

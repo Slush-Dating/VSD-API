@@ -12,6 +12,7 @@ import { User } from 'src/users/user.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { UsersService } from 'src/users/users.service';
 import { CancelSubscriptionDto } from './cancelsubscription.dto';
+import { SparkLikeService } from 'src/spark/spark.service';
 
 @Injectable()
 export class SubscriptionService {
@@ -50,6 +51,65 @@ export class SubscriptionService {
       }
     } catch (error) {
       console.error('Error finding users with expired subscriptions:', error);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_1AM)
+  async checkSubscriptionSparkUpdate() {
+    const currentDate = new Date();
+    try {
+      const subscriptionsPackageSilver = await createQueryBuilder(
+        SubScription,
+        's',
+      )
+        .leftJoinAndSelect('s.user', 'su')
+        .leftJoinAndSelect('s.package', 'sp')
+        .where('s.endsAt > :currentDate', { currentDate })
+        .andWhere('sp.id = :packageID', { packageID: 1 })
+        .getMany();
+
+      const subscriptionsPackageGold = await createQueryBuilder(
+        SubScription,
+        's',
+      )
+        .leftJoinAndSelect('s.user', 'su')
+        .leftJoinAndSelect('s.package', 'sp')
+        .where('s.endsAt > :currentDate', { currentDate })
+        .andWhere('sp.id = :packageID', { packageID: 2 })
+        .getMany();
+      const subscriptionsPackagePremium = await createQueryBuilder(
+        SubScription,
+        's',
+      )
+        .leftJoinAndSelect('s.user', 'su')
+        .leftJoinAndSelect('s.package', 'sp')
+        .where('s.endsAt > :currentDate', { currentDate })
+        .andWhere('sp.id = :packageID', { packageID: 3 })
+        .getMany();
+
+      const userUpdateSilverPackage = subscriptionsPackageSilver.map(
+        (value) => value.user.id,
+      );
+
+      const userUpdateGoldPackage = subscriptionsPackageGold.map(
+        (item) => item.user.id,
+      );
+
+      const userUpdatePremiumPackage = subscriptionsPackagePremium.map(
+        (item) => item.user.id,
+      );
+      if (userUpdateSilverPackage.length > 0) {
+        this.sparkLikeService.updateSparkEveryDay(userUpdateSilverPackage, 1);
+      }
+
+      if (userUpdateGoldPackage.length > 0) {
+        this.sparkLikeService.updateSparkEveryDay(userUpdateGoldPackage, 5);
+      }
+      if (userUpdatePremiumPackage.length > 0) {
+        this.sparkLikeService.updateSparkEveryDay(userUpdatePremiumPackage, 10);
+      }
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -134,5 +194,6 @@ export class SubscriptionService {
     private subscriptionRepo: Repository<SubScription>,
     @Inject(forwardRef(() => UsersService)) // Use forwardRef here
     private readonly usersService: UsersService,
+    private sparkLikeService: SparkLikeService,
   ) {}
 }
