@@ -803,13 +803,31 @@ export class UsersService {
   // }
 
   public async getManyUser(data: {
-    ids: string[] | number[];
+    ids: any[];
     options?: IPaginationOptions;
     alias?: string;
     select?: string[];
   }) {
     try {
-      const ids = data.ids || [1];
+      const sparkIds = data.ids.filter(
+        (u) => u.status === ProfileVideoLikeStatusEnum.SPARKLIKE,
+      ) || [1];
+
+      const likeIds = data.ids.filter(
+        (u) => u.status === ProfileVideoLikeStatusEnum.LIKED,
+      ) || [1];
+
+      if (sparkIds.length > 0) {
+        const updateSparkIkeUser = sparkIds.map((u) => u.user_id);
+        await this.repository.update(updateSparkIkeUser, {
+          isSparkLike: true,
+        });
+      }
+
+      const mergeIds = [...likeIds, ...sparkIds];
+
+      console.log('mergeIds===', mergeIds);
+      const ids = mergeIds.map((u) => u.user_id) || [1];
 
       const idMap = new Map<number | string, number>();
       ids.forEach((id, index) => {
@@ -823,7 +841,8 @@ export class UsersService {
         .leftJoinAndSelect('u.interests', 'ui')
         .leftJoinAndSelect('u.ethnicity', 'ue')
         .where('u.deactivatedAt IS NULL')
-        .andWhere('u.id IN (:...ids)', { ids });
+        .andWhere('u.id IN (:...ids)', { ids })
+        .orderBy(`CASE WHEN u_is_spark_like = true THEN 1 ELSE 0 END`, 'DESC');
 
       if (data.select) {
         queryBuilder.select(data.select);
@@ -847,7 +866,9 @@ export class UsersService {
         },
       });
 
-      users.items.sort((a, b) => idMap.get(a.id) - idMap.get(b.id));
+      console.log(users.items.map((i) => i.id));
+
+      // users.items.sort((a, b) => idMap.get(a.id) - idMap.get(b.id));
       return users;
     } catch (error) {
       throw error;

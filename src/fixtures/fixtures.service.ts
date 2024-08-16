@@ -47,7 +47,7 @@ export class FixturesService {
 
     const fixtureUserLikesQuery = this.fixtureRepo
       .createQueryBuilder('f')
-      .select(['fp.user_id', 'f.updated_at'])
+      .select(['fp.user_id', 'f.status AS status', 'f.updated_at'])
       .innerJoin(Participant, 'fp', 'fp.id = f.first_participant_id')
       .innerJoin(Participant, 'sp', 'sp.id = f.second_participant_id')
       // .where('f.status = :liked', { liked: FixtureStatus.LIKED })
@@ -79,8 +79,8 @@ export class FixturesService {
       const [queryOne, parametersOne] =
         fixtureUserLikesQuery.getQueryAndParameters();
 
-      const users: { user_id: number }[] = await getManager().query(
-        `SELECT user_id FROM (
+      const users = await getManager().query(
+        `SELECT user_id, status FROM (
             ( ${queryOne} )
         ) d3
         WHERE user_id NOT IN (?)
@@ -94,7 +94,7 @@ export class FixturesService {
       }
 
       return this.usersService.getManyUser({
-        ids: users.map((u) => String(u.user_id)),
+        ids: users,
         options,
       });
     }
@@ -110,7 +110,11 @@ export class FixturesService {
 
     const profileVideoUserLikesQuery = getManager()
       .createQueryBuilder(ProfileVideoLike, 'pvl')
-      .select(['pvl.from_id AS user_id', 'pvl.updated_at'])
+      .select([
+        'pvl.from_id AS user_id',
+        'pvl.status AS status',
+        'pvl.updated_at',
+      ])
       .where('pvl.to_id = :authUserId', { authUserId })
       // .andWhere('pvl.status = :liked', {
       //   liked: ProfileVideoLikeStatusEnum.LIKED,
@@ -132,8 +136,10 @@ export class FixturesService {
     const [queryTwo, parametersTwo] =
       profileVideoUserLikesQuery.getQueryAndParameters();
 
-    const users: { user_id: number }[] = await getManager().query(
-      `SELECT user_id FROM (
+    console.log('query===', queryOne, queryTwo);
+
+    const users = await getManager().query(
+      `SELECT user_id, status FROM (
             ( ${queryOne} )
             UNION
             ( ${queryTwo} )
@@ -143,6 +149,8 @@ export class FixturesService {
         ORDER BY updated_at DESC`,
       [...parametersOne, ...parametersTwo, matchedUsersIds],
     );
+
+    console.log('users===', users);
 
     if (!users.length) {
       return defaultPaginationPayload(options);
@@ -150,7 +158,7 @@ export class FixturesService {
 
     try {
       return await this.usersService.getManyUser({
-        ids: users.map((u) => String(u.user_id)),
+        ids: users,
         options,
       });
     } catch (error) {
@@ -158,128 +166,6 @@ export class FixturesService {
     }
   }
 
-  public async getUsersWhoLikedMeNoSubscription(
-    authUserId: number,
-    options: IPaginationOptions,
-    eventId?: number | string,
-  ): Promise<Pagination<User, IPaginationMeta>> {
-    let matchedUsersIds = await this.getMatchedUsersIds(authUserId, eventId);
-    matchedUsersIds = matchedUsersIds.length ? matchedUsersIds : [0];
-
-    const fixtureUserHasDislikeSubQuery = getManager()
-      .createQueryBuilder(Fixture, 'f2')
-      .select('COUNT(*)')
-      .innerJoin(Participant, 'fp2', 'fp2.id = f2.first_participant_id')
-      .innerJoin(Participant, 'sp2', 'sp2.id = f2.second_participant_id')
-      .where('f2.status = :dislike', {
-        dislike: FixtureStatus.DISLIKED,
-      })
-      .andWhere('f2.first_participant_id = f.second_participant_id')
-      .andWhere('f2.second_participant_id = f.first_participant_id');
-
-    const fixtureUserLikesQuery = this.fixtureRepo
-      .createQueryBuilder('f')
-      .select(['fp.user_id', 'f.updated_at'])
-      .innerJoin(Participant, 'fp', 'fp.id = f.first_participant_id')
-      .innerJoin(Participant, 'sp', 'sp.id = f.second_participant_id')
-      .where('f.status = :liked', { liked: FixtureStatus.LIKED })
-      .andWhere('sp.user_id = :authUserId', { authUserId })
-      .andWhere(
-        `(${fixtureUserHasDislikeSubQuery.getQuery()}) = 0`,
-        fixtureUserHasDislikeSubQuery.getParameters(),
-      );
-
-    if (eventId) {
-      fixtureUserHasDislikeSubQuery.andWhere(
-        new Brackets((qb) => {
-          return qb
-            .where('fp2.event_id = :eventId', { eventId })
-            .orWhere('sp2.event_id = :eventId', { eventId });
-        }),
-      );
-      fixtureUserLikesQuery.andWhere(
-        new Brackets((qb) => {
-          return qb
-            .where('fp.event_id = :eventId', { eventId })
-            .orWhere('sp.event_id = :eventId', { eventId });
-        }),
-      );
-
-      const [queryOne, parametersOne] =
-        fixtureUserLikesQuery.getQueryAndParameters();
-
-      const users: { user_id: number }[] = await getManager().query(
-        `SELECT user_id FROM (
-            ( ${queryOne} )
-        ) d3
-        WHERE user_id NOT IN (?)
-        GROUP BY user_id, updated_at
-        ORDER BY updated_at DESC`,
-        [...parametersOne, matchedUsersIds],
-      );
-
-      if (!users.length) {
-        return defaultPaginationPayload(options);
-      }
-
-      return this.usersService.getManyUser({
-        ids: users.map((u) => String(u.user_id)),
-        options,
-      });
-    }
-
-    const profileVideoHasDislikeSubQuery = getManager()
-      .createQueryBuilder(ProfileVideoLike, 'pvl_1')
-      .select('COUNT(*)')
-      .where('pvl_1.status = :disliked', {
-        disliked: ProfileVideoLikeStatusEnum.DISLIKED,
-      })
-      .andWhere('pvl_1.from_id = pvl.to_id')
-      .andWhere('pvl_1.to_id = pvl.from_id');
-
-    const profileVideoUserLikesQuery = getManager()
-      .createQueryBuilder(ProfileVideoLike, 'pvl')
-      .select(['pvl.from_id AS user_id', 'pvl.updated_at'])
-      .where('pvl.to_id = :authUserId', { authUserId })
-      .andWhere('pvl.status = :liked', {
-        liked: ProfileVideoLikeStatusEnum.LIKED,
-      })
-      .andWhere(
-        `(${profileVideoHasDislikeSubQuery.getQuery()}) = 0`,
-        profileVideoHasDislikeSubQuery.getParameters(),
-      );
-
-    const [queryOne, parametersOne] =
-      fixtureUserLikesQuery.getQueryAndParameters();
-
-    const [queryTwo, parametersTwo] =
-      profileVideoUserLikesQuery.getQueryAndParameters();
-
-    const users: { user_id: number }[] = await getManager().query(
-      `SELECT user_id FROM (
-            ( ${queryOne} )
-            UNION
-            ( ${queryTwo} )
-        ) d3
-        WHERE user_id NOT IN (?)
-        GROUP BY user_id, updated_at
-        ORDER BY updated_at DESC`,
-      [...parametersOne, ...parametersTwo, matchedUsersIds],
-    );
-
-    if (!users.length) {
-      return defaultPaginationPayload(options);
-    }
-
-    try {
-      return await this.usersService.getManyUserNoSubscription({
-        ids: users.map((u) => String(u.user_id)),
-        options,
-      });
-    } catch (error) {
-      throw error;
-    }
-  }
   /**
    * Get users who liked me and I liked him/her as well
    */
@@ -455,7 +341,7 @@ export class FixturesService {
     try {
       const fixtureMatchesQuery = this.fixtureRepo
         .createQueryBuilder('f')
-        .select(['p1.user_id AS user_id', 'f.updated_at', 'f.status'])
+        .select(['p1.user_id AS user_id', 'f.updated_at', 'f.status AS status'])
         .addSelect((qb) => {
           qb.select('COUNT(*)')
             .from(Fixture, 'f1')
@@ -502,11 +388,11 @@ export class FixturesService {
         const [queryOne, paramOne] =
           fixtureMatchesQuery.getQueryAndParameters();
 
-        const users: { user_id: string }[] = await getManager().query(
-          `SELECT user_id, f_status FROM (${queryOne}) AS temp
-          GROUP BY user_id, f_status, updated_at
+        const users = await getManager().query(
+          `SELECT user_id, status FROM (${queryOne}) AS temp
+          GROUP BY user_id, status, updated_at
           ORDER BY
-          CASE f_status
+          CASE status
             WHEN '${FixtureStatus.SPARKLIKE}' THEN 1
             WHEN '${FixtureStatus.LIKED}' THEN 2
             ELSE 3
@@ -515,7 +401,9 @@ export class FixturesService {
           paramOne,
         );
 
-        return users.map((o) => Number(o.user_id));
+        console.log(users);
+
+        return users;
       }
 
       const profileVideoMatchesQuery = getManager()
@@ -548,8 +436,8 @@ export class FixturesService {
         profileVideoMatchesQuery.getQueryAndParameters();
 
       const users: { user_id: string }[] = await getManager().query(
-        `SELECT user_id FROM (
-            SELECT user_id, updated_at, f_status, NULL AS p1_status
+        `SELECT user_id, status FROM (
+            SELECT user_id, updated_at, status, NULL AS p1_status
             FROM (${queryOne}) AS temp1
             UNION ALL
             SELECT user_id, updated_at, p1_status, p1_status
@@ -566,9 +454,9 @@ export class FixturesService {
         [...paramOne, ...paramTwo],
       );
 
-      console.log('users id======', users);
+      console.log('users id match ======', users);
 
-      return users.map((u) => Number(u.user_id));
+      return users;
     } catch (error) {
       throw error;
     }

@@ -177,19 +177,6 @@ export class EventsService {
     }
 
     if (query.type === EventResultTypeEnum.LIKED) {
-      // if (
-      //   authUser.isSubscriptionPurchased === SubscriptionPurchased.No ||
-      //   authUser.isSubscriptionPurchased === null
-      // ) {
-      //   // throw new BadRequestException(
-      //   //   'Update to Slush Silver to see who has liked you!',
-      //   // );
-      //   return await this.fixturesService.getUsersWhoLikedMeNoSubscription(
-      //     authUser.id,
-      //     options,
-      //     query.event,
-      //   );
-      // }
       return await this.fixturesService.getUsersWhoLikedMe(
         authUser.id,
         options,
