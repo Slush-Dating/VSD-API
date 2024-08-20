@@ -203,6 +203,8 @@ export class ChatsService {
         return defaultPaginationPayload(options);
       }
 
+      const userIds = matchedUsers.map((i) => i.user_id);
+
       const baseQueryBuilder = this.chatRepository
         .createQueryBuilder(queryAlias)
         .select('MAX(c.id)', 'c.id')
@@ -222,7 +224,7 @@ export class ChatsService {
         .orderBy('c.createdAt', 'DESC')
         .setParameters({
           sender_id: authUser.id,
-          matched_users: matchedUsers,
+          matched_users: userIds,
         });
 
       if (search) {
