@@ -573,6 +573,9 @@ export class User extends BaseEntity {
   public get isMale(): boolean {
     return this.gender === GenderEnum.male;
   }
+  public get isOther(): boolean {
+    return this.gender === GenderEnum.other;
+  }
 
   public get isFemale(): boolean {
     return this.gender === GenderEnum.female;
@@ -580,8 +583,9 @@ export class User extends BaseEntity {
 
   public get isStraight(): boolean {
     return (
-      this.sexuality === SexualityEnum.STRAIGHT ||
-      this.sexuality === SexualityEnum.QUESTIONING
+      (this.sexuality === SexualityEnum.STRAIGHT ||
+        this.sexuality === SexualityEnum.QUESTIONING) &&
+      (this.gender === GenderEnum.male || this.gender === GenderEnum.female)
     );
   }
 
