@@ -5,6 +5,7 @@ import { User } from 'src/users/user.entity';
 import { FixtureStatus } from '../fixture.entity';
 
 export class UserFixtureListDto extends PickType(User, [
+  'id',
   'firstName',
   'lastName',
 ] as const) {
@@ -31,6 +32,9 @@ export class UserFixtureListDto extends PickType(User, [
 
   @Expose()
   readonly bio: string;
+
+  @Expose()
+  readonly user_id: number;
 
   @CastToBucket()
   @Expose()

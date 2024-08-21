@@ -194,6 +194,7 @@ export class FixturesService {
         'f.status AS status',
         'f.isReported AS isReported',
         'f.reportReason AS reportReason',
+        'spu.id AS user_id',
         'spu.firstName AS firstName',
         'spu.lastName AS lastName',
         'spu.bio AS bio',
