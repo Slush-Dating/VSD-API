@@ -324,7 +324,7 @@ export class EventsService {
 
     if (!event.isGenderAllowed(authUser)) {
       throw new ForbiddenException(
-        `Sorry! The event is only for ${event.gender}`,
+        `This event is only available for users that identify as ${event.gender}`,
       );
     }
 
