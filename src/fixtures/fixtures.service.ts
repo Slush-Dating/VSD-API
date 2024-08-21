@@ -32,6 +32,7 @@ export class FixturesService {
     eventId?: number | string,
   ): Promise<Pagination<User, IPaginationMeta>> {
     let matchedUsersIds = await this.getMatchedUsersIds(authUserId, eventId);
+    matchedUsersIds = matchedUsersIds.map((u: any) => u.user_id);
     matchedUsersIds = matchedUsersIds.length ? matchedUsersIds : [0];
 
     const fixtureUserHasDislikeSubQuery = getManager()
@@ -116,9 +117,6 @@ export class FixturesService {
         'pvl.updated_at',
       ])
       .where('pvl.to_id = :authUserId', { authUserId })
-      // .andWhere('pvl.status = :liked', {
-      //   liked: ProfileVideoLikeStatusEnum.LIKED,
-      // })
       .andWhere('pvl.status IN (:likedStatuses)', {
         likedStatuses: [
           ProfileVideoLikeStatusEnum.LIKED,
@@ -136,8 +134,6 @@ export class FixturesService {
     const [queryTwo, parametersTwo] =
       profileVideoUserLikesQuery.getQueryAndParameters();
 
-    console.log('query===', queryOne, queryTwo);
-
     const users = await getManager().query(
       `SELECT user_id, status FROM (
             ( ${queryOne} )
@@ -149,8 +145,6 @@ export class FixturesService {
         ORDER BY updated_at DESC`,
       [...parametersOne, ...parametersTwo, matchedUsersIds],
     );
-
-    console.log('users===', users);
 
     if (!users.length) {
       return defaultPaginationPayload(options);
@@ -179,9 +173,6 @@ export class FixturesService {
     if (!users.length) {
       return defaultPaginationPayload(options);
     }
-
-    console.log(users);
-
     return this.usersService.getManyUser({
       ids: users,
       options,
@@ -401,8 +392,6 @@ export class FixturesService {
           paramOne,
         );
 
-        console.log(users);
-
         return users;
       }
 
@@ -453,8 +442,6 @@ export class FixturesService {
             updated_at DESC`,
         [...paramOne, ...paramTwo],
       );
-
-      console.log('users id match ======', users);
 
       return users;
     } catch (error) {

@@ -826,7 +826,6 @@ export class UsersService {
 
       const mergeIds = [...likeIds, ...sparkIds];
 
-      console.log('mergeIds===', mergeIds);
       const ids = mergeIds.map((u) => u.user_id) || [1];
 
       const idMap = new Map<number | string, number>();
@@ -865,8 +864,6 @@ export class UsersService {
           };
         },
       });
-
-      console.log(users.items.map((i) => i.id));
 
       // users.items.sort((a, b) => idMap.get(a.id) - idMap.get(b.id));
       return users;

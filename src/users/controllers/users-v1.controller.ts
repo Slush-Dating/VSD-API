@@ -356,6 +356,7 @@ export class UsersControllerV1 {
       jobtitle: updateUserDto.jobTitle ?? '',
       date_of_birth: updateUserDto.dateOfBirth ?? '',
       gender: updateUserDto.gender ?? '',
+      user_type: 'app',
     };
   }
 

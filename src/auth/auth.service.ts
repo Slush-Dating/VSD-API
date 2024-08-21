@@ -345,6 +345,7 @@ export class AuthService {
             properties: {
               email: authUser.email,
               firstname: firstName,
+              user_type: 'app',
             },
           },
           {
@@ -371,6 +372,7 @@ export class AuthService {
               properties: {
                 email: authUser.email,
                 firstname: authUser.firstName,
+                user_type: 'app',
               },
             },
             {

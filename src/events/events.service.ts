@@ -280,7 +280,7 @@ export class EventsService {
         throw new BadRequestException('No tickets found for this event');
       }
 
-      await this.participantsService.cancelEventTicket(event, ticket);
+      await this.participantsService.cancelEventTicket(event, ticket, authUser);
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('Event not found');
@@ -646,6 +646,7 @@ export class EventsService {
     console.log('Checking if events are ready');
 
     const event = await this.getEventById();
+
     try {
       const currentDate = moment.utc();
       console.log(currentDate);

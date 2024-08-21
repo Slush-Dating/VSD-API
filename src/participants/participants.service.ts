@@ -171,18 +171,28 @@ export class ParticipantsService {
   async cancelEventTicket(
     event: Event,
     user: Participant,
+    authUser: User,
   ): Promise<Participant> {
-    const existingParticipant = await this.participantRepo.findOne(user.id);
+    const existingParticipants = await this.participantRepo.find({
+      where: {
+        user: { id: authUser.id },
+        event: { id: event.id },
+      },
+    });
 
-    if (!existingParticipant) {
+    if (existingParticipants.length === 0) {
       throw new BadRequestException('Participant not found');
     }
 
-    if (existingParticipant.status === 'cancelled') {
+    const bookedParticipant = existingParticipants.find(
+      (participant) => participant.status === 'booked',
+    );
+
+    if (!bookedParticipant) {
       throw new BadRequestException('Participant has already been cancelled');
     }
 
-    await this.participantRepo.update(user.id, {
+    await this.participantRepo.update(bookedParticipant.id, {
       status: 'cancelled',
     });
 
