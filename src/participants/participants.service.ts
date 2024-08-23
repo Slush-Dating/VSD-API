@@ -96,6 +96,7 @@ export class ParticipantsService {
       .createQueryBuilder('p')
       .where('u.id = :user_id', { user_id })
       .andWhere('e.id = :event_id', { event_id })
+      .andWhere('p.status != :status', { status: 'cancelled' })
       .addSelect(['u'])
       .leftJoin('p.user', 'u')
       .leftJoin('p.event', 'e')

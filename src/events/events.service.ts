@@ -347,6 +347,15 @@ export class EventsService {
       data.eventId,
     );
 
+    const existingUser = await this.participantsService.checkUser(
+      authUser.id,
+      event.id,
+    );
+
+    if (existingUser) {
+      throw new ConflictException('User is already booked event');
+    }
+
     if (isAlreadyBooked) {
       throw new ConflictException(
         'User is already booked for an event at the same time',
@@ -751,6 +760,7 @@ export class EventsService {
         .where('p.user = :user', {
           user: authUser.id,
         })
+        .andWhere('p.status = :status', { status: 'booked' })
         .andWhere('(e.startsAt + INTERVAL 45 MINUTE) > :currentDate', {
           currentDate: moment.utc().format('YYYY-MM-DD H:mm:ss'),
         });
