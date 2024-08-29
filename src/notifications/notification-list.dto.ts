@@ -1,7 +1,9 @@
 import { PickType } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { CastToUnixTimestamp } from 'src/common/decorators/cast-to-unix-timestamp.decorator';
 import { Notifications } from './notifcations.entity';
+import { ProfilePicture } from 'src/profile-pictures/profile-picture.entity';
+import { bucketUrl } from 'src/common/helper';
 
 export class ToUser {
   @Expose({ name: 'userId' })
@@ -13,8 +15,16 @@ export class ToUser {
   @Expose()
   email: string;
 
+  // @Expose()
+  // @Transform(({ value }: { value: ProfilePicture[] }) => value?.[0] || null)
+  // profilePictures: ProfilePicture | null;
+
   @Expose()
-  avatar: string;
+  @Transform(
+    ({ value }: { value: ProfilePicture[] }) =>
+      (value?.[0]?.key && bucketUrl(value[0].key)) ?? null,
+  )
+  profilePictures: ProfilePicture | null;
 }
 
 export class FromUser {
@@ -28,7 +38,11 @@ export class FromUser {
   email: string;
 
   @Expose()
-  avatar: string;
+  @Transform(
+    ({ value }: { value: ProfilePicture[] }) =>
+      (value?.[0]?.key && bucketUrl(value[0].key)) ?? null,
+  )
+  profilePictures: ProfilePicture | null;
 }
 
 export class NotificationList extends PickType(Notifications, [

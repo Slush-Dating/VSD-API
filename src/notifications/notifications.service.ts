@@ -129,7 +129,11 @@ export class NotificationsService {
       .createQueryBuilder('notification')
       .where('notification.toUser = :authUserId', { authUserId: user.id })
       .leftJoinAndSelect('notification.toUser', 'user')
-      .leftJoinAndSelect('notification.fromUser', 'from_user');
+      .leftJoinAndSelect('user.profilePictures', 'toUserProfilePicture')
+      .leftJoinAndSelect('notification.fromUser', 'from_user')
+      .leftJoinAndSelect('from_user.profilePictures', 'fromUserProfilePicture');
+
+    console.log(queryBuilder.getQuery());
 
     // Filter by notification type if provided
     if (options.notificationType) {
@@ -141,7 +145,7 @@ export class NotificationsService {
       );
     }
 
-    queryBuilder.orderBy('notification.createdAt', 'ASC');
+    queryBuilder.orderBy('notification.createdAt', 'DESC');
 
     const { value: totalItems } = await queryBuilder.connection
       .createQueryBuilder()
