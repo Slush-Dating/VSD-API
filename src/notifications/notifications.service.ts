@@ -147,19 +147,19 @@ export class NotificationsService {
 
     queryBuilder.orderBy('notification.createdAt', 'DESC');
 
-    const { value: totalItems } = await queryBuilder.connection
-      .createQueryBuilder()
-      .select('COUNT(*)', 'value')
-      .from(`(${queryBuilder.getQuery()})`, 'uniqueTableAlias')
-      .setParameters(queryBuilder.getParameters())
-      .getRawOne();
+    // const { value: totalItems } = await queryBuilder.connection
+    //   .createQueryBuilder()
+    //   .select('COUNT(*)', 'value')
+    //   .from(`(${queryBuilder.getQuery()})`, 'uniqueTableAlias')
+    //   .setParameters(queryBuilder.getParameters())
+    //   .getRawOne();
+
+    const totalItems = await queryBuilder.getCount();
 
     const items = await queryBuilder
       .offset(offset)
       .limit(options.limit)
       .getMany();
-
-    console.log(items);
 
     // early return if no events found
     if (!items.length) {

@@ -143,24 +143,30 @@ export class SubscriptionService {
     package_detail: Pacakagedetail,
     findSubscription: any,
   ) {
-    const currentDate = new Date();
-    await this.subscriptionRepo.update(findSubscription.id, {
-      endsAt: currentDate,
-    });
-    const startTime = new Date();
-    const endTime = new Date(
-      startTime.getTime() +
-        package_detail.duration_of_plan * 24 * 60 * 60 * 1000,
-    );
+    if (findSubscription) {
+      const currentDate = new Date();
+      await this.subscriptionRepo.update(findSubscription.id, {
+        endsAt: currentDate,
+      });
+      const startTime = new Date();
+      const endTime = new Date(
+        startTime.getTime() +
+          package_detail.duration_of_plan * 24 * 60 * 60 * 1000,
+      );
 
-    const subscriber = this.subscriptionRepo.create({
-      user: user,
-      package: package_detail,
-      startsAt: startTime,
-      endsAt: endTime,
-    });
+      const subscriber = this.subscriptionRepo.create({
+        user: user,
+        package: package_detail,
+        startsAt: startTime,
+        endsAt: endTime,
+      });
 
-    await this.subscriptionRepo.save(subscriber);
+      await this.subscriptionRepo.save(subscriber);
+    } else {
+      throw new BadRequestException(
+        `Subscription not found for ${user.firstName}`,
+      );
+    }
   }
 
   async cancelSubscripton(

@@ -774,6 +774,19 @@ export class EventsService {
         .andWhere('(e.startsAt) > :currentDate', {
           currentDate: moment.utc().format('YYYY-MM-DD H:mm:ss'),
         });
+
+      if (getEventDto.latitude && getEventDto.longitude) {
+        this.filterByDistance(
+          queryBuilder,
+          authUser,
+          getEventDto.distance,
+          getEventDto.latitude,
+          getEventDto.longitude,
+        );
+      }
+      if (getEventDto.date) {
+        this.filterByDate(getEventDto.date, queryBuilder);
+      }
     } else {
       if (getEventDto.latitude && getEventDto.longitude) {
         this.filterByDistance(
