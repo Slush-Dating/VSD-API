@@ -756,6 +756,7 @@ export class EventsService {
     const isPopularEvent = getEventDto.events === EventTypeEnum.POPULAR_EVENTS;
 
     if (isMyEvent) {
+      console.log(isMyEvent);
       queryBuilder
         .where('p.user = :user', {
           user: authUser.id,
@@ -764,6 +765,22 @@ export class EventsService {
         .andWhere('(e.startsAt + INTERVAL 45 MINUTE) > :currentDate', {
           currentDate: moment.utc().format('YYYY-MM-DD H:mm:ss'),
         });
+
+      console.log(queryBuilder.getQuery());
+
+      if (getEventDto.latitude && getEventDto.longitude) {
+        console.log('get event dto lat long', getEventDto);
+        this.filterByDistance(
+          queryBuilder,
+          authUser,
+          getEventDto.distance,
+          getEventDto.latitude,
+          getEventDto.longitude,
+        );
+      }
+      if (getEventDto.date) {
+        this.filterByDate(getEventDto.date, queryBuilder);
+      }
 
       // + INTERVAL 45 MINUTE
     } else if (isPopularEvent) {
@@ -857,7 +874,7 @@ export class EventsService {
   private async filterByDistance(
     queryBuilder: SelectQueryBuilder<Event>,
     authUser: User,
-    distance = 500,
+    distance = 50,
     latitude: string,
     longitude: string,
   ): Promise<void> {
