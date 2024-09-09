@@ -187,12 +187,14 @@ export class AppService {
     try {
       // Determine the file type
       const fileType = file.mimetype.split('/')[0];
+      const fileExtension = file.mimetype?.split('/')[1];
 
-      if (fileType === 'image') {
+      if (fileType === 'image' && fileExtension !== 'gif') {
         await this.detectInAppropriateImage(file);
       } else if (fileType === 'video') {
         // For video files, extract frames and moderate them
         // await this.detectInAppropriateVideo(file);
+      } else if (fileExtension === 'gif') {
       } else {
         throw new BadRequestException('Unsupported file type');
       }
