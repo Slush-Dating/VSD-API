@@ -860,15 +860,18 @@ export class EventsService {
     });
   }
 
-  private filterByDate(
+  private async filterByDate(
     date: number,
     queryBuilder: SelectQueryBuilder<Event>,
-  ): void {
+  ): Promise<void> {
+    console.log('date=====', moment.unix(date).format('YYYY-MM-DD'));
     if (date) {
       queryBuilder.andWhere('DATE(e.startsAt) = :date', {
         date: moment.unix(date).format('YYYY-MM-DD'),
       });
     }
+
+    console.log(await queryBuilder.getMany());
   }
 
   private async filterByDistance(
@@ -891,6 +894,7 @@ export class EventsService {
           })
           .having('distance <= :distance', { distance })
           .addOrderBy('distance', 'ASC');
+        console.log('events ==================== ', queryBuilder.getQuery());
       } else {
         queryBuilder.addSelect('0 AS distance');
       }

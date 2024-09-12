@@ -31,4 +31,14 @@ export class FcmToken extends BaseEntity {
   @IsNotEmpty()
   @Column()
   deviceName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Column({ nullable: true, default: null })
+  playerId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Column({ nullable: true, default: null })
+  deviceType: string;
 }

@@ -17,6 +17,8 @@ import { RoleType, User } from 'src/users/user.entity';
 import { Participant } from 'src/participants/participant.entity';
 import { createFcmPayload } from 'src/common/helper';
 import { Event } from './event.entity';
+import { FcmTokenService } from 'src/fcm-token/fcm-token.service';
+import { OnesignalNotificationService } from 'src/onesignal-notification/onesignal-notification.service';
 
 @Injectable()
 export class EventNotificationsService {
@@ -48,6 +50,37 @@ export class EventNotificationsService {
       return;
     }
 
+    const userIds = participants.map((p) => p.user.id);
+
+    const findFcmDetails = await this.fcmTokensService.findUserDetail(userIds);
+
+    const androidPlayerIds: string[] = [];
+    const iosPlayerIds: string[] = [];
+
+    findFcmDetails.forEach((f) => {
+      if (f.device_type.toLowerCase() === 'android') {
+        androidPlayerIds.push(...f.player_ids.split(','));
+      }
+
+      if (f.device_type.toLowerCase() === 'ios') {
+        iosPlayerIds.push(...f.player_ids.split(','));
+      }
+    });
+
+    if (androidPlayerIds.length > 0) {
+      await this.oneSignalNotificationService.sendNotificationToAndroid(
+        'Event beginning in 15 minutes! Waiting room is now open.',
+        androidPlayerIds,
+      );
+    }
+
+    if (iosPlayerIds.length > 0) {
+      await this.oneSignalNotificationService.sendNotificationToIOS(
+        'Event beginning in 15 minutes! Waiting room is now open.',
+        iosPlayerIds,
+      );
+    }
+
     participants.forEach((participant) => {
       const tokens = participant.user.fcmTokens.map(
         (fcmToken) => fcmToken.token,
@@ -64,7 +97,7 @@ export class EventNotificationsService {
           tokens,
         });
 
-        notificationPromises.push(getMessaging().sendMulticast(payload));
+        // notificationPromises.push(getMessaging().sendMulticast(payload));
 
         notificationLogs.push({
           event: participant.event,
@@ -113,6 +146,36 @@ export class EventNotificationsService {
       return;
     }
 
+    const userIds = participants.map((p) => p.user.id);
+    const findFcmDetails = await this.fcmTokensService.findUserDetail(userIds);
+
+    const androidPlayerIds: string[] = [];
+    const iosPlayerIds: string[] = [];
+
+    findFcmDetails.forEach((f) => {
+      if (f.device_type.toLowerCase() === 'android') {
+        androidPlayerIds.push(...f.player_ids.split(','));
+      }
+
+      if (f.device_type.toLowerCase() === 'ios') {
+        iosPlayerIds.push(...f.player_ids.split(','));
+      }
+    });
+
+    if (androidPlayerIds.length > 0) {
+      await this.oneSignalNotificationService.sendNotificationToAndroid(
+        'Event is beginning in 5 minutes! Join the waiting room now.',
+        androidPlayerIds,
+      );
+    }
+
+    if (iosPlayerIds.length > 0) {
+      await this.oneSignalNotificationService.sendNotificationToIOS(
+        'Event is beginning in 5 minutes! Join the waiting room now.',
+        iosPlayerIds,
+      );
+    }
+
     participants.forEach((participant) => {
       const tokens = participant.user.fcmTokens.map(
         (fcmToken) => fcmToken.token,
@@ -129,7 +192,7 @@ export class EventNotificationsService {
           tokens,
         });
 
-        notificationPromises.push(getMessaging().sendMulticast(payload));
+        // notificationPromises.push(getMessaging().sendMulticast(payload));
 
         notificationLogs.push({
           event: participant.event,
@@ -178,6 +241,36 @@ export class EventNotificationsService {
       return;
     }
 
+    const userIds = participants.map((p) => p.user.id);
+    const findFcmDetails = await this.fcmTokensService.findUserDetail(userIds);
+
+    const androidPlayerIds: string[] = [];
+    const iosPlayerIds: string[] = [];
+
+    findFcmDetails.forEach((f) => {
+      if (f.device_type.toLowerCase() === 'android') {
+        androidPlayerIds.push(...f.player_ids.split(','));
+      }
+
+      if (f.device_type.toLowerCase() === 'ios') {
+        iosPlayerIds.push(...f.player_ids.split(','));
+      }
+    });
+
+    if (androidPlayerIds.length > 0) {
+      await this.oneSignalNotificationService.sendNotificationToAndroid(
+        'Event starting in 60 seconds, JOIN NOW',
+        androidPlayerIds,
+      );
+    }
+
+    if (iosPlayerIds.length > 0) {
+      await this.oneSignalNotificationService.sendNotificationToIOS(
+        'Event starting in 60 seconds, JOIN NOW',
+        iosPlayerIds,
+      );
+    }
+
     participants.forEach((participant) => {
       const tokens = participant.user.fcmTokens.map(
         (fcmToken) => fcmToken.token,
@@ -194,7 +287,7 @@ export class EventNotificationsService {
           tokens,
         });
 
-        notificationPromises.push(getMessaging().sendMulticast(payload));
+        // notificationPromises.push(getMessaging().sendMulticast(payload));
 
         notificationLogs.push({
           event: participant.event,
@@ -220,7 +313,7 @@ export class EventNotificationsService {
   /**
    * User will be notified every 7 days if he has not joined any event for 7 days
    */
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   public async notifyAfterSevenDays() {
     const passiveUsersQuery = getManager()
       .createQueryBuilder()
@@ -254,7 +347,7 @@ export class EventNotificationsService {
         tokens,
       });
 
-      await getMessaging().sendMulticast(fcmPayload);
+      // await getMessaging().sendMulticast(fcmPayload);
 
       const updateSubQuery = `SELECT * FROM (${usersToNotifyQuery.getQuery()}) t`;
 
@@ -274,5 +367,7 @@ export class EventNotificationsService {
     private participantsService: ParticipantsService,
     private configService: ConfigService,
     private notificationLogsService: NotificationLogsService,
+    private fcmTokensService: FcmTokenService,
+    private oneSignalNotificationService: OnesignalNotificationService,
   ) {}
 }

@@ -47,6 +47,8 @@ import { validate } from 'class-validator';
 import { CompleteDetailDto } from './dto/complete-detail.dto';
 import { getMessaging } from 'firebase-admin/messaging';
 import { lastValueFrom } from 'rxjs';
+import { OnesignalNotificationService } from 'src/onesignal-notification/onesignal-notification.service';
+import { PlatformEnum } from 'src/onesignal-notification/onesignal-notification.dto';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mailchimp = require('@mailchimp/mailchimp_marketing');
@@ -1088,7 +1090,37 @@ export class AuthService {
     const percentage = await this.getProfilePercentage(authUserId);
     const user = await this.usersService.findUserById(authUserId);
 
-    await this.sendProfilePercentageNotification(user, percentage);
+    const findFcmDetails = await this.fcmTokensService.findUserDetail([
+      authUserId,
+    ]);
+    const androidPlayerIds: string[] = [];
+    const iosPlayerIds: string[] = [];
+
+    findFcmDetails.forEach((f) => {
+      if (f.device_type.toLowerCase() === 'android') {
+        androidPlayerIds.push(...f.player_ids.split(','));
+      }
+
+      if (f.device_type.toLowerCase() === 'ios') {
+        iosPlayerIds.push(...f.player_ids.split(','));
+      }
+    });
+
+    if (androidPlayerIds.length > 0) {
+      await this.oneSignalNotificationService.sendNotificationToAndroid(
+        'Your profile on Slush is waiting to shine. Complete it now to attract more matches!',
+        androidPlayerIds,
+      );
+    }
+
+    if (iosPlayerIds.length > 0) {
+      await this.oneSignalNotificationService.sendNotificationToIOS(
+        'Your profile on Slush is waiting to shine. Complete it now to attract more matches!',
+        iosPlayerIds,
+      );
+    }
+
+    // await this.sendProfilePercentageNotification(user, percentage);
   }
 
   // get filled profile percent
@@ -1141,6 +1173,7 @@ export class AuthService {
     private refreshTokensService: RefreshTokenService,
     private fcmTokensService: FcmTokenService,
     private configService: ConfigService,
+    private oneSignalNotificationService: OnesignalNotificationService,
     private httpService: HttpService,
   ) {}
 }

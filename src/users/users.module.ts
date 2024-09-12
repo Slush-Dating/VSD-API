@@ -22,6 +22,7 @@ import { ViewedVideosModule } from 'src/viewed_videos/viewed-videos.module';
 import { PaymentHistoryModule } from 'src/payment_history/payment_history.module';
 import { VerificationImageModule } from 'src/verification-image/verification-image.module';
 import { NotificationsModule } from 'src/notifications/notifications.module';
+import { OnesignalNotificationModule } from 'src/onesignal-notification/onesignal-notification.module';
 
 @Module({
   imports: [
@@ -43,6 +44,8 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
     ViewedVideosModule,
     PaymentHistoryModule,
     NotificationsModule,
+    OnesignalNotificationModule,
+    FcmTokenModule,
   ],
   providers: [UsersService],
   exports: [UsersService],

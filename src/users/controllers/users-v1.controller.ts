@@ -54,6 +54,8 @@ import { SubscriptionService } from 'src/subscription/subscription.service';
 import { lastValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { CancelSubscriptionDto } from 'src/subscription/cancelsubscription.dto';
+import { FcmTokenService } from 'src/fcm-token/fcm-token.service';
+import { OnesignalNotificationService } from 'src/onesignal-notification/onesignal-notification.service';
 @Controller({
   path: 'users',
   version: '1',
@@ -464,36 +466,70 @@ export class UsersControllerV1 {
     console.log(match);
     console.log('USER ACTION ====' + matchUnmatchDto.action);
     if (matchUnmatchDto.action == 'LIKED') {
-      const receiver = await this.usersService.findOneByAttribute({
-        select: ['id', 'fcmTokens', 'notifications'],
-        where: { id: user },
-        relations: ['fcmTokens', 'profilePictures'],
+      // const receiver = await this.usersService.findOneByAttribute({
+      //   select: ['id', 'fcmTokens', 'notifications'],
+      //   where: { id: user },
+      //   relations: ['fcmTokens', 'profilePictures'],
+      // });
+      // console.log(authUser.firstName + ' liked ' + receiver.firstName);
+      // if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
+      //   // await getMessaging().sendMulticast({
+      //   //   data: {
+      //   //     senderId: authUser.id.toString(),
+      //   //     type: 'like',
+      //   //     category: 'like',
+      //   //     message: authUser.firstName + ' liked you.',
+      //   //     notificationCount: '1',
+      //   //   },
+      //   //   apns: {
+      //   //     payload: {
+      //   //       aps: {
+      //   //         alert: {
+      //   //           body: authUser.firstName + ' liked you.',
+      //   //         },
+      //   //         category: 'like',
+      //   //         badge: 1,
+      //   //         sound: 'default',
+      //   //         contentAvailable: true,
+      //   //       },
+      //   //     },
+      //   //   },
+      //   //   tokens: receiver.rawFcmTokens,
+      //   // });
+      // }
+      const findFcmDetails = await this.fcmTokensService.findUserDetail([user]);
+      // Initialize arrays to store player IDs for Android and iOS
+      const androidPlayerIds: string[] = [];
+      const iosPlayerIds: string[] = [];
+
+      // Populate the player IDs based on device type
+      findFcmDetails.forEach((f) => {
+        if (f.device_type.toLowerCase() === 'android') {
+          androidPlayerIds.push(...f.player_ids.split(','));
+        }
+
+        if (f.device_type.toLowerCase() === 'ios') {
+          iosPlayerIds.push(...f.player_ids.split(','));
+        }
       });
-      console.log(authUser.firstName + ' liked ' + receiver.firstName);
-      if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
-        await getMessaging().sendMulticast({
-          data: {
-            senderId: authUser.id.toString(),
-            type: 'like',
-            category: 'like',
-            message: authUser.firstName + ' liked you.',
-            notificationCount: '1',
-          },
-          apns: {
-            payload: {
-              aps: {
-                alert: {
-                  body: authUser.firstName + ' liked you.',
-                },
-                category: 'like',
-                badge: 1,
-                sound: 'default',
-                contentAvailable: true,
-              },
-            },
-          },
-          tokens: receiver.rawFcmTokens,
-        });
+
+      // Prepare the notification message
+      const message = `${authUser.firstName} liked you.`;
+
+      // Send notification to Android devices
+      if (androidPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToAndroid(
+          message,
+          androidPlayerIds,
+        );
+      }
+
+      // Send notification to iOS devices
+      if (iosPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToIOS(
+          message,
+          iosPlayerIds,
+        );
       }
     }
     return { message: 'Success!', isMatch: match };
@@ -743,5 +779,7 @@ export class UsersControllerV1 {
     private notificationsService: NotificationsService,
     private subscriptionService: SubscriptionService,
     private httpService: HttpService,
+    private fcmTokensService: FcmTokenService,
+    private oneSignalNotificationService: OnesignalNotificationService,
   ) {}
 }

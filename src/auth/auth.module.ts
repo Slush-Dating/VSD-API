@@ -11,6 +11,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { FcmTokenModule } from 'src/fcm-token/fcm-token.module';
+import { OnesignalNotificationModule } from 'src/onesignal-notification/onesignal-notification.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { FcmTokenModule } from 'src/fcm-token/fcm-token.module';
     AccessTokensModule,
     RefreshTokensModule,
     FcmTokenModule,
+    OnesignalNotificationModule,
     HttpModule,
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],

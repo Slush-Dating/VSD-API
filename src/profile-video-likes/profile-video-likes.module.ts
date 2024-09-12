@@ -5,6 +5,8 @@ import { ProfileVideoLike } from './profile-video-like.entity';
 import { UsersModule } from 'src/users/users.module';
 import { SparkLikeModule } from 'src/spark/spark.module';
 import { NotificationsModule } from 'src/notifications/notifications.module';
+import { FcmTokenModule } from 'src/fcm-token/fcm-token.module';
+import { OnesignalNotificationModule } from 'src/onesignal-notification/onesignal-notification.module';
 
 @Module({
   imports: [
@@ -12,6 +14,8 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
     forwardRef(() => UsersModule),
     SparkLikeModule,
     NotificationsModule,
+    FcmTokenModule,
+    OnesignalNotificationModule,
   ],
   providers: [ProfileVideoLikesService],
   controllers: [],

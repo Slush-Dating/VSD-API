@@ -11,6 +11,8 @@ import { NotificationLogsModule } from 'src/notification-logs/notification-logs.
 import { SavedEventsModule } from 'src/saved-events/saved-events.module';
 import { UsersModule } from 'src/users/users.module';
 import { SubscriptionModule } from 'src/subscription/subscription.module';
+import { FcmTokenModule } from 'src/fcm-token/fcm-token.module';
+import { OnesignalNotificationModule } from 'src/onesignal-notification/onesignal-notification.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { SubscriptionModule } from 'src/subscription/subscription.module';
     SavedEventsModule,
     UsersModule,
     SubscriptionModule,
+    FcmTokenModule,
+    OnesignalNotificationModule,
   ],
   controllers: [EventsControllerV1],
   providers: [

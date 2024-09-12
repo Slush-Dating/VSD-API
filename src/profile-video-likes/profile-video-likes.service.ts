@@ -16,6 +16,8 @@ import {
 import { getMessaging } from 'firebase-admin/messaging';
 import { SparkLikeService } from 'src/spark/spark.service';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { FcmTokenService } from 'src/fcm-token/fcm-token.service';
+import { OnesignalNotificationService } from 'src/onesignal-notification/onesignal-notification.service';
 @Injectable()
 export class ProfileVideoLikesService {
   public async interactWithUser(
@@ -111,42 +113,85 @@ export class ProfileVideoLikesService {
     }
   }
 
+  // async sendNotification(
+  //   category: string,
+  //   status: string,
+  //   authUser: User,
+  //   receiverId: number,
+  // ) {
+  //   if (status == 'LIKED') {
+  //     const receiver = await this.usersService.findOneByAttribute({
+  //       select: ['id', 'fcmTokens', 'notifications'],
+  //       where: { id: receiverId },
+  //       relations: ['fcmTokens', 'profilePictures'],
+  //     });
+  //     if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
+  //       // await getMessaging().sendMulticast({
+  //       //   data: {
+  //       //     senderId: authUser.id.toString(),
+  //       //     type: category,
+  //       //     category: category,
+  //       //     message: category == 'match' ? 'New Match' : 'Someone liked you',
+  //       //     notificationCount: '1',
+  //       //   },
+  //       //   apns: {
+  //       //     payload: {
+  //       //       aps: {
+  //       //         alert: {
+  //       //           body: category == 'match' ? 'New Match' : 'Someone liked you',
+  //       //         },
+  //       //         category: category,
+  //       //         badge: 1,
+  //       //         sound: 'default',
+  //       //         contentAvailable: true,
+  //       //       },
+  //       //     },
+  //       //   },
+  //       //   tokens: receiver.rawFcmTokens,
+  //       // });
+  //     }
+  //   } else {
+  //     console.log('>>>>> ' + 'USER DISLIKED VIDEO ' + status);
+  //   }
+  // }
+
   async sendNotification(
     category: string,
     status: string,
     authUser: User,
     receiverId: number,
   ) {
-    if (status == 'LIKED') {
-      const receiver = await this.usersService.findOneByAttribute({
-        select: ['id', 'fcmTokens', 'notifications'],
-        where: { id: receiverId },
-        relations: ['fcmTokens', 'profilePictures'],
+    if (status === 'LIKED' || status === 'SPARK LIKE') {
+      const findFcmDetails = await this.fcmTokensService.findUserDetail([
+        receiverId,
+      ]);
+
+      const androidPlayerIds: string[] = [];
+      const iosPlayerIds: string[] = [];
+
+      findFcmDetails.forEach((f) => {
+        if (f.device_type.toLowerCase() === 'android') {
+          androidPlayerIds.push(...f.player_ids.split(','));
+        }
+        if (f.device_type.toLowerCase() === 'ios') {
+          iosPlayerIds.push(...f.player_ids.split(','));
+        }
       });
-      if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
-        await getMessaging().sendMulticast({
-          data: {
-            senderId: authUser.id.toString(),
-            type: category,
-            category: category,
-            message: category == 'match' ? 'New Match' : 'Someone liked you',
-            notificationCount: '1',
-          },
-          apns: {
-            payload: {
-              aps: {
-                alert: {
-                  body: category == 'match' ? 'New Match' : 'Someone liked you',
-                },
-                category: category,
-                badge: 1,
-                sound: 'default',
-                contentAvailable: true,
-              },
-            },
-          },
-          tokens: receiver.rawFcmTokens,
-        });
+
+      const message = category === 'match' ? 'New Match' : 'Someone liked you';
+
+      if (androidPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToAndroid(
+          message,
+          androidPlayerIds,
+        );
+      }
+
+      if (iosPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToIOS(
+          message,
+          iosPlayerIds,
+        );
       }
     } else {
       console.log('>>>>> ' + 'USER DISLIKED VIDEO ' + status);
@@ -160,5 +205,7 @@ export class ProfileVideoLikesService {
     private usersService: UsersService,
     private sparkLikeService: SparkLikeService,
     public notificationService: NotificationsService,
+    private fcmTokensService: FcmTokenService,
+    private oneSignalNotificationService: OnesignalNotificationService,
   ) {}
 }
