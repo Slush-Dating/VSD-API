@@ -313,7 +313,7 @@ export class EventNotificationsService {
   /**
    * User will be notified every 7 days if he has not joined any event for 7 days
    */
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   public async notifyAfterSevenDays() {
     const passiveUsersQuery = getManager()
       .createQueryBuilder()
@@ -337,6 +337,40 @@ export class EventNotificationsService {
       .where(`ft.user_id IN (${usersToNotifyQuery.getQuery()})`)
       .setParameters(usersToNotifyQuery.getParameters())
       .execute();
+
+    const userIds = await usersToNotifyQuery.getRawMany();
+    const users = userIds.map((user) => user.id);
+
+    if (users.length > 0) {
+      const findFcmDetails = await this.fcmTokensService.findUserDetail(users);
+
+      const androidPlayerIds: string[] = [];
+      const iosPlayerIds: string[] = [];
+
+      findFcmDetails.forEach((f) => {
+        if (f.device_type.toLowerCase() === 'android') {
+          androidPlayerIds.push(...f.player_ids.split(','));
+        }
+
+        if (f.device_type.toLowerCase() === 'ios') {
+          iosPlayerIds.push(...f.player_ids.split(','));
+        }
+      });
+
+      if (androidPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToAndroid(
+          'New events are now showing, check them out!',
+          androidPlayerIds,
+        );
+      }
+
+      if (iosPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToIOS(
+          'New events are now showing, check them out!',
+          iosPlayerIds,
+        );
+      }
+    }
 
     const tokens = fcmTokens.flatMap((a) => a.token);
 

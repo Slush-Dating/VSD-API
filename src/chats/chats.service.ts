@@ -18,6 +18,8 @@ import { ChatConversationListDto } from './dto/chat.dto';
 import { defaultPaginationPayload } from 'src/common/helper';
 import { FixturesService } from 'src/fixtures/fixtures.service';
 import * as moment from 'moment';
+import { FcmTokenService } from 'src/fcm-token/fcm-token.service';
+import { OnesignalNotificationService } from 'src/onesignal-notification/onesignal-notification.service';
 
 type PrivateMessageRequest = {
   from: number;
@@ -61,6 +63,36 @@ export class ChatsService {
         }),
       );
 
+      const findFcmDetails = await this.fcmTokensService.findUserDetail([
+        data.to,
+      ]);
+      const androidPlayerIds: string[] = [];
+      const iosPlayerIds: string[] = [];
+
+      findFcmDetails.forEach((f) => {
+        if (f.device_type.toLowerCase() === 'android') {
+          androidPlayerIds.push(...f.player_ids.split(','));
+        }
+
+        if (f.device_type.toLowerCase() === 'ios') {
+          iosPlayerIds.push(...f.player_ids.split(','));
+        }
+      });
+
+      if (androidPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToAndroid(
+          data.content,
+          androidPlayerIds,
+        );
+      }
+
+      if (iosPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToIOS(
+          data.content,
+          iosPlayerIds,
+        );
+      }
+
       const sender = await this.usersService.findOneByAttribute({
         select: ['id', 'firstName', 'lastName'],
         where: { id: data.from },
@@ -74,31 +106,31 @@ export class ChatsService {
       });
 
       if (receiver.isNotificationOn && receiver.rawFcmTokens.length) {
-        await getMessaging().sendMulticast({
-          data: {
-            senderId: data.from.toString(),
-            type: NOTIFICATION.PRIVATE_MESSAGE,
-            category: 'chat',
-            title: sender.fullName,
-            message: data.content,
-            notificationCount: '1',
-          },
-          apns: {
-            payload: {
-              aps: {
-                alert: {
-                  title: sender.fullName,
-                  body: data.content,
-                },
-                category: 'chat',
-                badge: 1,
-                sound: 'default',
-                contentAvailable: true,
-              },
-            },
-          },
-          tokens: receiver.rawFcmTokens,
-        });
+        // await getMessaging().sendMulticast({
+        //   data: {
+        //     senderId: data.from.toString(),
+        //     type: NOTIFICATION.PRIVATE_MESSAGE,
+        //     category: 'chat',
+        //     title: sender.fullName,
+        //     message: data.content,
+        //     notificationCount: '1',
+        //   },
+        //   apns: {
+        //     payload: {
+        //       aps: {
+        //         alert: {
+        //           title: sender.fullName,
+        //           body: data.content,
+        //         },
+        //         category: 'chat',
+        //         badge: 1,
+        //         sound: 'default',
+        //         contentAvailable: true,
+        //       },
+        //     },
+        //   },
+        //   tokens: receiver.rawFcmTokens,
+        // });
       }
 
       return {
@@ -397,5 +429,7 @@ export class ChatsService {
     @InjectRepository(Chat) private chatRepository: Repository<Chat>,
     private usersService: UsersService,
     private fixturesService: FixturesService,
+    private fcmTokensService: FcmTokenService,
+    private oneSignalNotificationService: OnesignalNotificationService,
   ) {}
 }

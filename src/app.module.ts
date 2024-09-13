@@ -38,6 +38,9 @@ import { SavedEventsModule } from './saved-events/saved-events.module';
 import { VerificationImageModule } from './verification-image/verification-image.module';
 import { EventCategoryModule } from './event-category/event-category.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { OnesignalNotificationService } from './onesignal-notification/onesignal-notification.service';
+import { HttpModule } from '@nestjs/axios';
+import { OnesignalNotificationModule } from './onesignal-notification/onesignal-notification.module';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mailchimp = require('@mailchimp/mailchimp_marketing');
@@ -118,6 +121,7 @@ const mailchimp = require('@mailchimp/mailchimp_marketing');
     }),
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
+    HttpModule,
     AuthModule,
     AccessTokensModule,
     RefreshTokensModule,
@@ -140,6 +144,7 @@ const mailchimp = require('@mailchimp/mailchimp_marketing');
     VerificationImageModule,
     EventCategoryModule,
     NotificationsModule,
+    OnesignalNotificationModule,
   ],
   controllers: [AppController],
   providers: [
@@ -148,6 +153,7 @@ const mailchimp = require('@mailchimp/mailchimp_marketing');
       provide: 'VALIDATE_PATH_USER_PIPE',
       useClass: ValidatePathUserPipe,
     },
+    OnesignalNotificationService,
   ],
   exports: [AppService],
 })
