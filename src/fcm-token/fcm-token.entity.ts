@@ -1,7 +1,12 @@
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { BaseEntity } from 'src/common/base.entity';
 import { User } from 'src/users/user.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+
+export enum DeviceType {
+  ANDROID = 'android',
+  IOS = 'ios',
+}
 
 @Entity('fcm_tokens')
 export class FcmToken extends BaseEntity {
@@ -37,8 +42,8 @@ export class FcmToken extends BaseEntity {
   @Column({ nullable: true, default: null })
   playerId: string;
 
-  @IsString()
+  @IsEnum(DeviceType)
   @IsNotEmpty()
-  @Column({ nullable: true, default: null })
-  deviceType: string;
+  @Column({ type: 'enum', enum: DeviceType, default: DeviceType.ANDROID })
+  deviceType: DeviceType;
 }
