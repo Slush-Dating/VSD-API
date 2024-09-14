@@ -63,6 +63,8 @@ import { SubscriptionService } from 'src/subscription/subscription.service';
 import { SparkLikeService } from 'src/spark/spark.service';
 import { PaymentHistoryService } from 'src/payment_history/payment_history.service';
 import { VerificationImageService } from 'src/verification-image/verification-image.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { OnesignalNotificationService } from 'src/onesignal-notification/onesignal-notification.service';
 
 @Injectable()
 export class UsersService {
@@ -1173,6 +1175,376 @@ export class UsersService {
     });
   }
 
+  async setIsLastActiveAt(userId: number) {
+    await this.repository.update(userId, {
+      isLastActiveAt: new Date(),
+    });
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async checkInactiveUsers() {
+    const currentDate = new Date();
+    const threeDaysAgoStart = new Date(currentDate);
+    const threeDaysAgoEnd = new Date(currentDate);
+
+    threeDaysAgoStart.setDate(currentDate.getDate() - 3);
+    threeDaysAgoStart.setHours(0, 0, 0, 0);
+    threeDaysAgoEnd.setDate(currentDate.getDate() - 3);
+    threeDaysAgoEnd.setHours(23, 59, 59, 999);
+
+    try {
+      const inactiveUsers = await this.repository
+        .createQueryBuilder('u')
+        .where(
+          'u.isLastActiveAt BETWEEN :threeDaysAgoStart AND :threeDaysAgoEnd',
+          {
+            threeDaysAgoStart,
+            threeDaysAgoEnd,
+          },
+        )
+        .getMany();
+
+      console.log(
+        'Users inactive for exactly 3 days',
+        inactiveUsers.map((user) => user.id),
+      );
+
+      if (inactiveUsers.length > 0) {
+        const userIds = inactiveUsers.map((user) => user.id);
+
+        const findFcmDetails = await this.fcmTokensService.findUserDetail(
+          userIds,
+        );
+
+        const androidPlayerIds: string[] = [];
+        const iosPlayerIds: string[] = [];
+
+        findFcmDetails.forEach((f) => {
+          if (f.device_type.toLowerCase() === 'android') {
+            androidPlayerIds.push(...f.player_ids.split(','));
+          }
+
+          if (f.device_type.toLowerCase() === 'ios') {
+            iosPlayerIds.push(...f.player_ids.split(','));
+          }
+        });
+
+        const notificationMessage =
+          "We miss you! It's been a few days since you last checked in. Come back and see what's new on Slush!";
+
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            notificationMessage,
+            androidPlayerIds,
+          );
+        }
+
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            notificationMessage,
+            iosPlayerIds,
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error checking inactive users:', error);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async checkInactiveUsersAfter7Days() {
+    const currentDate = new Date();
+    const sevenDaysAgoStart = new Date(currentDate);
+    const sevenDaysAgoEnd = new Date(currentDate);
+    sevenDaysAgoStart.setDate(currentDate.getDate() - 7);
+    sevenDaysAgoStart.setHours(0, 0, 0, 0);
+    sevenDaysAgoEnd.setDate(currentDate.getDate() - 7);
+    sevenDaysAgoEnd.setHours(23, 59, 59, 999);
+
+    try {
+      const inactiveUsers = await this.repository
+        .createQueryBuilder('u')
+        .where(
+          'u.isLastActiveAt BETWEEN :sevenDaysAgoStart AND :sevenDaysAgoEnd',
+          {
+            sevenDaysAgoStart,
+            sevenDaysAgoEnd,
+          },
+        )
+        .getMany();
+
+      console.log(
+        'Users inactive for exactly 7 days',
+        inactiveUsers.map((user) => user.id),
+      );
+
+      if (inactiveUsers.length > 0) {
+        const userIds = inactiveUsers.map((user) => user.id);
+
+        const findFcmDetails = await this.fcmTokensService.findUserDetail(
+          userIds,
+        );
+
+        const androidPlayerIds: string[] = [];
+        const iosPlayerIds: string[] = [];
+
+        findFcmDetails.forEach((f) => {
+          if (f.device_type.toLowerCase() === 'android') {
+            androidPlayerIds.push(...f.player_ids.split(','));
+          }
+
+          if (f.device_type.toLowerCase() === 'ios') {
+            iosPlayerIds.push(...f.player_ids.split(','));
+          }
+        });
+
+        const notificationMessage =
+          'It’s been a week! Your matches are waiting for you. Hop back into Slush and keep the conversations going!';
+
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            notificationMessage,
+            androidPlayerIds,
+          );
+        }
+
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            notificationMessage,
+            iosPlayerIds,
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error checking inactive users:', error);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async checkInactiveUsersAfter14Days() {
+    const currentDate = new Date();
+    const fourteenDaysAgoStart = new Date(currentDate);
+    const fourteenDaysAgoEnd = new Date(currentDate);
+
+    fourteenDaysAgoStart.setDate(currentDate.getDate() - 14);
+    fourteenDaysAgoStart.setHours(0, 0, 0, 0);
+    fourteenDaysAgoEnd.setDate(currentDate.getDate() - 14);
+    fourteenDaysAgoEnd.setHours(23, 59, 59, 999);
+
+    try {
+      const inactiveUsers = await this.repository
+        .createQueryBuilder('u')
+        .where(
+          'u.isLastActiveAt BETWEEN :fourteenDaysAgoStart AND :fourteenDaysAgoEnd',
+          {
+            fourteenDaysAgoStart,
+            fourteenDaysAgoEnd,
+          },
+        )
+        .getMany();
+
+      console.log(
+        'Users inactive for exactly 14 days:',
+        inactiveUsers.map((user) => user.id),
+      );
+
+      if (inactiveUsers.length > 0) {
+        const userIds = inactiveUsers.map((user) => user.id);
+        const findFcmDetails = await this.fcmTokensService.findUserDetail(
+          userIds,
+        );
+
+        const androidPlayerIds: string[] = [];
+        const iosPlayerIds: string[] = [];
+
+        findFcmDetails.forEach((f) => {
+          if (f.device_type.toLowerCase() === 'android') {
+            androidPlayerIds.push(...f.player_ids.split(','));
+          }
+
+          if (f.device_type.toLowerCase() === 'ios') {
+            iosPlayerIds.push(...f.player_ids.split(','));
+          }
+        });
+
+        const notificationMessage =
+          'We’ve missed you! New people have joined Slush, and your perfect match could be waiting. Why not take a look?';
+
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            notificationMessage,
+            androidPlayerIds,
+          );
+        }
+
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            notificationMessage,
+            iosPlayerIds,
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error checking inactive users after 14 days:', error);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async checkInactiveUsersAfter30Days() {
+    const currentDate = new Date();
+    const thirtyDaysAgoStart = new Date(currentDate);
+    const thirtyDaysAgoEnd = new Date(currentDate);
+
+    thirtyDaysAgoStart.setDate(currentDate.getDate() - 30);
+    thirtyDaysAgoStart.setHours(0, 0, 0, 0);
+    thirtyDaysAgoEnd.setDate(currentDate.getDate() - 30);
+    thirtyDaysAgoEnd.setHours(23, 59, 59, 999);
+
+    try {
+      const inactiveUsers = await this.repository
+        .createQueryBuilder('u')
+        .where(
+          'u.isLastActiveAt BETWEEN :thirtyDaysAgoStart AND :thirtyDaysAgoEnd',
+          {
+            thirtyDaysAgoStart,
+            thirtyDaysAgoEnd,
+          },
+        )
+        .getMany();
+
+      console.log(
+        'Users inactive for exactly 30 days:',
+        inactiveUsers.map((user) => user.id),
+      );
+
+      if (inactiveUsers.length > 0) {
+        const userIds = inactiveUsers.map((user) => user.id);
+        const findFcmDetails = await this.fcmTokensService.findUserDetail(
+          userIds,
+        );
+
+        const androidPlayerIds: string[] = [];
+        const iosPlayerIds: string[] = [];
+
+        findFcmDetails.forEach((f) => {
+          if (f.device_type.toLowerCase() === 'android') {
+            androidPlayerIds.push(...f.player_ids.split(','));
+          }
+
+          if (f.device_type.toLowerCase() === 'ios') {
+            iosPlayerIds.push(...f.player_ids.split(','));
+          }
+        });
+
+        const notificationMessage =
+          'It’s been a while! Many new people looking for love on Slush. Your perfect match could be waiting. Why not take a look?';
+
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            notificationMessage,
+            androidPlayerIds,
+          );
+        }
+
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            notificationMessage,
+            iosPlayerIds,
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error checking inactive users after 30 days:', error);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
+  async checkNotVerifiedUsers() {
+    const findNotVerifiedUser = await this.repository.find({
+      where: {
+        isVerified: false || null,
+      },
+    });
+
+    console.log(
+      'find not verified user',
+      findNotVerifiedUser.map((i) => i.id),
+    );
+    if (findNotVerifiedUser.length > 0) {
+      const userIds = findNotVerifiedUser.map((user) => user.id);
+      const findFcmDetails = await this.fcmTokensService.findUserDetail(
+        userIds,
+      );
+
+      const androidPlayerIds: string[] = [];
+      const iosPlayerIds: string[] = [];
+
+      findFcmDetails.forEach((f) => {
+        if (f.device_type.toLowerCase() === 'android') {
+          androidPlayerIds.push(...f.player_ids.split(','));
+        }
+
+        if (f.device_type.toLowerCase() === 'ios') {
+          iosPlayerIds.push(...f.player_ids.split(','));
+        }
+      });
+
+      const notificationMessage =
+        'Increase your credibility! Verify your profile on Slush and boost your chances of finding your perfect match. Verified profiles get more attention and build trust. Verify now!';
+
+      if (androidPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToAndroid(
+          notificationMessage,
+          androidPlayerIds,
+        );
+      }
+
+      if (iosPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToIOS(
+          notificationMessage,
+          iosPlayerIds,
+        );
+      }
+    }
+  }
+
+  async profileViewNotification(userId: number) {
+    if (userId) {
+      const findFcmDetails = await this.fcmTokensService.findUserDetail([
+        userId,
+      ]);
+
+      const androidPlayerIds: string[] = [];
+      const iosPlayerIds: string[] = [];
+
+      findFcmDetails.forEach((f) => {
+        if (f.device_type.toLowerCase() === 'android') {
+          androidPlayerIds.push(...f.player_ids.split(','));
+        }
+
+        if (f.device_type.toLowerCase() === 'ios') {
+          iosPlayerIds.push(...f.player_ids.split(','));
+        }
+      });
+
+      const notificationMessage = 'Someone has viewed your profile!';
+
+      if (androidPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToAndroid(
+          notificationMessage,
+          androidPlayerIds,
+        );
+      }
+
+      if (iosPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToIOS(
+          notificationMessage,
+          iosPlayerIds,
+        );
+      }
+    }
+  }
+
   constructor(
     @InjectRepository(User) private repository: Repository<User>,
     @InjectAwsService(S3)
@@ -1195,5 +1567,6 @@ export class UsersService {
     private sparkLikeService: SparkLikeService,
     private paymentHistoryService: PaymentHistoryService,
     private verifyVideoSevice: VerificationImageService,
+    private oneSignalNotificationService: OnesignalNotificationService,
   ) {}
 }

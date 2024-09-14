@@ -481,6 +481,10 @@ export class User extends BaseEntity {
   @Column({ type: 'enum', enum: SubscriptionPurchased, nullable: true })
   isSubscriptionPurchased?: SubscriptionPurchased;
 
+  @Transform(({ value }) => !!value, { toPlainOnly: true })
+  @Column({ type: 'datetime', nullable: true, default: null })
+  isLastActiveAt?: Date;
+
   public get age(): number {
     if (this.dateOfBirth) {
       return calculateAge(this.dateOfBirth);

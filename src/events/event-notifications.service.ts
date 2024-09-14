@@ -257,19 +257,19 @@ export class EventNotificationsService {
       }
     });
 
-    if (androidPlayerIds.length > 0) {
-      await this.oneSignalNotificationService.sendNotificationToAndroid(
-        'Event starting in 60 seconds, JOIN NOW',
-        androidPlayerIds,
-      );
-    }
+    // if (androidPlayerIds.length > 0) {
+    //   await this.oneSignalNotificationService.sendNotificationToAndroid(
+    //     'Event starting in 60 seconds, JOIN NOW',
+    //     androidPlayerIds,
+    //   );
+    // }
 
-    if (iosPlayerIds.length > 0) {
-      await this.oneSignalNotificationService.sendNotificationToIOS(
-        'Event starting in 60 seconds, JOIN NOW',
-        iosPlayerIds,
-      );
-    }
+    // if (iosPlayerIds.length > 0) {
+    //   await this.oneSignalNotificationService.sendNotificationToIOS(
+    //     'Event starting in 60 seconds, JOIN NOW',
+    //     iosPlayerIds,
+    //   );
+    // }
 
     participants.forEach((participant) => {
       const tokens = participant.user.fcmTokens.map(

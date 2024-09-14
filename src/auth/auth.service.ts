@@ -1090,6 +1090,8 @@ export class AuthService {
     const percentage = await this.getProfilePercentage(authUserId);
     const user = await this.usersService.findUserById(authUserId);
 
+    // await this.usersService.setIsLastActiveAt(authUserId);
+
     const findFcmDetails = await this.fcmTokensService.findUserDetail([
       authUserId,
     ]);

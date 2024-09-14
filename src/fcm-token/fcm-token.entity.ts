@@ -44,6 +44,6 @@ export class FcmToken extends BaseEntity {
 
   @IsEnum(DeviceType)
   @IsNotEmpty()
-  @Column({ type: 'enum', enum: DeviceType, default: DeviceType.ANDROID })
+  @Column({ type: 'enum', enum: DeviceType, default: null })
   deviceType: DeviceType;
 }

@@ -116,7 +116,14 @@ export class UsersControllerV1 {
    */
   @Get(':user')
   @ApiOperation({ summary: 'Get user profile' })
-  async getUserProfile(@Param('user', ParseIntPipe) user: number) {
+  async getUserProfile(
+    @AuthUser() authUser: User,
+    @Param('user', ParseIntPipe) user: number,
+  ) {
+    if (authUser.id === user) {
+      return { message: 'You can not view your own profile' };
+    }
+    await this.usersService.profileViewNotification(user);
     const newUser = await this.usersService.getUserProfile(user);
     return { data: newUser };
   }

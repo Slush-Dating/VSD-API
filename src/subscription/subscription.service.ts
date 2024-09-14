@@ -13,6 +13,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { UsersService } from 'src/users/users.service';
 import { CancelSubscriptionDto } from './cancelsubscription.dto';
 import { SparkLikeService } from 'src/spark/spark.service';
+import { FcmTokenService } from 'src/fcm-token/fcm-token.service';
+import { OnesignalNotificationService } from 'src/onesignal-notification/onesignal-notification.service';
 
 @Injectable()
 export class SubscriptionService {
@@ -51,6 +53,82 @@ export class SubscriptionService {
       }
     } catch (error) {
       console.error('Error finding users with expired subscriptions:', error);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_1AM)
+  async checkFiverDaysBeforeOverSubscription() {
+    const currentDate = new Date();
+    const fiveDaysFromNow = new Date();
+    fiveDaysFromNow.setDate(currentDate.getDate() + 5);
+
+    try {
+      const subscriptions = await createQueryBuilder(SubScription, 's')
+        .leftJoinAndSelect('s.user', 'u')
+        .addSelect(['u.id'])
+        .where('s.endsAt BETWEEN :currentDate AND :fiveDaysFromNow', {
+          currentDate,
+          fiveDaysFromNow,
+        })
+        .getMany();
+
+      const userSubscriptions = subscriptions.reduce((acc, subscription) => {
+        const userId = subscription.user.id;
+        if (!acc[userId]) {
+          acc[userId] = [];
+        }
+        acc[userId].push(subscription);
+        return acc;
+      }, {});
+
+      const userIds = [];
+      for (const userId in userSubscriptions) {
+        const userSubs = userSubscriptions[userId];
+        const hasExpiringSoon = userSubs.some(
+          (sub) => sub.endsAt >= currentDate && sub.endsAt <= fiveDaysFromNow,
+        );
+        if (hasExpiringSoon) {
+          userIds.push(Number(userId));
+        }
+      }
+
+      if (userIds.length > 0) {
+        console.log(
+          'Users with subscriptions expiring within 5 days:',
+          userIds,
+        );
+        const findFcmDetails = await this.fcmTokensService.findUserDetail(
+          userIds,
+        );
+        const androidPlayerIds: string[] = [];
+        const iosPlayerIds: string[] = [];
+
+        findFcmDetails.forEach((f) => {
+          if (f.device_type.toLowerCase() === 'android') {
+            androidPlayerIds.push(...f.player_ids.split(','));
+          }
+
+          if (f.device_type.toLowerCase() === 'ios') {
+            iosPlayerIds.push(...f.player_ids.split(','));
+          }
+        });
+
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            'Your Slush subscription is expiring soon. Renew now to keep your benefits!',
+            androidPlayerIds,
+          );
+        }
+
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            'Your Slush subscription is expiring soon. Renew now to keep your benefits!',
+            iosPlayerIds,
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error finding users with expiring subscriptions:', error);
     }
   }
 
@@ -201,5 +279,7 @@ export class SubscriptionService {
     @Inject(forwardRef(() => UsersService)) // Use forwardRef here
     private readonly usersService: UsersService,
     private sparkLikeService: SparkLikeService,
+    private fcmTokensService: FcmTokenService,
+    private oneSignalNotificationService: OnesignalNotificationService,
   ) {}
 }

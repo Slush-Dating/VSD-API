@@ -27,6 +27,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
+    await this.usersService.setIsLastActiveAt(payload.sub);
+
     const accessToken = await this.accessTokensService.findOne(payload.jti);
 
     if (
