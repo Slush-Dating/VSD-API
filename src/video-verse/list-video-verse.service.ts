@@ -281,9 +281,9 @@ export class ListVideoVerseService {
       }, 'avatar')
       .innerJoin(User, 'u', 'pv.user_id = u.id')
       .where('pv.is_primary = :isPrimary', { isPrimary: true })
-      .andWhere('pv.id NOT IN (:...viewedVideoIds)', {
-        viewedVideoIds: viewedVideoIds.length > 0 ? viewedVideoIds : [-1],
-      })
+      // .andWhere('pv.id NOT IN (:...viewedVideoIds)', {
+      //   viewedVideoIds: viewedVideoIds.length > 0 ? viewedVideoIds : [-1],
+      // })
       .andWhere('u.deactivatedAt IS NULL')
       .setParameters({
         latitude: videoVerseDto.latitude,
@@ -319,6 +319,7 @@ export class ListVideoVerseService {
     let items = await this.queryBuilder
       .offset(offset)
       .limit(options.limit)
+      .orderBy('RAND()')
       .getRawMany();
 
     items = removeAliasFromList(items, ['pv_', 'u_']);

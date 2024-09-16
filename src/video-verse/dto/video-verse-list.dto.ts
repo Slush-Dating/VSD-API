@@ -22,7 +22,7 @@ export class User {
   readonly nickName: string;
 
   @Expose()
-  @Transform(({ value }) => Number(value.toFixed(2)))
+  @Transform(({ value }) => Number(value?.toFixed(2)))
   readonly distance: number;
 
   @Expose({ name: 'dateOfBirth' })
