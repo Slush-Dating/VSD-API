@@ -1034,8 +1034,6 @@ export class UsersService {
     });
     let totalFields = 0;
     let filledFields = 0;
-
-    // Iterate over user object properties
     for (const key in findUser) {
       if (Object.prototype.hasOwnProperty.call(findUser, key)) {
         totalFields++;

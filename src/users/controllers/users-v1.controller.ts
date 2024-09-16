@@ -124,8 +124,10 @@ export class UsersControllerV1 {
       return { message: 'You can not view your own profile' };
     }
     await this.usersService.profileViewNotification(user);
+    const percentage = await this.usersService.findOneById(user);
     const newUser = await this.usersService.getUserProfile(user);
-    return { data: newUser };
+    const userDetail = { ...newUser, profileCompletion: percentage };
+    return { data: userDetail };
   }
 
   /**
