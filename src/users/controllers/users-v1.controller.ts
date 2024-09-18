@@ -124,9 +124,9 @@ export class UsersControllerV1 {
       await this.usersService.profileViewNotification(user);
     }
     const percentage = await this.usersService.findOneById(user);
-    const newUser = await this.usersService.getUserProfile(user);
-    const userDetail = { ...newUser, profileCompletion: percentage };
-    return { data: userDetail };
+    const newUser: any = await this.usersService.getUserProfile(user);
+    newUser.profileCompletion = percentage;
+    return { data: newUser };
   }
 
   /**
