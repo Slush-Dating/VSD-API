@@ -74,13 +74,15 @@ export class ProfileVideoLikesService {
         await this.usersService.addReminderForLikedtabForMatch(authUser, user);
         return true;
       } else {
+        console.log('here');
         await this.notificationService.createLikesNotification(
           authUser,
           user,
           interactDto.status,
         );
         await this.usersService.addReminderForLikedtabForLike(user);
-        // this.sendNotification("video-liked", newEntity.status, authUser, user.id);
+
+        this.sendNotification('liked', newEntity.status, authUser, user.id);
       }
 
       return false;
@@ -106,7 +108,7 @@ export class ProfileVideoLikesService {
         await this.usersService.addReminderForLikedtabForMatch(authUser, user);
         return true;
       } else {
-        // this.sendNotification("video-liked", entity.status, authUser, user.id);
+        this.sendNotification('liked', entity.status, authUser, user.id);
       }
 
       return false;
@@ -166,6 +168,9 @@ export class ProfileVideoLikesService {
         receiverId,
       ]);
 
+      console.log('findfcmdetails', findFcmDetails);
+      console.log('receiverId', receiverId);
+
       const androidPlayerIds: string[] = [];
       const iosPlayerIds: string[] = [];
 
@@ -178,7 +183,7 @@ export class ProfileVideoLikesService {
         }
       });
 
-      const message = category === 'match' ? 'New Match' : 'Someone liked you';
+      const message = category === 'match' ? 'New Match' : `Someone likes you!`;
 
       if (androidPlayerIds.length > 0) {
         await this.oneSignalNotificationService.sendNotificationToAndroid(

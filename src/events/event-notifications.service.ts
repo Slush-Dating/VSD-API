@@ -35,7 +35,6 @@ export class EventNotificationsService {
     const events = await this.eventsService.getEventsStartingInFifteenMinutes();
 
     const eventIds = events.map((e: { id: any }) => e.id);
-
     if (!eventIds.length) {
       this.logger.log('Notify before 15 mins: No events found!');
       return;
@@ -226,7 +225,7 @@ export class EventNotificationsService {
     const events = await this.eventsService.getEventsStartingInOneMinute();
 
     const eventIds = events.map((e: { id: any }) => e.id);
-
+    console.log(eventIds);
     if (!eventIds.length) {
       this.logger.log('Notify when event starts: No events found!');
       return;
@@ -257,19 +256,19 @@ export class EventNotificationsService {
       }
     });
 
-    // if (androidPlayerIds.length > 0) {
-    //   await this.oneSignalNotificationService.sendNotificationToAndroid(
-    //     'Event starting in 60 seconds, JOIN NOW',
-    //     androidPlayerIds,
-    //   );
-    // }
+    if (androidPlayerIds.length > 0) {
+      await this.oneSignalNotificationService.sendNotificationToAndroid(
+        'Event starting in 60 seconds, JOIN NOW',
+        androidPlayerIds,
+      );
+    }
 
-    // if (iosPlayerIds.length > 0) {
-    //   await this.oneSignalNotificationService.sendNotificationToIOS(
-    //     'Event starting in 60 seconds, JOIN NOW',
-    //     iosPlayerIds,
-    //   );
-    // }
+    if (iosPlayerIds.length > 0) {
+      await this.oneSignalNotificationService.sendNotificationToIOS(
+        'Event starting in 60 seconds, JOIN NOW',
+        iosPlayerIds,
+      );
+    }
 
     participants.forEach((participant) => {
       const tokens = participant.user.fcmTokens.map(
