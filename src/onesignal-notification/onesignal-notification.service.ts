@@ -32,14 +32,22 @@ export class OnesignalNotificationService {
   async sendNotificationToAndroid(
     message: string,
     playerIds: string[],
+    event_id?: number,
   ): Promise<AxiosResponse<any>> {
     const url = 'https://onesignal.com/api/v1/notifications';
+    const custom_data = {};
+
+    if (event_id) {
+      custom_data['custom_data'] = { event_id };
+    }
+
     const payload = {
       app_id: this.oneSignalAndroidAppId,
       contents: {
         en: message,
       },
       include_player_ids: playerIds,
+      ...custom_data,
     };
 
     const headers = {
@@ -53,14 +61,23 @@ export class OnesignalNotificationService {
   async sendNotificationToIOS(
     message: string,
     playerIds: string[],
+    event_id?: number,
   ): Promise<AxiosResponse<any>> {
     const url = 'https://onesignal.com/api/v1/notifications';
+
+    const custom_data = {};
+
+    if (event_id) {
+      custom_data['custom_data'] = { event_id };
+    }
+
     const payload = {
       app_id: this.oneSignalIOSAppId,
       contents: {
         en: message,
       },
       include_player_ids: playerIds,
+      ...custom_data,
     };
 
     const headers = {

@@ -34,90 +34,187 @@ export class EventNotificationsService {
 
     const events = await this.eventsService.getEventsStartingInFifteenMinutes();
 
-    const eventIds = events.map((e: { id: any }) => e.id);
-    if (!eventIds.length) {
+    if (!events.length) {
       this.logger.log('Notify before 15 mins: No events found!');
       return;
     }
 
-    const participants = await this.participantsService.getParticipantsForEvent(
-      eventIds,
-    );
+    for (const event of events) {
+      const participants =
+        await this.participantsService.getParticipantsForEvent([event.id]);
 
-    if (!participants.length) {
-      this.logger.log('Notify when event starts: No participants found!');
-      return;
-    }
-
-    const userIds = participants.map((p) => p.user.id);
-
-    const findFcmDetails = await this.fcmTokensService.findUserDetail(userIds);
-
-    const androidPlayerIds: string[] = [];
-    const iosPlayerIds: string[] = [];
-
-    findFcmDetails.forEach((f) => {
-      if (f.device_type.toLowerCase() === 'android') {
-        androidPlayerIds.push(...f.player_ids.split(','));
+      if (!participants.length) {
+        this.logger.log(
+          `Notify before 15 mins: No participants found for event ${event.id}`,
+        );
+        continue;
       }
 
-      if (f.device_type.toLowerCase() === 'ios') {
-        iosPlayerIds.push(...f.player_ids.split(','));
-      }
-    });
+      const userIds = participants.map((p) => p.user.id);
 
-    if (androidPlayerIds.length > 0) {
-      await this.oneSignalNotificationService.sendNotificationToAndroid(
-        'Event beginning in 15 minutes! Waiting room is now open.',
-        androidPlayerIds,
+      const findFcmDetails = await this.fcmTokensService.findUserDetail(
+        userIds,
       );
+
+      const androidPlayerIds: string[] = [];
+      const iosPlayerIds: string[] = [];
+
+      findFcmDetails.forEach((f) => {
+        if (f.device_type.toLowerCase() === 'android') {
+          androidPlayerIds.push(...f.player_ids.split(','));
+        }
+
+        if (f.device_type.toLowerCase() === 'ios') {
+          iosPlayerIds.push(...f.player_ids.split(','));
+        }
+      });
+
+      if (androidPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToAndroid(
+          `Event beginning in 15 minutes! Waiting room is now open.`,
+          androidPlayerIds,
+          event.id,
+        );
+      }
+
+      if (iosPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToIOS(
+          `Event beginning in 15 minutes! Waiting room is now open.`,
+          iosPlayerIds,
+          event.id,
+        );
+      }
+      participants.forEach((participant) => {
+        const tokens = participant.user.fcmTokens.map(
+          (fcmToken) => fcmToken.token,
+        );
+
+        if (tokens.length) {
+          const payload = createFcmPayload({
+            title: this.configService.get<string>('APP_NAME'),
+            body: `Event beginning in 15 minutes! Waiting room is now open.`,
+            data: {
+              eventId: event.id.toString(),
+              type: NOTIFICATION.EVENT_REMINDER,
+            },
+            tokens,
+          });
+
+          // Store logs for the notification
+          notificationLogs.push({
+            event: participant.event,
+            user: participant.user,
+            payload: JSON.stringify(payload),
+            type: NotificationLogEnum.BEFORE_FIFTEEN,
+          });
+
+          // Add to notification promises (e.g., Firebase notification sending)
+          // notificationPromises.push(getMessaging().sendMulticast(payload));
+        }
+      });
     }
 
-    if (iosPlayerIds.length > 0) {
-      await this.oneSignalNotificationService.sendNotificationToIOS(
-        'Event beginning in 15 minutes! Waiting room is now open.',
-        iosPlayerIds,
-      );
-    }
-
-    participants.forEach((participant) => {
-      const tokens = participant.user.fcmTokens.map(
-        (fcmToken) => fcmToken.token,
-      );
-
-      if (tokens.length) {
-        const payload = createFcmPayload({
-          title: this.configService.get<string>('APP_NAME'),
-          body: 'Event beginning in 15 minutes! Waiting room is now open.',
-          data: {
-            eventId: participant.event.id.toString(),
-            type: NOTIFICATION.EVENT_REMINDER,
-          },
-          tokens,
-        });
-
-        // notificationPromises.push(getMessaging().sendMulticast(payload));
-
-        notificationLogs.push({
-          event: participant.event,
-          user: participant.user,
-          payload: JSON.stringify(payload),
-          type: NotificationLogEnum.BEFORE_FIFTEEN,
-        });
-      }
-    });
-
+    // Save notification logs and execute any remaining promises
     if (notificationPromises.length) {
       await Promise.all([
         ...notificationPromises,
         this.notificationLogsService.saveMany(notificationLogs),
-        this.eventsService.batchUpdate(
-          { notifyBeforeFifteen: moment().format('YYYY-MM-DD HH:mm:ss') },
-          eventIds,
-        ),
       ]);
     }
   }
+  // async notifyUserBeforeFifteenMins(): Promise<void> {
+  //   const notificationLogs: Partial<NotificationLog>[] = [];
+  //   const notificationPromises = [];
+
+  //   const events = await this.eventsService.getEventsStartingInFifteenMinutes();
+
+  //   const eventIds = events.map((e: { id: any }) => e.id);
+
+  //   if (!eventIds.length) {
+  //     this.logger.log('Notify before 15 mins: No events found!');
+  //     return;
+  //   }
+
+  //   const participants = await this.participantsService.getParticipantsForEvent(
+  //     eventIds,
+  //   );
+
+  //   if (!participants.length) {
+  //     this.logger.log('Notify when event starts: No participants found!');
+  //     return;
+  //   }
+
+  //   const userIds = participants.map((p) => p.user.id);
+
+  //   const findFcmDetails = await this.fcmTokensService.findUserDetail(userIds);
+
+  //   const androidPlayerIds: string[] = [];
+  //   const iosPlayerIds: string[] = [];
+
+  //   findFcmDetails.forEach((f) => {
+  //     if (f.device_type.toLowerCase() === 'android') {
+  //       androidPlayerIds.push(...f.player_ids.split(','));
+  //     }
+
+  //     if (f.device_type.toLowerCase() === 'ios') {
+  //       iosPlayerIds.push(...f.player_ids.split(','));
+  //     }
+  //   });
+
+  //   if (androidPlayerIds.length > 0) {
+  //     await this.oneSignalNotificationService.sendNotificationToAndroid(
+  //       'Event beginning in 15 minutes! Waiting room is now open.',
+  //       androidPlayerIds,
+  //       eventIds as number,
+  //     );
+  //   }
+
+  //   if (iosPlayerIds.length > 0) {
+  //     await this.oneSignalNotificationService.sendNotificationToIOS(
+  //       'Event beginning in 15 minutes! Waiting room is now open.',
+  //       iosPlayerIds,
+  //       eventIds,
+  //     );
+  //   }
+
+  //   participants.forEach((participant) => {
+  //     const tokens = participant.user.fcmTokens.map(
+  //       (fcmToken) => fcmToken.token,
+  //     );
+
+  //     if (tokens.length) {
+  //       const payload = createFcmPayload({
+  //         title: this.configService.get<string>('APP_NAME'),
+  //         body: 'Event beginning in 15 minutes! Waiting room is now open.',
+  //         data: {
+  //           eventId: participant.event.id.toString(),
+  //           type: NOTIFICATION.EVENT_REMINDER,
+  //         },
+  //         tokens,
+  //       });
+
+  //       // notificationPromises.push(getMessaging().sendMulticast(payload));
+
+  //       notificationLogs.push({
+  //         event: participant.event,
+  //         user: participant.user,
+  //         payload: JSON.stringify(payload),
+  //         type: NotificationLogEnum.BEFORE_FIFTEEN,
+  //       });
+  //     }
+  //   });
+
+  //   if (notificationPromises.length) {
+  //     await Promise.all([
+  //       ...notificationPromises,
+  //       this.notificationLogsService.saveMany(notificationLogs),
+  //       this.eventsService.batchUpdate(
+  //         { notifyBeforeFifteen: moment().format('YYYY-MM-DD HH:mm:ss') },
+  //         eventIds,
+  //       ),
+  //     ]);
+  //   }
+  // }
 
   /**
    * Notify users when event starts
@@ -136,71 +233,76 @@ export class EventNotificationsService {
       return;
     }
 
-    const participants = await this.participantsService.getParticipantsForEvent(
-      eventIds,
-    );
+    for (const event of events) {
+      const participants =
+        await this.participantsService.getParticipantsForEvent([event.id]);
 
-    if (!participants.length) {
-      this.logger.log('Notify when event starts: No participants found!');
-      return;
-    }
-
-    const userIds = participants.map((p) => p.user.id);
-    const findFcmDetails = await this.fcmTokensService.findUserDetail(userIds);
-
-    const androidPlayerIds: string[] = [];
-    const iosPlayerIds: string[] = [];
-
-    findFcmDetails.forEach((f) => {
-      if (f.device_type.toLowerCase() === 'android') {
-        androidPlayerIds.push(...f.player_ids.split(','));
+      if (!participants.length) {
+        this.logger.log('Notify when event starts: No participants found!');
+        return;
       }
 
-      if (f.device_type.toLowerCase() === 'ios') {
-        iosPlayerIds.push(...f.player_ids.split(','));
+      const userIds = participants.map((p) => p.user.id);
+      const findFcmDetails = await this.fcmTokensService.findUserDetail(
+        userIds,
+      );
+
+      const androidPlayerIds: string[] = [];
+      const iosPlayerIds: string[] = [];
+
+      findFcmDetails.forEach((f) => {
+        if (f.device_type.toLowerCase() === 'android') {
+          androidPlayerIds.push(...f.player_ids.split(','));
+        }
+
+        if (f.device_type.toLowerCase() === 'ios') {
+          iosPlayerIds.push(...f.player_ids.split(','));
+        }
+      });
+
+      if (androidPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToAndroid(
+          'Event is beginning in 5 minutes! Join the waiting room now.',
+          androidPlayerIds,
+          event.id,
+        );
       }
-    });
 
-    if (androidPlayerIds.length > 0) {
-      await this.oneSignalNotificationService.sendNotificationToAndroid(
-        'Event is beginning in 5 minutes! Join the waiting room now.',
-        androidPlayerIds,
-      );
-    }
-
-    if (iosPlayerIds.length > 0) {
-      await this.oneSignalNotificationService.sendNotificationToIOS(
-        'Event is beginning in 5 minutes! Join the waiting room now.',
-        iosPlayerIds,
-      );
-    }
-
-    participants.forEach((participant) => {
-      const tokens = participant.user.fcmTokens.map(
-        (fcmToken) => fcmToken.token,
-      );
-
-      if (tokens.length) {
-        const payload = createFcmPayload({
-          title: this.configService.get<string>('APP_NAME'),
-          body: 'Event is beginning in 5 minutes! Join the waiting room now',
-          data: {
-            eventId: participant.event.id.toString(),
-            type: NOTIFICATION.EVENT_REMINDER,
-          },
-          tokens,
-        });
-
-        // notificationPromises.push(getMessaging().sendMulticast(payload));
-
-        notificationLogs.push({
-          event: participant.event,
-          user: participant.user,
-          payload: JSON.stringify(payload),
-          type: NotificationLogEnum.BEFORE_FIVE,
-        });
+      if (iosPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToIOS(
+          'Event is beginning in 5 minutes! Join the waiting room now.',
+          iosPlayerIds,
+          event.id,
+        );
       }
-    });
+
+      participants.forEach((participant) => {
+        const tokens = participant.user.fcmTokens.map(
+          (fcmToken) => fcmToken.token,
+        );
+
+        if (tokens.length) {
+          const payload = createFcmPayload({
+            title: this.configService.get<string>('APP_NAME'),
+            body: 'Event is beginning in 5 minutes! Join the waiting room now',
+            data: {
+              eventId: participant.event.id.toString(),
+              type: NOTIFICATION.EVENT_REMINDER,
+            },
+            tokens,
+          });
+
+          // notificationPromises.push(getMessaging().sendMulticast(payload));
+
+          notificationLogs.push({
+            event: participant.event,
+            user: participant.user,
+            payload: JSON.stringify(payload),
+            type: NotificationLogEnum.BEFORE_FIVE,
+          });
+        }
+      });
+    }
 
     if (notificationPromises.length) {
       await Promise.all([
@@ -225,77 +327,82 @@ export class EventNotificationsService {
     const events = await this.eventsService.getEventsStartingInOneMinute();
 
     const eventIds = events.map((e: { id: any }) => e.id);
-    console.log(eventIds);
+
     if (!eventIds.length) {
       this.logger.log('Notify when event starts: No events found!');
       return;
     }
 
-    const participants = await this.participantsService.getParticipantsForEvent(
-      eventIds,
-    );
+    for (const event of events) {
+      const participants =
+        await this.participantsService.getParticipantsForEvent([event.id]);
 
-    if (!participants.length) {
-      this.logger.log('Notify when event starts: No participants found!');
-      return;
-    }
-
-    const userIds = participants.map((p) => p.user.id);
-    const findFcmDetails = await this.fcmTokensService.findUserDetail(userIds);
-
-    const androidPlayerIds: string[] = [];
-    const iosPlayerIds: string[] = [];
-
-    findFcmDetails.forEach((f) => {
-      if (f.device_type.toLowerCase() === 'android') {
-        androidPlayerIds.push(...f.player_ids.split(','));
+      if (!participants.length) {
+        this.logger.log('Notify when event starts: No participants found!');
+        return;
       }
 
-      if (f.device_type.toLowerCase() === 'ios') {
-        iosPlayerIds.push(...f.player_ids.split(','));
+      const userIds = participants.map((p) => p.user.id);
+      const findFcmDetails = await this.fcmTokensService.findUserDetail(
+        userIds,
+      );
+
+      const androidPlayerIds: string[] = [];
+      const iosPlayerIds: string[] = [];
+
+      findFcmDetails.forEach((f) => {
+        if (f.device_type.toLowerCase() === 'android') {
+          androidPlayerIds.push(...f.player_ids.split(','));
+        }
+
+        if (f.device_type.toLowerCase() === 'ios') {
+          iosPlayerIds.push(...f.player_ids.split(','));
+        }
+      });
+
+      if (androidPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToAndroid(
+          'Event starting in 60 seconds, JOIN NOW',
+          androidPlayerIds,
+          event.id,
+        );
       }
-    });
 
-    if (androidPlayerIds.length > 0) {
-      await this.oneSignalNotificationService.sendNotificationToAndroid(
-        'Event starting in 60 seconds, JOIN NOW',
-        androidPlayerIds,
-      );
-    }
-
-    if (iosPlayerIds.length > 0) {
-      await this.oneSignalNotificationService.sendNotificationToIOS(
-        'Event starting in 60 seconds, JOIN NOW',
-        iosPlayerIds,
-      );
-    }
-
-    participants.forEach((participant) => {
-      const tokens = participant.user.fcmTokens.map(
-        (fcmToken) => fcmToken.token,
-      );
-
-      if (tokens.length) {
-        const payload = createFcmPayload({
-          title: this.configService.get<string>('APP_NAME'),
-          body: 'Event starting in 60 seconds, JOIN NOW',
-          data: {
-            eventId: participant.event.id.toString(),
-            type: NOTIFICATION.EVENT_REMINDER,
-          },
-          tokens,
-        });
-
-        // notificationPromises.push(getMessaging().sendMulticast(payload));
-
-        notificationLogs.push({
-          event: participant.event,
-          user: participant.user,
-          payload: JSON.stringify(payload),
-          type: NotificationLogEnum.BEFORE_ONE,
-        });
+      if (iosPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToIOS(
+          'Event starting in 60 seconds, JOIN NOW',
+          iosPlayerIds,
+          event.id,
+        );
       }
-    });
+
+      participants.forEach((participant) => {
+        const tokens = participant.user.fcmTokens.map(
+          (fcmToken) => fcmToken.token,
+        );
+
+        if (tokens.length) {
+          const payload = createFcmPayload({
+            title: this.configService.get<string>('APP_NAME'),
+            body: 'Event starting in 60 seconds, JOIN NOW',
+            data: {
+              eventId: participant.event.id.toString(),
+              type: NOTIFICATION.EVENT_REMINDER,
+            },
+            tokens,
+          });
+
+          // notificationPromises.push(getMessaging().sendMulticast(payload));
+
+          notificationLogs.push({
+            event: participant.event,
+            user: participant.user,
+            payload: JSON.stringify(payload),
+            type: NotificationLogEnum.BEFORE_ONE,
+          });
+        }
+      });
+    }
 
     if (notificationPromises.length) {
       await Promise.all([
