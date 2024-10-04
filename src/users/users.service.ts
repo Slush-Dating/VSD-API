@@ -192,7 +192,28 @@ export class UsersService {
     user: number,
     reportUserProfileDto: ReportUserProfileDto,
   ): Promise<void> {
-    await this.findOneOrFail({ id: user });
+    const finduser = await this.findOneOrFail({ id: user });
+    const from = this.configService.get<string>('MAIL_FROM');
+    const appName = this.configService.get<string>('APP_NAME');
+    this.mailerService.sendMail({
+      to: authUser.email,
+      from,
+      subject: `User Report Notification - ${authUser.firstName} reported ${finduser.firstName}`,
+      template: 'report-notification',
+      context: {
+        reportingUser: {
+          name: authUser.firstName + ' ' + authUser.lastName,
+          email: authUser.email,
+        },
+        reportedUser: {
+          name: finduser.firstName + ' ' + finduser.lastName,
+          email: finduser.email,
+        },
+        report: {
+          reason: reportUserProfileDto.reason,
+        },
+      },
+    });
     this.userReportService.reportUserProfile(
       authUser.id,
       user,
@@ -228,7 +249,7 @@ export class UsersService {
    */
   async getUserProfile(userId: number): Promise<User> {
     try {
-      const user = await this.repository.findOneOrFail({
+      const user: any = await this.repository.findOneOrFail({
         where: {
           id: userId,
           role: RoleType.USER,
@@ -237,7 +258,14 @@ export class UsersService {
       });
       // const remainSparks = await this.sparkLikeService.remainSparks(user);
       // console.log(remainSparks);
-      return user;
+
+      const unreadChatsCount = await this.repository.query(
+        'SELECT COUNT(*) as count FROM `chats` WHERE `receiver_id` = ' +
+          userId +
+          ' and `read_by_receiver` is null',
+      );
+      user.unreadMsgCount = unreadChatsCount[0].count;
+      return user as User;
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('User not found');
