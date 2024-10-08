@@ -41,6 +41,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { OnesignalNotificationService } from './onesignal-notification/onesignal-notification.service';
 import { HttpModule } from '@nestjs/axios';
 import { OnesignalNotificationModule } from './onesignal-notification/onesignal-notification.module';
+import { WellKnownController } from './well-known/well-known.controller';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mailchimp = require('@mailchimp/mailchimp_marketing');
@@ -146,7 +147,7 @@ const mailchimp = require('@mailchimp/mailchimp_marketing');
     NotificationsModule,
     OnesignalNotificationModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, WellKnownController],
   providers: [
     AppService,
     {
