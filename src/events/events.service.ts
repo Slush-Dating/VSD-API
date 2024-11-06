@@ -658,7 +658,6 @@ export class EventsService {
 
     try {
       const currentDate = moment.utc();
-      console.log(currentDate);
       return await this.eventRepo.query(
         `SELECT e.*
         FROM events e
@@ -757,7 +756,6 @@ export class EventsService {
     const isPopularEvent = getEventDto.events === EventTypeEnum.POPULAR_EVENTS;
 
     if (isMyEvent) {
-      console.log(isMyEvent);
       queryBuilder
         .where('p.user = :user', {
           user: authUser.id,
@@ -767,18 +765,16 @@ export class EventsService {
           currentDate: moment.utc().format('YYYY-MM-DD H:mm:ss'),
         });
 
-      console.log(queryBuilder.getQuery());
-
-      if (getEventDto.latitude && getEventDto.longitude) {
-        console.log('get event dto lat long', getEventDto);
-        this.filterByDistance(
-          queryBuilder,
-          authUser,
-          getEventDto.distance,
-          getEventDto.latitude,
-          getEventDto.longitude,
-        );
-      }
+      // if (getEventDto.latitude && getEventDto.longitude) {
+      console.log('get event dto lat long', getEventDto);
+      this.filterByDistance(
+        queryBuilder,
+        authUser,
+        getEventDto.distance,
+        getEventDto.latitude,
+        getEventDto.longitude,
+      );
+      // }
       if (getEventDto.date) {
         this.filterByDate(getEventDto.date, queryBuilder);
       }
@@ -793,28 +789,29 @@ export class EventsService {
           currentDate: moment.utc().format('YYYY-MM-DD H:mm:ss'),
         });
 
-      if (getEventDto.latitude && getEventDto.longitude) {
-        this.filterByDistance(
-          queryBuilder,
-          authUser,
-          getEventDto.distance,
-          getEventDto.latitude,
-          getEventDto.longitude,
-        );
-      }
+      // if (getEventDto.latitude && getEventDto.longitude) {
+      this.filterByDistance(
+        queryBuilder,
+        authUser,
+        getEventDto.distance,
+        getEventDto.latitude,
+        getEventDto.longitude,
+      );
+      // }
       if (getEventDto.date) {
         this.filterByDate(getEventDto.date, queryBuilder);
       }
     } else {
-      if (getEventDto.latitude && getEventDto.longitude) {
-        this.filterByDistance(
-          queryBuilder,
-          authUser,
-          getEventDto.distance,
-          getEventDto.latitude,
-          getEventDto.longitude,
-        );
-      }
+      console.log('here===');
+      // if (getEventDto.latitude && getEventDto.longitude) {
+      this.filterByDistance(
+        queryBuilder,
+        authUser,
+        getEventDto.distance,
+        getEventDto.latitude,
+        getEventDto.longitude,
+      );
+      // }
       this.filterByAge(authUser.age, queryBuilder, getEventDto);
 
       this.filterByGender(authUser, queryBuilder);
@@ -865,14 +862,11 @@ export class EventsService {
     date: number,
     queryBuilder: SelectQueryBuilder<Event>,
   ): Promise<void> {
-    console.log('date=====', moment.unix(date).format('YYYY-MM-DD'));
     if (date) {
       queryBuilder.andWhere('DATE(e.startsAt) = :date', {
         date: moment.unix(date).format('YYYY-MM-DD'),
       });
     }
-
-    console.log(await queryBuilder.getMany());
   }
 
   private async filterByDistance(
@@ -895,7 +889,6 @@ export class EventsService {
           })
           .having('distance <= :distance', { distance })
           .addOrderBy('distance', 'ASC');
-        console.log('events ==================== ', queryBuilder.getQuery());
       } else {
         queryBuilder.addSelect('0 AS distance');
       }
