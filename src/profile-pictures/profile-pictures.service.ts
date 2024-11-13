@@ -175,7 +175,7 @@ export class ProfilePicturesService {
       // Return the file links instead of creating records in profilePictureRepo
       return filenames.map(
         (filename) =>
-          `https://virtual-speed-date.s3.eu-west-2.amazonaws.com/${filename}`,
+          `https://${process.env.AWS_BUCKET}.s3.eu-west-2.amazonaws.com/${filename}`,
       );
     } catch (error) {
       throw error;

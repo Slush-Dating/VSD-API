@@ -15,7 +15,7 @@ export class EventCategoryService {
       const categories = await this.eventCategoryRepo.find();
       const transformedCategories = categories.map((category) => ({
         ...category,
-        image: `https://virtual-speed-date.s3.eu-west-2.amazonaws.com/${category.image}`,
+        image: `https://${process.env.AWS_BUCKET}.s3.eu-west-2.amazonaws.com/${category.image}`,
       }));
 
       return transformedCategories;
