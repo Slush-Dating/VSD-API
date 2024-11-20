@@ -120,9 +120,10 @@ export class UsersControllerV1 {
     @AuthUser() authUser: User,
     @Param('user', ParseIntPipe) user: number,
   ) {
-    if (authUser.id !== user) {
-      await this.usersService.profileViewNotification(user);
-    }
+    // disable profile view notification
+    // if (authUser.id !== user) {
+    //   await this.usersService.profileViewNotification(user);
+    // }
     const percentage = await this.usersService.findOneById(user);
     const newUser: any = await this.usersService.getUserProfile(user);
     newUser.profileCompletion = percentage;
