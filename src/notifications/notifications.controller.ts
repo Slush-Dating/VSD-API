@@ -56,10 +56,10 @@ export class NotificationsController {
     @AuthUser() authUser: User,
     @Body() notificationSettingTypeDto?: NotificationSettingsDto,
   ): Promise<any> {
-    console.log(notificationSettingTypeDto.notificationType);
     const data = this.userService.updateUserNotificationType(
       authUser,
       notificationSettingTypeDto.notificationType,
+      notificationSettingTypeDto.status,
     );
     return data;
   }

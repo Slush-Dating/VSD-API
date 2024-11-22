@@ -1579,21 +1579,26 @@ export class UsersService {
   async updateUserNotificationType(
     authUser: User,
     notificationType: NotificationSettingType,
+    status: number,
   ): Promise<{ message: string }> {
+    // if (![0, 1].includes(status)) {
+    //   throw new Error('Invalid status value. Must be 0 or 1');
+    // }
+
     const updateFields: Partial<User> = {};
 
     switch (notificationType) {
       case NotificationSettingType.MATCH:
-        updateFields.isNewMatchNotification = true;
+        updateFields.isNewMatchNotification = status === 1;
         break;
       case NotificationSettingType.EVENT:
-        updateFields.isEventNotification = true;
+        updateFields.isEventNotification = status === 1;
         break;
       case NotificationSettingType.MESSAGE:
-        updateFields.isNewMessageNotification = true;
+        updateFields.isNewMessageNotification = status === 1;
         break;
       case NotificationSettingType.LIKE:
-        updateFields.isLikeNotification = true;
+        updateFields.isLikeNotification = status === 1;
         break;
       default:
         throw new Error('Invalid notification type');
@@ -1601,8 +1606,9 @@ export class UsersService {
 
     await this.repository.update(authUser.id, updateFields);
 
+    const statusText = status === 1 ? 'enabled' : 'disabled';
     return {
-      message: `Notification settings updated for type: ${notificationType}`,
+      message: `Notification ${statusText} for type: ${notificationType}`,
     };
   }
 
