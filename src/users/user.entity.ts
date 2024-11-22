@@ -485,6 +485,22 @@ export class User extends BaseEntity {
   @Column({ type: 'datetime', nullable: true, default: null })
   isLastActiveAt?: Date;
 
+  @Expose()
+  @Column({ type: 'boolean', default: false })
+  isNewMatchNotification: boolean;
+
+  @Expose()
+  @Column({ type: 'boolean', default: false })
+  isEventNotification: boolean;
+
+  @Expose()
+  @Column({ type: 'boolean', default: false })
+  isNewMessageNotification: boolean;
+
+  @Expose()
+  @Column({ type: 'boolean', default: false })
+  isLikeNotification: boolean;
+
   public get age(): number {
     if (this.dateOfBirth) {
       return calculateAge(this.dateOfBirth);

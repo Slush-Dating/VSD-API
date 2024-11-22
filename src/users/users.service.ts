@@ -65,6 +65,7 @@ import { PaymentHistoryService } from 'src/payment_history/payment_history.servi
 import { VerificationImageService } from 'src/verification-image/verification-image.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { OnesignalNotificationService } from 'src/onesignal-notification/onesignal-notification.service';
+import { NotificationSettingType } from 'src/notifications/notifcations.entity';
 
 @Injectable()
 export class UsersService {
@@ -1083,6 +1084,10 @@ export class UsersService {
     return findUser;
   }
 
+  async findUsersByIds(userIds: number[]): Promise<User[]> {
+    return this.repository.findByIds(userIds);
+  }
+
   async removeUser(
     deleteUserProfileDto: DeleteProfileDto,
     authUser: User,
@@ -1569,6 +1574,36 @@ export class UsersService {
         );
       }
     }
+  }
+
+  async updateUserNotificationType(
+    authUser: User,
+    notificationType: NotificationSettingType,
+  ): Promise<{ message: string }> {
+    const updateFields: Partial<User> = {};
+
+    switch (notificationType) {
+      case NotificationSettingType.MATCH:
+        updateFields.isNewMatchNotification = true;
+        break;
+      case NotificationSettingType.EVENT:
+        updateFields.isEventNotification = true;
+        break;
+      case NotificationSettingType.MESSAGE:
+        updateFields.isNewMessageNotification = true;
+        break;
+      case NotificationSettingType.LIKE:
+        updateFields.isLikeNotification = true;
+        break;
+      default:
+        throw new Error('Invalid notification type');
+    }
+
+    await this.repository.update(authUser.id, updateFields);
+
+    return {
+      message: `Notification settings updated for type: ${notificationType}`,
+    };
   }
 
   constructor(

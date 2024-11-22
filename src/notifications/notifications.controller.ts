@@ -1,8 +1,10 @@
 import {
+  Body,
   Controller,
   DefaultValuePipe,
   Get,
   ParseIntPipe,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -14,6 +16,8 @@ import { User } from 'src/users/user.entity';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { NotificationType, Notifications } from './notifcations.entity';
 import { NotificationList } from './notification-list.dto';
+import { NotificationSettingsDto } from './notificationSettings.dto';
+import { UsersService } from 'src/users/users.service';
 
 @Controller('notifications')
 @ApiBearerAuth()
@@ -43,5 +47,24 @@ export class NotificationsController {
     return { data: { items, meta } };
   }
 
-  constructor(private notificationsService: NotificationsService) {}
+  /**
+   * Notifcation settings
+   */
+  @ApiOperation({ summary: 'Notification Settings' })
+  @Post('settings')
+  public async notificationSettings(
+    @AuthUser() authUser: User,
+    @Body() notificationSettingTypeDto?: NotificationSettingsDto,
+  ): Promise<any> {
+    console.log(notificationSettingTypeDto.notificationType);
+    const data = this.userService.updateUserNotificationType(
+      authUser,
+      notificationSettingTypeDto.notificationType,
+    );
+    return data;
+  }
+  constructor(
+    private notificationsService: NotificationsService,
+    private userService: UsersService,
+  ) {}
 }

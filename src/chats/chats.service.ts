@@ -63,34 +63,40 @@ export class ChatsService {
         }),
       );
 
-      const findFcmDetails = await this.fcmTokensService.findUserDetail([
-        data.to,
-      ]);
-      const androidPlayerIds: string[] = [];
-      const iosPlayerIds: string[] = [];
+      const receiverDetails = await this.usersService.findUserById(data.to);
 
-      findFcmDetails.forEach((f) => {
-        if (f.device_type.toLowerCase() === 'android') {
-          androidPlayerIds.push(...f.player_ids.split(','));
+      if (receiverDetails.isNewMessageNotification) {
+        const findFcmDetails = await this.fcmTokensService.findUserDetail([
+          data.to,
+        ]);
+        const androidPlayerIds: string[] = [];
+        const iosPlayerIds: string[] = [];
+
+        findFcmDetails.forEach((f) => {
+          if (f.device_type.toLowerCase() === 'android') {
+            androidPlayerIds.push(...f.player_ids.split(','));
+          }
+
+          if (f.device_type.toLowerCase() === 'ios') {
+            iosPlayerIds.push(...f.player_ids.split(','));
+          }
+        });
+
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            data.content,
+            androidPlayerIds,
+          );
         }
 
-        if (f.device_type.toLowerCase() === 'ios') {
-          iosPlayerIds.push(...f.player_ids.split(','));
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            data.content,
+            iosPlayerIds,
+          );
         }
-      });
-
-      if (androidPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToAndroid(
-          data.content,
-          androidPlayerIds,
-        );
-      }
-
-      if (iosPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToIOS(
-          data.content,
-          iosPlayerIds,
-        );
+      } else {
+        console.log('no notification send');
       }
 
       const sender = await this.usersService.findOneByAttribute({

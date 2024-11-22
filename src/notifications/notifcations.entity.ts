@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { IsString } from 'class-validator';
+import { isEnum, IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { BaseEntity } from 'src/common/base.entity';
 import { User } from 'src/users/user.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
@@ -8,6 +8,13 @@ export enum NotificationType {
   GENERAL = 'general',
   MATCH = 'match',
   LIKES = 'likes',
+}
+
+export enum NotificationSettingType {
+  MATCH = 'match',
+  EVENT = 'event',
+  MESSAGE = 'message',
+  LIKE = 'like',
 }
 
 @Entity({ name: 'notifications' })

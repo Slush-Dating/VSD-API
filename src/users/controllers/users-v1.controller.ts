@@ -505,39 +505,46 @@ export class UsersControllerV1 {
       //   //   tokens: receiver.rawFcmTokens,
       //   // });
       // }
-      const findFcmDetails = await this.fcmTokensService.findUserDetail([user]);
-      // Initialize arrays to store player IDs for Android and iOS
-      const androidPlayerIds: string[] = [];
-      const iosPlayerIds: string[] = [];
+      const receiverDetails = await this.usersService.findUserById(user);
+      if (receiverDetails.isNewMatchNotification) {
+        const findFcmDetails = await this.fcmTokensService.findUserDetail([
+          user,
+        ]);
+        // Initialize arrays to store player IDs for Android and iOS
+        const androidPlayerIds: string[] = [];
+        const iosPlayerIds: string[] = [];
 
-      // Populate the player IDs based on device type
-      findFcmDetails.forEach((f) => {
-        if (f.device_type.toLowerCase() === 'android') {
-          androidPlayerIds.push(...f.player_ids.split(','));
+        // Populate the player IDs based on device type
+        findFcmDetails.forEach((f) => {
+          if (f.device_type.toLowerCase() === 'android') {
+            androidPlayerIds.push(...f.player_ids.split(','));
+          }
+
+          if (f.device_type.toLowerCase() === 'ios') {
+            iosPlayerIds.push(...f.player_ids.split(','));
+          }
+        });
+
+        // Prepare the notification message
+        const message = `${authUser.firstName} liked you.`;
+
+        // Send notification to Android devices
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            message,
+            androidPlayerIds,
+          );
         }
 
-        if (f.device_type.toLowerCase() === 'ios') {
-          iosPlayerIds.push(...f.player_ids.split(','));
+        // Send notification to iOS devices
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            message,
+            iosPlayerIds,
+          );
         }
-      });
-
-      // Prepare the notification message
-      const message = `${authUser.firstName} liked you.`;
-
-      // Send notification to Android devices
-      if (androidPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToAndroid(
-          message,
-          androidPlayerIds,
-        );
-      }
-
-      // Send notification to iOS devices
-      if (iosPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToIOS(
-          message,
-          iosPlayerIds,
-        );
+      } else {
+        console.log('no notification');
       }
     }
     return { message: 'Success!', isMatch: match };

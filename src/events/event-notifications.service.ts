@@ -19,6 +19,7 @@ import { createFcmPayload } from 'src/common/helper';
 import { Event } from './event.entity';
 import { FcmTokenService } from 'src/fcm-token/fcm-token.service';
 import { OnesignalNotificationService } from 'src/onesignal-notification/onesignal-notification.service';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class EventNotificationsService {
@@ -52,8 +53,14 @@ export class EventNotificationsService {
 
       const userIds = participants.map((p) => p.user.id);
 
+      const usersWithDetails = await this.userService.findUsersByIds(userIds);
+
+      const eligibleUserIds = usersWithDetails
+        .filter((user) => user.isEventNotification)
+        .map((user) => user.id);
+
       const findFcmDetails = await this.fcmTokensService.findUserDetail(
-        userIds,
+        eligibleUserIds,
       );
 
       const androidPlayerIds: string[] = [];
@@ -243,8 +250,13 @@ export class EventNotificationsService {
       }
 
       const userIds = participants.map((p) => p.user.id);
+      const usersWithDetails = await this.userService.findUsersByIds(userIds);
+
+      const eligibleUserIds = usersWithDetails
+        .filter((user) => user.isEventNotification)
+        .map((user) => user.id);
       const findFcmDetails = await this.fcmTokensService.findUserDetail(
-        userIds,
+        eligibleUserIds,
       );
 
       const androidPlayerIds: string[] = [];
@@ -343,8 +355,13 @@ export class EventNotificationsService {
       }
 
       const userIds = participants.map((p) => p.user.id);
+      const usersWithDetails = await this.userService.findUsersByIds(userIds);
+
+      const eligibleUserIds = usersWithDetails
+        .filter((user) => user.isEventNotification)
+        .map((user) => user.id);
       const findFcmDetails = await this.fcmTokensService.findUserDetail(
-        userIds,
+        eligibleUserIds,
       );
 
       const androidPlayerIds: string[] = [];
@@ -445,10 +462,15 @@ export class EventNotificationsService {
       .execute();
 
     const userIds = await usersToNotifyQuery.getRawMany();
-    const users = userIds.map((user) => user.id);
+    const usersWithDetails = await this.userService.findUsersByIds(userIds);
 
-    if (users.length > 0) {
-      const findFcmDetails = await this.fcmTokensService.findUserDetail(users);
+    const eligibleUserIds = usersWithDetails
+      .filter((user) => user.isEventNotification)
+      .map((user) => user.id);
+    if (eligibleUserIds.length > 0) {
+      const findFcmDetails = await this.fcmTokensService.findUserDetail(
+        eligibleUserIds,
+      );
 
       const androidPlayerIds: string[] = [];
       const iosPlayerIds: string[] = [];
@@ -509,5 +531,6 @@ export class EventNotificationsService {
     private notificationLogsService: NotificationLogsService,
     private fcmTokensService: FcmTokenService,
     private oneSignalNotificationService: OnesignalNotificationService,
+    private userService: UsersService,
   ) {}
 }

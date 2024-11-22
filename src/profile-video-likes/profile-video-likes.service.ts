@@ -164,39 +164,46 @@ export class ProfileVideoLikesService {
     receiverId: number,
   ) {
     if (status === 'LIKED' || status === 'SPARK LIKE') {
-      const findFcmDetails = await this.fcmTokensService.findUserDetail([
-        receiverId,
-      ]);
+      const receiverDetails = await this.usersService.findUserById(receiverId);
+      if (receiverDetails.isNewMatchNotification) {
+        const findFcmDetails = await this.fcmTokensService.findUserDetail([
+          receiverId,
+        ]);
 
-      console.log('findfcmdetails', findFcmDetails);
-      console.log('receiverId', receiverId);
+        console.log('findfcmdetails', findFcmDetails);
+        console.log('receiverId', receiverId);
 
-      const androidPlayerIds: string[] = [];
-      const iosPlayerIds: string[] = [];
+        const androidPlayerIds: string[] = [];
+        const iosPlayerIds: string[] = [];
 
-      findFcmDetails.forEach((f) => {
-        if (f.device_type.toLowerCase() === 'android') {
-          androidPlayerIds.push(...f.player_ids.split(','));
+        findFcmDetails.forEach((f) => {
+          console.log(f.user_id);
+          if (f.device_type.toLowerCase() === 'android') {
+            androidPlayerIds.push(...f.player_ids.split(','));
+          }
+          if (f.device_type.toLowerCase() === 'ios') {
+            iosPlayerIds.push(...f.player_ids.split(','));
+          }
+        });
+
+        const message =
+          category === 'match' ? 'New Match' : `Someone likes you!`;
+
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            message,
+            androidPlayerIds,
+          );
         }
-        if (f.device_type.toLowerCase() === 'ios') {
-          iosPlayerIds.push(...f.player_ids.split(','));
+
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            message,
+            iosPlayerIds,
+          );
         }
-      });
-
-      const message = category === 'match' ? 'New Match' : `Someone likes you!`;
-
-      if (androidPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToAndroid(
-          message,
-          androidPlayerIds,
-        );
-      }
-
-      if (iosPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToIOS(
-          message,
-          iosPlayerIds,
-        );
+      } else {
+        console.log('no notification');
       }
     } else {
       console.log('>>>>> ' + 'USER DISLIKED VIDEO ' + status);
