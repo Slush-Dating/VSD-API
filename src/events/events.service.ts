@@ -699,7 +699,7 @@ export class EventsService {
             FROM events e
             WHERE e.status != ?
             AND e.notify_before_five IS NULL
-            AND TIMESTAMPDIFF(MINUTE, CURRENT_TIMESTAMP, e.starts_at) BETWEEN 2 AND 5`,
+            AND TIMESTAMPDIFF(MINUTE, CURRENT_TIMESTAMP, e.starts_at) = 5`,
         [EventStatusEnum.CANCELLED],
       );
     } catch (error) {
@@ -735,7 +735,7 @@ export class EventsService {
         FROM events e
         WHERE e.status != ?
         AND e.notify_before_fifteen IS NULL
-        AND TIMESTAMPDIFF(MINUTE, CURRENT_TIMESTAMP, e.starts_at) BETWEEN 6 AND 15`,
+        AND TIMESTAMPDIFF(MINUTE, CURRENT_TIMESTAMP, e.starts_at) = 15`,
         [EventStatusEnum.CANCELLED],
       );
     } catch (error) {
