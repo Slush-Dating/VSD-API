@@ -680,7 +680,7 @@ export class EventsService {
             FROM events e
             WHERE e.status != ?
             AND e.notify_before_one IS NULL
-            AND TIMESTAMPDIFF(SECOND, CURRENT_TIMESTAMP, e.starts_at) < 60
+            AND TIMESTAMPDIFF(MINUTE, CURRENT_TIMESTAMP, e.starts_at) = 1
             AND e.ends_at > CURRENT_TIMESTAMP`,
         [EventStatusEnum.CANCELLED],
       );
