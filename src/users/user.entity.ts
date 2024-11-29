@@ -486,19 +486,19 @@ export class User extends BaseEntity {
   isLastActiveAt?: Date;
 
   @Expose()
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: true })
   isNewMatchNotification: boolean;
 
   @Expose()
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: true })
   isEventNotification: boolean;
 
   @Expose()
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: true })
   isNewMessageNotification: boolean;
 
   @Expose()
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: true })
   isLikeNotification: boolean;
 
   public get age(): number {
