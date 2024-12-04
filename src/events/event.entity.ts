@@ -283,9 +283,10 @@ export class Event extends BaseEntity {
    */
   isGenderAllowed(user: User): boolean {
     if (
-      (this.isEventFor(EventGenderEnum.STRAIGHT) ||
+      ((this.isEventFor(EventGenderEnum.STRAIGHT) ||
         this.isEventFor(EventGenderEnum.QUESTIONING)) &&
-      user.isStraight
+        user.isStraight) ||
+      user.isBisexual
     ) {
       return true;
     } else if (
