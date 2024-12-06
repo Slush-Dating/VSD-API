@@ -553,9 +553,21 @@ export class User extends BaseEntity {
   public get allowedGenders(): EventGenderEnum[] {
     const allowedGender: EventGenderEnum[] = [];
 
-    if (this.isStraight || this.isBisexual) {
+    if (this.isStraight) {
       allowedGender.push(EventGenderEnum.STRAIGHT, EventGenderEnum.QUESTIONING);
-    } else if (this.isMale) {
+    } else if (this.isBisexual) {
+      allowedGender.push(
+	EventGenderEnum.STRAIGHT, 
+	EventGenderEnum.QUESTIONING,
+        EventGenderEnum.BISEXUAL,
+        EventGenderEnum.GAY,
+        EventGenderEnum.LESBIAN,
+        EventGenderEnum.ASEXUAL,
+        EventGenderEnum.DEMISEXUAL,
+        EventGenderEnum.PANSEXUAL,
+        EventGenderEnum.QUEER,
+      );
+    }  else if (this.isMale) {
       allowedGender.push(
         EventGenderEnum.BISEXUAL,
         EventGenderEnum.GAY,

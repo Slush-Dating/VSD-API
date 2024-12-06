@@ -282,6 +282,12 @@ export class Event extends BaseEntity {
    * Check if user's gender is eligible for the event
    */
   isGenderAllowed(user: User): boolean {
+
+    // Bisexual is alllowed to see all events
+    if(user.isBisexual) {
+      return true;
+    }
+
     if (
       ((this.isEventFor(EventGenderEnum.STRAIGHT) ||
         this.isEventFor(EventGenderEnum.QUESTIONING)) &&
