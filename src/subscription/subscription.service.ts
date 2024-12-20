@@ -113,18 +113,22 @@ export class SubscriptionService {
           }
         });
 
-        if (androidPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToAndroid(
-            'Your Slush subscription is expiring soon. Renew now to keep your benefits!',
-            androidPlayerIds,
-          );
-        }
+        try {
+          if (androidPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToAndroid(
+              'Your Slush subscription is expiring soon. Renew now to keep your benefits!',
+              androidPlayerIds,
+            );
+          }
 
-        if (iosPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToIOS(
-            'Your Slush subscription is expiring soon. Renew now to keep your benefits!',
-            iosPlayerIds,
-          );
+          if (iosPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToIOS(
+              'Your Slush subscription is expiring soon. Renew now to keep your benefits!',
+              iosPlayerIds,
+            );
+          }
+        } catch (error) {
+          console.log(error);
         }
       }
     } catch (error) {

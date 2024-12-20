@@ -1263,18 +1263,22 @@ export class UsersService {
         const notificationMessage =
           "We miss you! It's been a few days since you last checked in. Come back and see what's new on Slush!";
 
-        if (androidPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToAndroid(
-            notificationMessage,
-            androidPlayerIds,
-          );
-        }
+        try {
+          if (androidPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToAndroid(
+              notificationMessage,
+              androidPlayerIds,
+            );
+          }
 
-        if (iosPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToIOS(
-            notificationMessage,
-            iosPlayerIds,
-          );
+          if (iosPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToIOS(
+              notificationMessage,
+              iosPlayerIds,
+            );
+          }
+        } catch (error) {
+          console.log(error);
         }
       }
     } catch (error) {
@@ -1331,19 +1335,22 @@ export class UsersService {
 
         const notificationMessage =
           'It’s been a week! Your matches are waiting for you. Hop back into Slush and keep the conversations going!';
+        try {
+          if (androidPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToAndroid(
+              notificationMessage,
+              androidPlayerIds,
+            );
+          }
 
-        if (androidPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToAndroid(
-            notificationMessage,
-            androidPlayerIds,
-          );
-        }
-
-        if (iosPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToIOS(
-            notificationMessage,
-            iosPlayerIds,
-          );
+          if (iosPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToIOS(
+              notificationMessage,
+              iosPlayerIds,
+            );
+          }
+        } catch (error) {
+          console.log(error);
         }
       }
     } catch (error) {
@@ -1401,18 +1408,22 @@ export class UsersService {
         const notificationMessage =
           'We’ve missed you! New people have joined Slush, and your perfect match could be waiting. Why not take a look?';
 
-        if (androidPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToAndroid(
-            notificationMessage,
-            androidPlayerIds,
-          );
-        }
+        try {
+          if (androidPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToAndroid(
+              notificationMessage,
+              androidPlayerIds,
+            );
+          }
 
-        if (iosPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToIOS(
-            notificationMessage,
-            iosPlayerIds,
-          );
+          if (iosPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToIOS(
+              notificationMessage,
+              iosPlayerIds,
+            );
+          }
+        } catch (error) {
+          console.log(error);
         }
       }
     } catch (error) {
@@ -1470,18 +1481,22 @@ export class UsersService {
         const notificationMessage =
           'It’s been a while! Many new people looking for love on Slush. Your perfect match could be waiting. Why not take a look?';
 
-        if (androidPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToAndroid(
-            notificationMessage,
-            androidPlayerIds,
-          );
-        }
+        try {
+          if (androidPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToAndroid(
+              notificationMessage,
+              androidPlayerIds,
+            );
+          }
 
-        if (iosPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToIOS(
-            notificationMessage,
-            iosPlayerIds,
-          );
+          if (iosPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToIOS(
+              notificationMessage,
+              iosPlayerIds,
+            );
+          }
+        } catch (error) {
+          console.log(error);
         }
       }
     } catch (error) {
@@ -1523,18 +1538,22 @@ export class UsersService {
       const notificationMessage =
         'Increase your credibility! Verify your profile on Slush and boost your chances of finding your perfect match. Verified profiles get more attention and build trust. Verify now!';
 
-      if (androidPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToAndroid(
-          notificationMessage,
-          androidPlayerIds,
-        );
-      }
+      try {
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            notificationMessage,
+            androidPlayerIds,
+          );
+        }
 
-      if (iosPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToIOS(
-          notificationMessage,
-          iosPlayerIds,
-        );
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            notificationMessage,
+            iosPlayerIds,
+          );
+        }
+      } catch (error) {
+        console.log(error);
       }
     }
   }
@@ -1560,18 +1579,22 @@ export class UsersService {
 
       const notificationMessage = 'Someone has viewed your profile!';
 
-      if (androidPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToAndroid(
-          notificationMessage,
-          androidPlayerIds,
-        );
-      }
+      try {
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            notificationMessage,
+            androidPlayerIds,
+          );
+        }
 
-      if (iosPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToIOS(
-          notificationMessage,
-          iosPlayerIds,
-        );
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            notificationMessage,
+            iosPlayerIds,
+          );
+        }
+      } catch (error) {
+        console.log(error);
       }
     }
   }

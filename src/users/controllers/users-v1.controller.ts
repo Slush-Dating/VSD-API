@@ -529,20 +529,24 @@ export class UsersControllerV1 {
         // Prepare the notification message
         const message = `${authUser.firstName} liked you.`;
 
-        // Send notification to Android devices
-        if (androidPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToAndroid(
-            message,
-            androidPlayerIds,
-          );
-        }
+        try {
+          // Send notification to Android devices
+          if (androidPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToAndroid(
+              message,
+              androidPlayerIds,
+            );
+          }
 
-        // Send notification to iOS devices
-        if (iosPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToIOS(
-            message,
-            iosPlayerIds,
-          );
+          // Send notification to iOS devices
+          if (iosPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToIOS(
+              message,
+              iosPlayerIds,
+            );
+          }
+        } catch (error) {
+          console.log(error);
         }
       } else {
         console.log('no notification');

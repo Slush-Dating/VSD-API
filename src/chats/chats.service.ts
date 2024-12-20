@@ -82,18 +82,22 @@ export class ChatsService {
           }
         });
 
-        if (androidPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToAndroid(
-            data.content,
-            androidPlayerIds,
-          );
-        }
+        try {
+          if (androidPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToAndroid(
+              data.content,
+              androidPlayerIds,
+            );
+          }
 
-        if (iosPlayerIds.length > 0) {
-          await this.oneSignalNotificationService.sendNotificationToIOS(
-            data.content,
-            iosPlayerIds,
-          );
+          if (iosPlayerIds.length > 0) {
+            await this.oneSignalNotificationService.sendNotificationToIOS(
+              data.content,
+              iosPlayerIds,
+            );
+          }
+        } catch (error) {
+          console.log(error);
         }
       } else {
         console.log('no notification send');

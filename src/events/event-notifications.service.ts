@@ -76,21 +76,26 @@ export class EventNotificationsService {
         }
       });
 
-      if (androidPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToAndroid(
-          `Event beginning in 15 minutes! Waiting room is now open.`,
-          androidPlayerIds,
-          event.id,
-        );
+      try {
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            `Event beginning in 15 minutes! Waiting room is now open.`,
+            androidPlayerIds,
+            event.id,
+          );
+        }
+
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            `Event beginning in 15 minutes! Waiting room is now open.`,
+            iosPlayerIds,
+            event.id,
+          );
+        }
+      } catch (error) {
+        console.log(error);
       }
 
-      if (iosPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToIOS(
-          `Event beginning in 15 minutes! Waiting room is now open.`,
-          iosPlayerIds,
-          event.id,
-        );
-      }
       participants.forEach((participant) => {
         const tokens = participant.user.fcmTokens.map(
           (fcmToken) => fcmToken.token,
@@ -272,20 +277,24 @@ export class EventNotificationsService {
         }
       });
 
-      if (androidPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToAndroid(
-          'Event is beginning in 5 minutes! Join the waiting room now.',
-          androidPlayerIds,
-          event.id,
-        );
-      }
+      try {
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            'Event is beginning in 5 minutes! Join the waiting room now.',
+            androidPlayerIds,
+            event.id,
+          );
+        }
 
-      if (iosPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToIOS(
-          'Event is beginning in 5 minutes! Join the waiting room now.',
-          iosPlayerIds,
-          event.id,
-        );
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            'Event is beginning in 5 minutes! Join the waiting room now.',
+            iosPlayerIds,
+            event.id,
+          );
+        }
+      } catch (error) {
+        console.log(error);
       }
 
       participants.forEach((participant) => {
@@ -377,20 +386,24 @@ export class EventNotificationsService {
         }
       });
 
-      if (androidPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToAndroid(
-          'Event starting in 60 seconds, JOIN NOW',
-          androidPlayerIds,
-          event.id,
-        );
-      }
+      try {
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            'Event starting in 60 seconds, JOIN NOW',
+            androidPlayerIds,
+            event.id,
+          );
+        }
 
-      if (iosPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToIOS(
-          'Event starting in 60 seconds, JOIN NOW',
-          iosPlayerIds,
-          event.id,
-        );
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            'Event starting in 60 seconds, JOIN NOW',
+            iosPlayerIds,
+            event.id,
+          );
+        }
+      } catch (error) {
+        console.log(error);
       }
 
       participants.forEach((participant) => {
@@ -485,18 +498,22 @@ export class EventNotificationsService {
         }
       });
 
-      if (androidPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToAndroid(
-          'New events are now showing, check them out!',
-          androidPlayerIds,
-        );
-      }
+      try {
+        if (androidPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToAndroid(
+            'New events are now showing, check them out!',
+            androidPlayerIds,
+          );
+        }
 
-      if (iosPlayerIds.length > 0) {
-        await this.oneSignalNotificationService.sendNotificationToIOS(
-          'New events are now showing, check them out!',
-          iosPlayerIds,
-        );
+        if (iosPlayerIds.length > 0) {
+          await this.oneSignalNotificationService.sendNotificationToIOS(
+            'New events are now showing, check them out!',
+            iosPlayerIds,
+          );
+        }
+      } catch (error) {
+        console.log(error);
       }
     }
 
