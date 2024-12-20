@@ -1095,6 +1095,7 @@ export class AuthService {
     const findFcmDetails = await this.fcmTokensService.findUserDetail([
       authUserId,
     ]);
+
     const androidPlayerIds: string[] = [];
     const iosPlayerIds: string[] = [];
 
@@ -1108,18 +1109,22 @@ export class AuthService {
       }
     });
 
-    if (androidPlayerIds.length > 0) {
-      await this.oneSignalNotificationService.sendNotificationToAndroid(
-        'Your profile on Slush is waiting to shine. Complete it now to attract more matches!',
-        androidPlayerIds,
-      );
-    }
+    try {
+      if (androidPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToAndroid(
+          'Your profile on Slush is waiting to shine. Complete it now to attract more matches!',
+          androidPlayerIds,
+        );
+      }
 
-    if (iosPlayerIds.length > 0) {
-      await this.oneSignalNotificationService.sendNotificationToIOS(
-        'Your profile on Slush is waiting to shine. Complete it now to attract more matches!',
-        iosPlayerIds,
-      );
+      if (iosPlayerIds.length > 0) {
+        await this.oneSignalNotificationService.sendNotificationToIOS(
+          'Your profile on Slush is waiting to shine. Complete it now to attract more matches!',
+          iosPlayerIds,
+        );
+      }
+    } catch (error) {
+      console.log(error);
     }
 
     // await this.sendProfilePercentageNotification(user, percentage);
