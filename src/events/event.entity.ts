@@ -239,6 +239,14 @@ export class Event extends BaseEntity {
   @Column({ nullable: true })
   password: string;
 
+  /**
+   * @example false
+   */
+  @IsBoolean()
+  @Expose()
+  @Column({ type: 'boolean', default: false })
+  isGlobal: boolean;
+
   @ManyToOne(() => Categories, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',

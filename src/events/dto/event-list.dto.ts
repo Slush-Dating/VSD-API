@@ -22,6 +22,7 @@ export class EventList extends PickType(Event, [
   'type',
   'hasPassword',
   'password',
+  'isGlobal',
 ]) {
   @Expose({ name: 'id' })
   eventId: number;
