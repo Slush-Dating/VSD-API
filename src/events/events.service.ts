@@ -888,7 +888,7 @@ export class EventsService {
             longitude: longitude.trim(),
           })
           .having('distance <= :distance', { distance })
-          .orHaving('i_global = :isGlobal', { isGlobal: true })
+          .orHaving('is_global = :isGlobal', { isGlobal: true })
           .addOrderBy('distance', 'ASC');
       } else {
         queryBuilder.addSelect('0 AS distance');
