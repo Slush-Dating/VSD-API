@@ -1,0 +1,12 @@
+[
+    {
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.slushdating.slush",
+        "sha256_cert_fingerprints": [
+          "05:23:74:d9:09:ce:97:0a:91:c1:27:fa:7e:11:84:28:8a:33:8d:1e:b8:6a:7c:54:d7:ed:4d:a6:ed:a8:3c:a0"
+        ]
+      }
+    }
+  ]
