@@ -9,7 +9,7 @@ export const EnvSchema = Joi.object({
   JWT_SECRET_KEY: Joi.string().max(30),
   JWT_EXPIRES_IN: Joi.string(),
 
-  DB_HOST: Joi.string().ip(),
+  DB_HOST: Joi.string(),
   DB_PORT: Joi.number(),
   DB_DATABASE: Joi.string(),
   DB_USERNAME: Joi.string(),
